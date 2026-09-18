@@ -8,6 +8,7 @@ from app.models import (  # noqa: F401 — imported so tables register on Base.m
     ExperimentRunORM,
     ModelConfigORM,
     ModelExecutionORM,
+    RequestLogORM,
 )
 
 

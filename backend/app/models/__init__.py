@@ -8,6 +8,7 @@ Submodules are imported here so ``Base.metadata`` sees every table before
 from app.models.benchmark import BenchmarkTaskORM, BenchmarkTaskSchema
 from app.models.experiment import ExperimentRunORM, ModelExecutionORM
 from app.models.model_config import ModelConfigORM
+from app.models.request_log import RequestLogORM
 
 __all__ = [
     "BenchmarkTaskORM",
@@ -15,4 +16,5 @@ __all__ = [
     "ExperimentRunORM",
     "ModelExecutionORM",
     "ModelConfigORM",
+    "RequestLogORM",
 ]
