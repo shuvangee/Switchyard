@@ -15,6 +15,7 @@ from app.api.benchmarks import router as benchmarks_router
 from app.api.experiments import router as experiments_router
 from app.api.health import router as health_router
 from app.api.model_configs import router as model_configs_router
+from app.api.routing import router as routing_router
 from app.core.config import get_settings
 from app.db.init_db import init_db
 from app.db.session import SessionLocal, engine
@@ -55,6 +56,7 @@ app.include_router(health_router)
 app.include_router(benchmarks_router)
 app.include_router(model_configs_router)
 app.include_router(experiments_router)
+app.include_router(routing_router)
 
 
 @app.get("/")
