@@ -4,6 +4,9 @@ import type {
   ExperimentRunDetail,
   ExperimentRunSummary,
   ModelConfig,
+  RequestLog,
+  RequestLogSummary,
+  RouteRequest,
 } from "@/types/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -62,4 +65,19 @@ export function createExperiment(payload: CreateExperimentRequest): Promise<Expe
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export function routeRequest(payload: RouteRequest): Promise<RequestLog> {
+  return apiFetch<RequestLog>("/route", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getRequests(): Promise<RequestLogSummary[]> {
+  return apiFetch<RequestLogSummary[]>("/requests");
+}
+
+export function getRequest(id: string): Promise<RequestLog> {
+  return apiFetch<RequestLog>(`/requests/${encodeURIComponent(id)}`);
 }

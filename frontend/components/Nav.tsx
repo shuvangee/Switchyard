@@ -7,8 +7,11 @@ export function Nav() {
         <Link href="/" className="brand">
           Switchyard
         </Link>
+        <Link href="/playground">Playground</Link>
         <Link href="/benchmarks">Benchmarks</Link>
         <Link href="/experiments">Experiments</Link>
+        <Link href="/models">Models</Link>
+        <Link href="/requests">Requests</Link>
       </div>
     </nav>
   );

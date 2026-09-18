@@ -23,6 +23,14 @@ export interface BenchmarkTask {
   metadata: Record<string, unknown>;
 }
 
+export interface ModelPerformanceSummary {
+  total_executions: number;
+  scored_executions: number;
+  correct: number;
+  avg_latency_ms: number | null;
+  total_cost_usd: number | null;
+}
+
 export interface ModelConfig {
   id: string;
   provider: string;
@@ -32,6 +40,7 @@ export interface ModelConfig {
   input_cost_per_1k: number;
   output_cost_per_1k: number;
   capabilities: Record<string, unknown>;
+  performance: ModelPerformanceSummary | null;
 }
 
 export type ExecutionStatus = "success" | "error";
@@ -83,4 +92,46 @@ export interface CreateExperimentRequest {
   category?: TaskCategory;
   model_config_ids: string[];
   name?: string;
+}
+
+export type CategorySource = "explicit" | "heuristic";
+
+export interface RouteRequest {
+  prompt: string;
+  category_hint?: TaskCategory;
+}
+
+export interface RequestLog {
+  id: string;
+  prompt: string;
+  category: TaskCategory;
+  category_source: CategorySource;
+  difficulty: TaskDifficulty;
+  structured_output_required: boolean;
+  estimated_input_tokens: number;
+  selected_model_config_id: string;
+  selected_provider: string;
+  router_version: string;
+  rationale: string;
+  matched_rule: string | null;
+  status: ExecutionStatus;
+  response_text: string | null;
+  error_message: string | null;
+  latency_ms: number | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  estimated_cost_usd: number | null;
+  created_at: string;
+}
+
+export interface RequestLogSummary {
+  id: string;
+  prompt_preview: string;
+  category: TaskCategory;
+  difficulty: TaskDifficulty;
+  selected_model_config_id: string;
+  status: ExecutionStatus;
+  latency_ms: number | null;
+  estimated_cost_usd: number | null;
+  created_at: string;
 }
