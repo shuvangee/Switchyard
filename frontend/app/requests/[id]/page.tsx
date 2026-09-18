@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExecutionStatusPill } from "@/components/Pill";
+import { ConfidencePill, ExecutionStatusPill, ValidationStatusPill } from "@/components/Pill";
+import { RequestTrace } from "@/components/RequestTrace";
 import { ApiError, getRequest } from "@/lib/api";
 
 export default async function RequestDetailPage({
@@ -54,12 +55,20 @@ export default async function RequestDetailPage({
       <h2 className="section-label">Routing decision</h2>
       <div className="stat-row" style={{ marginTop: 0 }}>
         <div>
-          <div className="section-label">Selected model</div>
+          <div className="section-label">Confidence</div>
+          <ConfidencePill level={log.confidence} />
+        </div>
+        <div>
+          <div className="section-label">Initial model</div>
+          <div className="mono">{log.initial_model_config_id}</div>
+        </div>
+        <div>
+          <div className="section-label">Final model</div>
           <div className="mono">{log.selected_model_config_id}</div>
         </div>
         <div>
-          <div className="section-label">Provider</div>
-          <div className="mono">{log.selected_provider}</div>
+          <div className="section-label">Escalated</div>
+          <div className="mono">{log.escalated ? `yes (${log.attempt_count} attempts)` : "no"}</div>
         </div>
         <div>
           <div className="section-label">Router version</div>
@@ -71,11 +80,17 @@ export default async function RequestDetailPage({
       </p>
 
       <h2 className="section-label">Response</h2>
-      <div style={{ marginBottom: "0.5rem" }}>
+      <div style={{ marginBottom: "0.5rem", display: "flex", gap: "0.5rem" }}>
         <ExecutionStatusPill status={log.status} />
+        <ValidationStatusPill status={log.validation_status} />
       </div>
       {log.response_text !== null && <pre className="prompt-block">{log.response_text}</pre>}
       {log.error_message !== null && <pre className="prompt-block">{log.error_message}</pre>}
+      {log.validation_detail !== null && (
+        <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
+          Validation: {log.validation_detail}
+        </p>
+      )}
 
       <h2 className="section-label">Technical metadata</h2>
       <table>
@@ -100,6 +115,9 @@ export default async function RequestDetailPage({
           </tr>
         </tbody>
       </table>
+
+      <h2 className="section-label">Request trace</h2>
+      <RequestTrace events={log.trace_events} />
     </main>
   );
 }

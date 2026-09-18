@@ -95,10 +95,18 @@ export interface CreateExperimentRequest {
 }
 
 export type CategorySource = "explicit" | "heuristic";
+export type ConfidenceLevel = "high" | "medium" | "low";
+export type ValidationStatus = "not_validated" | "passed" | "failed";
 
 export interface RouteRequest {
   prompt: string;
   category_hint?: TaskCategory;
+}
+
+export interface TraceEvent {
+  event_type: string;
+  detail: string;
+  timestamp: string;
 }
 
 export interface RequestLog {
@@ -109,11 +117,17 @@ export interface RequestLog {
   difficulty: TaskDifficulty;
   structured_output_required: boolean;
   estimated_input_tokens: number;
+  confidence: ConfidenceLevel;
+  initial_model_config_id: string;
   selected_model_config_id: string;
   selected_provider: string;
   router_version: string;
   rationale: string;
   matched_rule: string | null;
+  escalated: boolean;
+  attempt_count: number;
+  validation_status: ValidationStatus;
+  validation_detail: string | null;
   status: ExecutionStatus;
   response_text: string | null;
   error_message: string | null;
@@ -121,6 +135,7 @@ export interface RequestLog {
   input_tokens: number | null;
   output_tokens: number | null;
   estimated_cost_usd: number | null;
+  trace_events: TraceEvent[];
   created_at: string;
 }
 
@@ -129,9 +144,26 @@ export interface RequestLogSummary {
   prompt_preview: string;
   category: TaskCategory;
   difficulty: TaskDifficulty;
+  initial_model_config_id: string;
   selected_model_config_id: string;
+  escalated: boolean;
   status: ExecutionStatus;
+  validation_status: ValidationStatus;
   latency_ms: number | null;
   estimated_cost_usd: number | null;
   created_at: string;
+}
+
+export interface RoutingAnalytics {
+  total_requests: number;
+  initial_model_counts: Record<string, number>;
+  final_model_counts: Record<string, number>;
+  escalation_count: number;
+  escalation_rate: number | null;
+  provider_error_count: number;
+  avg_latency_ms: number | null;
+  total_cost_usd: number | null;
+  validation_passed: number;
+  validation_failed: number;
+  validation_not_validated: number;
 }

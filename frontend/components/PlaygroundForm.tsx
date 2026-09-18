@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ExecutionStatusPill } from "@/components/Pill";
+import { ConfidencePill, ExecutionStatusPill, ValidationStatusPill } from "@/components/Pill";
+import { RequestTrace } from "@/components/RequestTrace";
 import { ApiError, routeRequest } from "@/lib/api";
 import type { RequestLog, TaskCategory } from "@/types/api";
 
@@ -129,12 +130,20 @@ export function PlaygroundForm() {
           <h2 className="section-label">Routing decision</h2>
           <div className="stat-row" style={{ marginTop: 0 }}>
             <div>
-              <div className="section-label">Selected model</div>
+              <div className="section-label">Confidence</div>
+              <ConfidencePill level={result.confidence} />
+            </div>
+            <div>
+              <div className="section-label">Initial model</div>
+              <div className="mono">{result.initial_model_config_id}</div>
+            </div>
+            <div>
+              <div className="section-label">Final model</div>
               <div className="mono">{result.selected_model_config_id}</div>
             </div>
             <div>
-              <div className="section-label">Provider</div>
-              <div className="mono">{result.selected_provider}</div>
+              <div className="section-label">Escalated</div>
+              <div className="mono">{result.escalated ? `yes (${result.attempt_count} attempts)` : "no"}</div>
             </div>
             <div>
               <div className="section-label">Router version</div>
@@ -146,13 +155,19 @@ export function PlaygroundForm() {
           </p>
 
           <h2 className="section-label">Response</h2>
-          <div style={{ marginBottom: "0.5rem" }}>
+          <div style={{ marginBottom: "0.5rem", display: "flex", gap: "0.5rem" }}>
             <ExecutionStatusPill status={result.status} />
+            <ValidationStatusPill status={result.validation_status} />
           </div>
           {result.response_text !== null && (
             <pre className="prompt-block">{result.response_text}</pre>
           )}
           {result.error_message !== null && <pre className="prompt-block">{result.error_message}</pre>}
+          {result.validation_detail !== null && (
+            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
+              Validation: {result.validation_detail}
+            </p>
+          )}
 
           <h2 className="section-label">Technical metadata</h2>
           <table>
@@ -183,6 +198,9 @@ export function PlaygroundForm() {
               </tr>
             </tbody>
           </table>
+
+          <h2 className="section-label">Request trace</h2>
+          <RequestTrace events={result.trace_events} />
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExecutionStatusPill } from "@/components/Pill";
+import { ExecutionStatusPill, ValidationStatusPill } from "@/components/Pill";
 import { getRequests } from "@/lib/api";
 
 export default async function RequestsPage() {
@@ -22,9 +22,10 @@ export default async function RequestsPage() {
             <tr>
               <th>Request</th>
               <th>Category</th>
-              <th>Difficulty</th>
-              <th>Selected model</th>
+              <th>Initial model</th>
+              <th>Final model</th>
               <th>Status</th>
+              <th>Validation</th>
               <th>Latency</th>
               <th>Cost</th>
               <th>Created</th>
@@ -37,10 +38,18 @@ export default async function RequestsPage() {
                   <Link href={`/requests/${request.id}`}>{request.prompt_preview}</Link>
                 </td>
                 <td className="mono">{request.category}</td>
-                <td className="mono">{request.difficulty}</td>
-                <td className="mono">{request.selected_model_config_id}</td>
+                <td className="mono">{request.initial_model_config_id}</td>
+                <td className="mono">
+                  {request.selected_model_config_id}
+                  {request.escalated && (
+                    <span style={{ color: "var(--accent)" }}> ↑</span>
+                  )}
+                </td>
                 <td>
                   <ExecutionStatusPill status={request.status} />
+                </td>
+                <td>
+                  <ValidationStatusPill status={request.validation_status} />
                 </td>
                 <td className="mono">
                   {request.latency_ms !== null ? `${request.latency_ms.toFixed(0)} ms` : "—"}

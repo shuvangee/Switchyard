@@ -7,6 +7,7 @@ import type {
   RequestLog,
   RequestLogSummary,
   RouteRequest,
+  RoutingAnalytics,
 } from "@/types/api";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -80,4 +81,8 @@ export function getRequests(): Promise<RequestLogSummary[]> {
 
 export function getRequest(id: string): Promise<RequestLog> {
   return apiFetch<RequestLog>(`/requests/${encodeURIComponent(id)}`);
+}
+
+export function getAnalytics(): Promise<RoutingAnalytics> {
+  return apiFetch<RoutingAnalytics>("/analytics");
 }

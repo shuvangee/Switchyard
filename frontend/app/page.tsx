@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { ExecutionStatusPill, RunStatusPill } from "@/components/Pill";
-import { getBenchmarks, getExperiments, getModels, getRequests } from "@/lib/api";
+import { getAnalytics, getBenchmarks, getExperiments, getModels, getRequests } from "@/lib/api";
 
 export default async function Home() {
-  const [tasks, models, runs, requests] = await Promise.all([
+  const [tasks, models, runs, requests, analytics] = await Promise.all([
     getBenchmarks(),
     getModels(),
     getExperiments(),
     getRequests(),
+    getAnalytics(),
   ]);
   const enabledModels = models.filter((model) => model.enabled);
   const recentRuns = runs.slice(0, 5);
@@ -18,8 +19,8 @@ export default async function Home() {
       <header style={{ marginBottom: "1rem" }}>
         <h1 style={{ fontSize: "1.6rem", margin: 0 }}>Switchyard</h1>
         <p style={{ color: "var(--text-muted)", marginTop: "0.4rem" }}>
-          Router version V1 — rule-based multi-model routing, on top of the V0 model
-          performance lab.
+          Router version V2 — validation, confidence, and escalation on top of V1&apos;s
+          rule-based routing.
         </p>
       </header>
 
@@ -41,6 +42,12 @@ export default async function Home() {
         <div>
           <div className="stat-value">{requests.length}</div>
           <div className="stat-label">Requests routed</div>
+        </div>
+        <div>
+          <div className="stat-value">
+            {analytics.escalation_rate !== null ? `${(analytics.escalation_rate * 100).toFixed(0)}%` : "—"}
+          </div>
+          <div className="stat-label">Escalation rate</div>
         </div>
       </div>
 

@@ -12,6 +12,7 @@ export function Nav() {
         <Link href="/experiments">Experiments</Link>
         <Link href="/models">Models</Link>
         <Link href="/requests">Requests</Link>
+        <Link href="/analytics">Analytics</Link>
       </div>
     </nav>
   );

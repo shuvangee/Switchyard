@@ -263,3 +263,46 @@ pre.prompt-block {
   font-size: 0.85rem;
   margin: 0.5rem 0 1.5rem;
 }
+
+/* --- request trace (observability-style event timeline) --- */
+
+.trace {
+  list-style: none;
+  margin: 0.5rem 0 1.5rem;
+  padding: 0;
+  border-left: 2px solid var(--border);
+}
+
+.trace-event {
+  position: relative;
+  padding: 0.4rem 0 0.4rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.trace-event::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 0.75rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+
+.trace-time {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-right: 0.6rem;
+}
+
+.trace-type {
+  font-weight: 600;
+  margin-right: 0.6rem;
+}
+
+.trace-detail {
+  color: var(--text);
+}

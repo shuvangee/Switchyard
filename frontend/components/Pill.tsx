@@ -38,3 +38,23 @@ const RUN_STATUS_TONE: Record<string, Tone> = {
 export function RunStatusPill({ status }: { status: string }) {
   return <Pill tone={RUN_STATUS_TONE[status] ?? "neutral"}>{status}</Pill>;
 }
+
+const VALIDATION_STATUS_TONE: Record<string, Tone> = {
+  passed: "success",
+  failed: "error",
+  not_validated: "neutral",
+};
+
+export function ValidationStatusPill({ status }: { status: string }) {
+  return <Pill tone={VALIDATION_STATUS_TONE[status] ?? "neutral"}>{status.replace("_", " ")}</Pill>;
+}
+
+const CONFIDENCE_TONE: Record<string, Tone> = {
+  high: "success",
+  medium: "warning",
+  low: "error",
+};
+
+export function ConfidencePill({ level }: { level: string }) {
+  return <Pill tone={CONFIDENCE_TONE[level] ?? "neutral"}>{level}</Pill>;
+}
