@@ -7,7 +7,11 @@ hard-code a model or provider name.
 from dataclasses import dataclass, field
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from app.core.config import Settings, get_settings
+from app.core.time import utcnow
+from app.models.model_config import ModelConfigORM
 from app.providers.base import Provider
 from app.providers.mock import MockProvider
 from app.providers.openai_provider import OpenAIProvider
@@ -84,3 +88,22 @@ def get_provider(name: str, settings: Settings | None = None) -> Provider:
     if name == "openai":
         return OpenAIProvider(settings.openai_api_key)
     raise ValueError(f"unknown provider: {name!r}")
+
+
+def sync_model_configs(session: Session, settings: Settings | None = None) -> None:
+    """Upsert the code-defined model registry into the model_configs table."""
+    now = utcnow()
+    for model in get_model_registry(settings):
+        existing = session.get(ModelConfigORM, model.id)
+        if existing is None:
+            existing = ModelConfigORM(id=model.id)
+            session.add(existing)
+        existing.provider = model.provider
+        existing.model_id = model.model_id
+        existing.display_name = model.display_name
+        existing.enabled = model.enabled
+        existing.input_cost_per_1k = model.input_cost_per_1k
+        existing.output_cost_per_1k = model.output_cost_per_1k
+        existing.capabilities = model.capabilities
+        existing.updated_at = now
+    session.commit()
