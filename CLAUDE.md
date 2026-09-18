@@ -143,3 +143,211 @@ Every non-trivial choice should be explainable: what was chosen, what the
 alternatives were, why this one, and what trade-off was accepted. That's
 what `docs/case-study/DECISIONS.md` is for — write the entry when the
 decision is made, not reconstructed later from memory.
+
+## Git Workflow
+
+Git history is part of the Switchyard case study and should clearly show how the project evolved.
+
+### Automatic Commits
+
+After completing each self-contained logical unit of work, automatically create a Git commit.
+
+Do not wait until the end of the entire session.
+
+A logical unit may include:
+- implementing one feature
+- fixing one bug
+- adding or modifying one subsystem
+- adding a meaningful group of tests
+- completing one refactor
+- completing one documentation/case-study update
+- completing one project setup/configuration task
+
+Do NOT create a separate commit for every individual file edit if multiple files belong to the same logical change.
+
+For example:
+
+GOOD:
+
+feat: add benchmark task schema
+
+feat: implement mock model provider
+
+feat: add experiment execution pipeline
+
+test: add experiment runner coverage
+
+docs: document V0 benchmark architecture
+
+BAD:
+
+chore: edit schema.py
+
+chore: edit database.py
+
+chore: edit README
+
+chore: edit file again
+
+Commits should represent meaningful project history.
+
+### Before Every Commit
+
+Before creating a commit:
+
+1. Review `git status`.
+2. Review the changes being committed.
+3. Make sure unrelated changes are not accidentally included.
+4. Run the relevant tests/checks for that unit of work.
+5. Verify that no secrets, API keys, `.env` files, credentials, generated junk, or sensitive files are being committed.
+6. Update relevant documentation if the change requires it.
+7. Stage only the files belonging to that logical unit.
+8. Create the commit.
+
+Do not knowingly commit broken code unless I explicitly request a checkpoint/WIP commit.
+
+If tests fail because of the current work:
+- fix the failure
+- rerun the relevant tests
+- commit only after the unit is in a valid state
+
+If a test failure is unrelated and existed before the current task:
+- document that clearly
+- do not silently modify unrelated code merely to obtain a green test run
+
+### Commit Message Format
+
+Use Conventional Commits.
+
+Preferred types:
+
+- `feat:` new functionality
+- `fix:` bug fix
+- `test:` tests
+- `docs:` documentation
+- `refactor:` internal code improvement without behavior change
+- `perf:` performance improvement
+- `chore:` tooling, setup, configuration, dependencies
+- `ci:` CI/CD changes
+- `build:` build-system changes
+
+Commit messages should be concise and describe the actual change.
+
+Examples:
+
+`chore: initialize Switchyard project structure`
+
+`feat: add benchmark task schema`
+
+`feat: implement mock provider adapter`
+
+`feat: add experiment execution pipeline`
+
+`fix: continue experiment after provider failure`
+
+`test: add provider failure coverage`
+
+`docs: record V0 architecture decisions`
+
+`refactor: separate provider registry from experiment runner`
+
+Avoid vague messages such as:
+
+`update stuff`
+
+`changes`
+
+`fix`
+
+`working version`
+
+`final`
+
+### Commit Scope
+
+Keep commits reasonably atomic.
+
+Code, tests, and documentation that all belong to the same feature may be included in the same commit.
+
+Example:
+
+A new benchmark runner may include:
+- implementation
+- tests
+- associated schema changes
+- documentation directly required by the feature
+
+These may be committed together as:
+
+`feat: add benchmark experiment runner`
+
+Do not mix unrelated work into the same commit.
+
+### Case Study Commits
+
+When a development task creates meaningful case-study information, update the relevant documentation before finishing that logical unit.
+
+Examples include:
+
+- `PROJECT_STATE.md`
+- `docs/case-study/DEVELOPMENT_LOG.md`
+- `docs/case-study/DECISIONS.md`
+- `docs/case-study/EXPERIMENTS.md`
+- `docs/case-study/FAILURES_AND_LESSONS.md`
+- `docs/case-study/METRICS.md`
+
+Minor documentation directly associated with a feature can be included in the same feature commit.
+
+Larger standalone case-study updates should use a separate `docs:` commit.
+
+### Never Push Automatically
+
+NEVER run:
+
+`git push`
+
+or otherwise push commits to a remote repository unless I explicitly ask you to push.
+
+Creating local commits is authorized.
+
+Pushing is not.
+
+Do not create pull requests, merge branches, force-push, rebase published history, or modify remote branches unless explicitly requested.
+
+### Git Safety
+
+Never use destructive Git operations without explicit permission.
+
+Do not automatically run commands such as:
+
+- `git reset --hard`
+- `git clean -fd`
+- `git push --force`
+- destructive rebases
+- deleting branches
+- discarding user changes
+
+Preserve any existing user-authored changes.
+
+If unrelated uncommitted changes already exist, do not overwrite or accidentally include them. Keep your changes isolated where possible.
+
+### Git Identity
+
+If Git cannot create a commit because `user.name` or `user.email` is not configured:
+
+- stop the commit
+- tell me what configuration is missing
+- do not modify my global Git identity automatically
+
+### End-of-Task Report
+
+After each logical unit, tell me:
+
+- what was completed
+- tests/checks run
+- commit message
+- short commit hash
+
+At the end of a larger task or version, also show the commits created during that work.
+
+Do not push them.
