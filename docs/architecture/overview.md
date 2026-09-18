@@ -1,23 +1,39 @@
 # Architecture overview
 
-Status: V1 (rule-based routing on top of the V0 model performance lab).
-This describes what exists right now, not the eventual full system —
-that grows incrementally alongside `PROJECT_STATE.md`.
+Status: V2 (validation, confidence, and escalation on top of V1's
+rule-based routing). This describes what exists right now, not the
+eventual full system — that grows incrementally alongside
+`PROJECT_STATE.md`.
 
-## Core flow (V1)
+## Core flow (V2)
 
 ```
 raw prompt
-  -> app/routing/analyzer.py   (category, difficulty, structured-output
-                                 flag, estimated tokens — transparent
-                                 heuristics, not a real classifier)
-  -> app/routing/rules.py      (DEFAULT_RULES: ordered, evidence-cited)
-  -> app/routing/router.py     (decide_route: first matching rule whose
-                                 target model is enabled)
-  -> app/routing/service.py    (handle_routed_request: calls the chosen
-                                 Provider, computes cost, persists the
-                                 full record regardless of outcome)
-  -> RequestLogORM              (request_logs table — one row per request)
+  -> app/routing/analyzer.py    (category, difficulty, structured-output
+                                  flag, estimated tokens — transparent
+                                  heuristics, not a real classifier)
+  -> app/routing/rules.py       (DEFAULT_RULES: ordered, evidence-cited)
+  -> app/routing/router.py      (decide_route: first matching rule whose
+                                  target model is enabled; also computes
+                                  confidence and can preemptively escalate
+                                  the initial pick when it's LOW)
+  -> app/routing/service.py     (handle_routed_request: the retry loop —
+                                  calls the chosen Provider, validates the
+                                  response, escalates to
+                                  ESCALATION_TARGETS on a ProviderError or
+                                  a FAILED validation, bounded by
+                                  MAX_ATTEMPTS, records a TraceEvent at
+                                  every step)
+       |-> app/evaluation/validation.py  (content-level check inferred
+       |                                  from the request itself — no
+       |                                  pre-authored expected_output
+       |                                  exists for freeform requests)
+       |-> app/routing/trace.py          (TraceEvent: system-level facts
+                                           only, never model reasoning)
+  -> RequestLogORM               (request_logs table — one row per
+                                   request: analysis + decision +
+                                   escalation history + final execution +
+                                   full trace_events)
 ```
 
 ## Repository shape
@@ -42,32 +58,40 @@ links them together.
 the responsibilities are stable even as features are added:
 
 - `api/` — HTTP route definitions (`benchmarks.py`, `model_configs.py`,
-  `experiments.py`), plus request/response schemas kept separate from the
-  ORM layer (`schemas.py`).
+  `experiments.py`, `routing.py`, `analytics.py`), plus request/response
+  schemas kept separate from the ORM layer (`schemas.py`).
 - `core/` — configuration (`config.py`) and cross-cutting helpers
   (`time.py`).
 - `models/` — `BenchmarkTaskORM`/`BenchmarkTaskSchema`, `ModelConfigORM`,
   `ExperimentRunORM`/`ModelExecutionORM`, `RequestLogORM`, and the shared
   enums (`TaskCategory`, `TaskDifficulty`, `EvaluationType`,
-  `ExecutionStatus`, `EvaluationStatus`, `RunStatus`).
+  `ExecutionStatus`, `EvaluationStatus`, `RunStatus`, `ValidationStatus`,
+  `ConfidenceLevel`).
 - `providers/` — the `Provider` interface, `MockProvider` (three
   deterministic profiles), `OpenAIProvider` (real, disabled without a
   key), pure cost estimation (`pricing.py`), and the single model registry
   (`registry.py`) that builds `ModelConfig` objects and syncs them into
   the `model_configs` table.
-- `evaluation/` — `exact_match`, `classification_label`, `valid_json`, and
-  `manual` strategies behind one `evaluate()` dispatcher.
+- `evaluation/` — `strategies.py` (`exact_match`, `classification_label`,
+  `valid_json`, `manual` — grading a benchmark task against its
+  pre-authored `expected_output`) and `validation.py` (`validate_response()`
+  — checking a *live* routed response against whatever can be inferred
+  from the request itself; no expected_output exists for freeform input,
+  so this is a deliberately separate module and enum — see
+  `docs/case-study/DECISIONS.md`).
 - `experiments/` — `loader.py` (validates benchmark task files and syncs
   them into the DB) and `runner.py` (`run_experiment()`/`execute_single()`).
 - `db/` — SQLAlchemy engine/session (`session.py`), the declarative base
   (`base.py`), and table creation (`init_db.py`).
 - `routing/` — `analyzer.py` (heuristic `RequestAnalysis`), `rules.py`
-  (the single configured `DEFAULT_RULES` list, each citing specific V0
-  baseline evidence), `router.py` (`decide_route()`, pure and DB-free),
-  and `service.py` (`handle_routed_request()`, the orchestrator that
-  calls a provider and persists a `RequestLogORM`). A learned strategy
-  (V3) will live alongside `rules.py` behind the same `decide_route()`-
-  shaped interface, swappable without touching `service.py`.
+  (`DEFAULT_RULES`, each citing specific V0 baseline evidence, plus
+  `ESCALATION_TARGETS`), `router.py` (`decide_route()`, pure and DB-free —
+  also computes confidence and applies the low-confidence override),
+  `trace.py` (`TraceEvent`, system-facts-only), and `service.py`
+  (`handle_routed_request()`, the bounded validate/escalate retry loop
+  that persists a `RequestLogORM`). A learned strategy (V3) will live
+  alongside `rules.py` behind the same `decide_route()`-shaped interface,
+  swappable without touching `service.py`.
 
 ## Why these choices
 

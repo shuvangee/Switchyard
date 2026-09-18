@@ -298,3 +298,120 @@ several columns (status, latency_ms, tokens, cost) with no shared base —
 acceptable; they represent different things (a benchmark-task execution
 vs. a live routed request) that happen to share a shape, not the same
 concept wearing two tables.
+
+## 2026-09-18 — Validation is a separate concern from evaluation, keyed by category not evaluation_type
+
+**Decision:** `evaluation/validation.py` is a new module, not an extension
+of `evaluation/strategies.py`. `validate_response()` dispatches on
+`TaskCategory`, not `EvaluationType`, and returns `ValidationOutcome`
+(carrying `ValidationStatus`), not the existing `EvaluationOutcome`/
+`EvaluationStatus`.
+
+**Alternatives considered:** Reusing `evaluate()`/`EvaluationStatus` for
+live requests too, since the three-state shape (not-checked / correct /
+incorrect) is identical.
+
+**Reasoning:** `evaluate()` compares a response to a benchmark task's
+pre-authored `expected_output` — it literally cannot run without one. A
+live Playground request has no `expected_output` and no `evaluation_type`
+assigned by anyone; the only thing available to validate against is
+whatever can be inferred from the prompt itself (a computable expression,
+an explicit label list, JSON-ness). These are different operations that
+happen to rhyme, not the same operation — reusing the type would either
+force benchmark evaluation to accept a null `evaluation_type` (blurring
+"never authored one" with "author explicitly said manual") or force
+validation to fake an `evaluation_type` it doesn't have.
+
+**Trade-offs accepted:** Two parallel three-state enums
+(`EvaluationStatus`/`ValidationStatus`) and two outcome dataclasses that
+look nearly identical side by side — worth the duplication for keeping
+"graded against a known answer" and "checked against what the request
+itself implies" from being silently conflated in the database or the UI.
+
+## 2026-09-18 — Escalation target is a static map, bounded by a fixed attempt count
+
+**Decision:** `ESCALATION_TARGETS: dict[str, str]` maps each model that
+can escalate to exactly one target; `MAX_ATTEMPTS = 2` bounds the retry
+loop in `routing/service.py` regardless of how deep a hypothetical
+escalation chain could go.
+
+**Alternatives considered:** A per-category or per-failure-reason
+escalation policy (e.g. validation failure escalates differently than a
+provider error); an unbounded chain that keeps escalating until something
+passes or every model has been tried.
+
+**Reasoning:** With three mock models and one real tier of "stronger,"
+there is exactly one meaningful escalation edge
+(fast/flaky → accurate) — building a more expressive policy now would be
+configuring for a model roster that doesn't exist yet. A fixed attempt
+count is a simpler, more obviously-correct way to guarantee termination
+than tracking "have we tried this model already" through an arbitrary
+chain; `_next_escalation_model()` already independently refuses to
+escalate past `MAX_ATTEMPTS`, so the loop terminates for two independent
+reasons (either is sufficient on its own), not just one.
+
+**Trade-offs accepted:** `mock-accurate-v1` failing has nowhere left to
+go, so a request that's both validation-checkable and gets it wrong even
+at the top tier is returned as best-effort with `validation_status=failed`
+— there is no fourth model to try. This is correct given the current
+registry (see the retry-limit test, which forces this exact case): the
+honest behavior when nothing better is configured is to say so, not to
+retry forever hoping something changes.
+
+## 2026-09-18 — Request trace stored as JSON on the row, not a child table
+
+**Decision:** `RequestLogORM.trace_events` is a `JSON` column holding an
+ordered list of `{event_type, detail, timestamp}` dicts, not a
+`trace_events` table with a foreign key back to `request_logs`.
+
+**Alternatives considered:** A proper child table (one row per event),
+queryable independently (e.g. "find all escalation events across every
+request").
+
+**Reasoning:** A trace is written once, in full, by a single call to
+`handle_routed_request()`, and is always read as a whole alongside its
+parent request — nothing currently needs to query across traces
+independently of their request. This is the same reasoning already
+applied to `task_metadata` and `capabilities` elsewhere in the schema:
+an inherently ordered, small, 1:1-owned list is simpler as JSON on the
+row than as a normalized table with no independent query pattern to
+justify it.
+
+**Trade-offs accepted:** Can't efficiently query "every request where an
+escalation event happened" in SQL — have to fetch and filter in Python
+(acceptable at V2's scale; `RoutingAnalytics` already does exactly this
+for `escalated`, a boolean column kept specifically because *that*
+aggregate — unlike per-event queries — was worth making cheap).
+
+## 2026-09-18 — Discovered: only the final attempt's latency/cost is recorded
+
+**Decision (a known, accepted gap, not yet fixed):** When a request
+escalates, `RequestLogORM.latency_ms`/`estimated_cost_usd` hold only the
+*final* attempt's numbers — the first (failed) attempt's latency and cost
+are visible in the trace but not added into the persisted totals, and
+therefore not counted in `RoutingAnalytics.avg_latency_ms`/
+`total_cost_usd` either.
+
+**Discovered via:** live verification. "What is -8 + 15?" escalates:
+`mock-fast-v1` took 110ms (wasted — its answer was wrong), `mock-accurate-v1`
+took 653ms. True wall-clock latency for the request was ~763ms; the
+persisted `latency_ms` is 653ms — a 14% undercount for this example, and
+analytics built from `latency_ms` inherit the same undercount for every
+escalated request.
+
+**Why it wasn't fixed here:** Deciding what "total cost of a request"
+should mean once escalation exists is a real design question, not a typo
+fix — does a user-facing "latency" mean wall-clock time-to-final-answer
+(sum across attempts) or "how long did the model that actually answered
+take" (current behavior, arguably still meaningful for per-model
+performance comparison)? Changing it silently would change the meaning of
+every existing analytics number without that decision being deliberate.
+
+**Trade-offs accepted:** `RoutingAnalytics.avg_latency_ms`/
+`total_cost_usd` currently understate true cost/latency for any request
+that escalated — small in this example (cost, dominated by the one
+expensive call anyway, is barely affected; latency by ~14%) but growing
+with escalation rate. Flagged here rather than silently shipped;
+revisit by deciding the semantics explicitly, then summing across
+`trace_events`' `model_completed` entries (or a per-attempt cost/latency
+list) rather than only the winning attempt.

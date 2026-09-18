@@ -139,3 +139,69 @@ the math misrouting *after* a wrong answer rather than needing a perfect
 difficulty prediction beforehand — and any of this should be re-evaluated
 against real provider data the moment it exists, since every routing rule
 here is still mock-provider evidence only.
+
+## 2026-09-18 — V2: validation, confidence, escalation, and the request trace
+
+Started by re-reading V1's own case study rather than assuming what it
+said. The two documented V1 failures — the math misrouting and the
+classification-phrasing garbage response — became V2's actual design
+inputs, not hypothetical scenarios.
+
+Built, in order: `evaluate/validation.py` (content-level checks inferred
+from the request itself — math via independent recomputation,
+classification via label-list membership, structured_output via JSON
+parsing, extraction via email format — everything else honestly
+`NOT_VALIDATED`, never guessed); confidence
+(`routing/router.py:estimate_confidence`, a heuristic HIGH/MEDIUM/LOW
+label, explicitly not calibrated, that can preemptively escalate before
+any model is called); escalation
+(`routing/rules.py:ESCALATION_TARGETS` + a bounded `MAX_ATTEMPTS=2` retry
+loop in `routing/service.py` triggered by either a `ProviderError` or a
+validation `FAILED`); and a structured request trace
+(`routing/trace.py`, persisted as `RequestLogORM.trace_events`) recording
+system events only — request_received, analyzed, routed, model_completed,
+provider_error, validation, escalating, returned — never model reasoning.
+Router version bumped to v2. Added `GET /analytics`, live-computed from
+`request_logs`, and a Playground/Request History/Analytics UI built around
+the trace as the primary artifact, not a chat transcript.
+
+Then actually ran the two V1 failure prompts through the real, unmocked
+pipeline rather than assuming the fix worked:
+
+- **The math case (fixed).** `"What is -8 + 15?"` still gets `23` from
+  `mock-fast-v1` first — but validation independently computes `7`, flags
+  the mismatch, escalates to `mock-accurate-v1`, which answers `7`, which
+  validates. Real, measured cost: attempt_count=2, ~650ms extra
+  wall-clock latency, one extra (pricier) model call. See `EXPERIMENTS.md`
+  for the full before/after table.
+- **The classification case (not fixed, and said so).** The same
+  phrasing-dependent gap that broke `MockProvider`'s classification also
+  breaks its validator — both key off the exact same `"one of:"` pattern.
+  No pattern found → `NOT_VALIDATED`, not `FAILED` → no escalation
+  triggers → the same garbage response from V1 is still returned in V2.
+  This is the honest negative result of the version: escalation is only
+  as good as validation's ability to detect a problem in the first place.
+
+A third, unplanned finding surfaced while verifying the second case:
+routing a classification prompt that *does* have `"one of:"` phrasing to
+`mock-fast-v1` returned `"positive"` for a review saying "disappointing"
+— arguably wrong, but `validation_status: passed`, because `"positive"`
+is genuinely a member of the allowed label set. Validation checks
+structural membership, not semantic correctness, for any category without
+real ground truth. Recorded in `EXPERIMENTS.md` and `DECISIONS.md` rather
+than treated as a bug — there's no way to check semantic correctness
+without an answer key that doesn't exist for freeform input.
+
+Also found, while capturing real numbers for the case study rather than
+estimating them: `RequestLogORM.latency_ms`/`estimated_cost_usd` only
+capture the *final* attempt of an escalated request, not the sum across
+attempts. True wall-clock latency for the math case was ~763ms; the
+persisted value is 653ms. Flagged in `DECISIONS.md` as a known,
+unresolved gap in the analytics rather than silently left inconsistent.
+
+Next: before V3 (learned routing), the highest-value step is still what
+V1 deferred — real experiments against a real provider. Every number in
+this version's `EXPERIMENTS.md` entries is genuine but mock-only; V2's
+validation/escalation *mechanism* is real, but whether it's solving a
+real problem (vs. a problem specific to how MockProvider is built) is
+still unmeasured.

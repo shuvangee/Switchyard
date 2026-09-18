@@ -31,19 +31,26 @@ The project is built incrementally rather than as a single large system:
 
 ## Current status
 
-V1 complete: Switchyard now routes. Submit a request in the Playground (or
-via `POST /route`) and it's analyzed (category, difficulty, structured-
-output requirement — transparent heuristics, not a validated classifier),
-routed by an explicit, ordered set of rules, executed against the selected
-model, and logged in full — request, routing rationale, response, latency,
-tokens, cost. Every current rule is derived from V0's mock-provider
-baseline (`experiments/results/v0-mock-baseline.json`) and says so in its
-rationale; no real (non-mock) provider has been measured yet, so treat the
-rules as an evidenced starting point, not a validated finding. See
+V2 complete: Switchyard no longer trusts its first routing decision
+blindly. A routed request is analyzed, routed by explicit rules (with a
+heuristic, explicitly-not-calibrated confidence label), executed, and
+*validated* — a content-level check inferred from the request itself
+(recomputing simple math, checking a response against an explicit label
+list, parsing JSON). A validation failure or a provider error escalates
+to a stronger model, bounded so it can never loop. Every step is recorded
+in a system-level request trace (never model reasoning) visible in the
+Playground and Request History.
+
+This closed two real V1 failures — verified on the live pipeline, not
+assumed: the literal V1 bug prompt (`"What is -8 + 15?"`) now escalates
+and self-corrects. One V1 failure (a classification response that didn't
+match any label) is **not** fixed by V2, and the README won't pretend
+otherwise — see `docs/case-study/EXPERIMENTS.md` for both results, honestly
+reported. Every routing rule and validator is still mock-provider
+evidence only; no real (non-mock) provider has been measured yet. See
 `PROJECT_STATE.md` for what's completed and what's next, and
-`docs/case-study/` — especially `DECISIONS.md` and
-`FAILURES_AND_LESSONS.md` — for the reasoning and the real routing
-limitations found during verification.
+`docs/case-study/` — especially `DECISIONS.md`, `EXPERIMENTS.md`, and
+`FAILURES_AND_LESSONS.md` — for the full reasoning.
 
 ## Architecture direction
 
@@ -112,10 +119,14 @@ curl -X POST http://localhost:8000/route \
   -d '{"prompt": "What is 17 * 6?"}'
 ```
 
-The response includes the request analysis, the routing decision (model,
-provider, rationale), and the execution result. `GET /requests` lists
-every routed request; `backend/app/routing/rules.py` is the one place
-routing rules are configured.
+The response includes the request analysis, the routing decision
+(model, provider, confidence, rationale), whether it escalated, the
+validated execution result, and the full event trace. `GET /requests`
+lists every routed request; `GET /analytics` summarizes escalation rate,
+validation outcomes, cost, and latency across all of them.
+`backend/app/routing/rules.py` is the one place routing rules and
+escalation targets are configured; `backend/app/evaluation/validation.py`
+is where response validation is defined.
 
 ### Adding a benchmark task
 
