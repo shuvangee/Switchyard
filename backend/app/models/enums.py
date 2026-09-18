@@ -41,3 +41,25 @@ class EvaluationStatus(str, Enum):
 class RunStatus(str, Enum):
     RUNNING = "running"
     COMPLETED = "completed"
+
+
+class ValidationStatus(str, Enum):
+    """Outcome of validating a *live* routed response (V2). Distinct from
+    EvaluationStatus, which grades a benchmark task against a pre-authored
+    expected_output — validation has no ground truth to compare against,
+    only structural/content checks inferred from the request itself.
+    """
+
+    NOT_VALIDATED = "not_validated"  # no applicable automated check
+    PASSED = "passed"
+    FAILED = "failed"
+
+
+class ConfidenceLevel(str, Enum):
+    """A heuristic label on the router's own analysis, not a statistically
+    calibrated probability. See docs/case-study/DECISIONS.md.
+    """
+
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
