@@ -106,3 +106,62 @@ than relying on attribute-name matching. General lesson: `metadata` (and a
 handful of other SQLAlchemy-reserved names) needs a different column name
 at the ORM layer even when it's the most natural field name for the
 domain/API.
+
+## 2026-09-18 — Word-count difficulty estimation misroutes negative-number math
+
+**What was tried:** V1's request analyzer estimates difficulty purely from
+prompt word count (see `DECISIONS.md`). "What is -8 + 15?" is 5 words, so
+it's estimated `easy` and routed to `mock-fast-v1` under the
+easy-deterministic-to-fast rule.
+
+**Why it didn't work:** `mock-fast-v1`'s "basic" math heuristic only
+recognizes positive integers (this was already known from V0 — see the
+"chained math" entry above); it reads "-8 + 15" as "8 + 15" and answers
+`23`, not `7`. Word count has no relationship to *numeric* complexity, so
+the one thing that actually determines whether this specific model gets
+the answer right — a leading minus sign — is invisible to the difficulty
+estimator entirely. Confirmed live: routing the identical arithmetic
+problem with more words around it ("Please carefully work through this
+arithmetic problem... what is negative eight plus fifteen, i.e. -8 + 15?")
+crosses the word-count threshold into `medium`, correctly routes to
+`mock-accurate-v1`, and gets `7` — the *only* reason it's now correct is
+that the rephrasing happened to be longer, not that the router understood
+anything about the math.
+
+**What changed:** Nothing — documented deliberately rather than patched.
+A quick fix (e.g. "math + contains a minus sign → hard") would just be
+teaching the analyzer MockProvider's specific internals again, which
+`DECISIONS.md` already rejected once for the same reason: it would stop
+meaning anything the moment a real provider replaces the mock. This is a
+real, load-bearing limitation of V1: an explainable rule-based router is
+still only as good as the difficulty signal feeding it, and V1's signal is
+genuinely weak. Recorded here as the concrete argument for V2 (confidence/
+escalation, which can catch a wrong answer after the fact instead of
+requiring a perfect prediction beforehand).
+
+## 2026-09-18 — Mock classification heuristic doesn't generalize to Playground phrasing
+
+**What was tried:** Routing a freeform Playground request — "Classify the
+sentiment of this review as positive, negative, or neutral: I absolutely
+love this, it is great." — through the router.
+
+**Why it didn't work:** Routing itself was correct (category=
+classification, difficulty=easy, model=mock-fast-v1, exactly per the
+evidence-based rule). But the response was the generic fallback string
+("[mock:basic] Response to prompt: ...") instead of an actual label,
+because `MockProvider._try_classification` only recognizes the literal
+phrase `"one of: X, Y, Z"` (matching how the V0 benchmark tasks are
+worded) — "as positive, negative, or neutral" doesn't match that pattern,
+so the classification heuristic silently declines and falls through.
+
+**What changed:** Nothing, and this is a different kind of limitation than
+the one above — worth distinguishing clearly. The *router* made a
+perfectly reasonable, well-evidenced decision; the *mock provider's* own
+naive heuristic just wasn't built to handle phrasing beyond the curated
+benchmark set it was designed against (documented already in `mock.py`'s
+module docstring). It's a preexisting, known constraint of the mock
+surfacing in a new context (freeform input) rather than a new bug. Real
+providers won't have this specific failure mode (they don't need
+"one of:" phrasing to classify sentiment) — but it's a reminder that
+Playground responses routed to the mock provider will generally look
+worse on open-ended phrasing than the curated benchmark tasks do.

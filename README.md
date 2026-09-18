@@ -31,14 +31,19 @@ The project is built incrementally rather than as a single large system:
 
 ## Current status
 
-V0 complete: Switchyard is a working model performance lab. You can
-define benchmark tasks, run them against multiple models (a deterministic
-mock provider by default; a real OpenAI adapter if `OPENAI_API_KEY` is
-set), and inspect latency, token usage, estimated cost, and evaluation
-results per task/model pair through the API and frontend. No routing
-logic exists yet — V0's job is measuring raw model performance, not
-deciding between models. See `PROJECT_STATE.md` for what's been completed
-and what's next, and `docs/case-study/` for the reasoning behind it.
+V1 complete: Switchyard now routes. Submit a request in the Playground (or
+via `POST /route`) and it's analyzed (category, difficulty, structured-
+output requirement — transparent heuristics, not a validated classifier),
+routed by an explicit, ordered set of rules, executed against the selected
+model, and logged in full — request, routing rationale, response, latency,
+tokens, cost. Every current rule is derived from V0's mock-provider
+baseline (`experiments/results/v0-mock-baseline.json`) and says so in its
+rationale; no real (non-mock) provider has been measured yet, so treat the
+rules as an evidenced starting point, not a validated finding. See
+`PROJECT_STATE.md` for what's completed and what's next, and
+`docs/case-study/` — especially `DECISIONS.md` and
+`FAILURES_AND_LESSONS.md` — for the reasoning and the real routing
+limitations found during verification.
 
 ## Architecture direction
 
@@ -96,6 +101,21 @@ curl -X POST http://localhost:8000/experiments \
   -H "Content-Type: application/json" \
   -d '{"task_ids": ["math-001"], "model_config_ids": ["mock-fast-v1", "mock-accurate-v1"]}'
 ```
+
+### Routing a request
+
+Open `http://localhost:3000/playground`, or via the API directly:
+
+```bash
+curl -X POST http://localhost:8000/route \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "What is 17 * 6?"}'
+```
+
+The response includes the request analysis, the routing decision (model,
+provider, rationale), and the execution result. `GET /requests` lists
+every routed request; `backend/app/routing/rules.py` is the one place
+routing rules are configured.
 
 ### Adding a benchmark task
 
