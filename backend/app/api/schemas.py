@@ -153,6 +153,12 @@ class RouteRequest(BaseModel):
     category_hint: TaskCategory | None = None
 
 
+class TraceEventOut(BaseModel):
+    event_type: str
+    detail: str
+    timestamp: str
+
+
 class RequestLogOut(BaseModel):
     id: str
     prompt: str
@@ -161,11 +167,17 @@ class RequestLogOut(BaseModel):
     difficulty: str
     structured_output_required: bool
     estimated_input_tokens: int
+    confidence: str
+    initial_model_config_id: str
     selected_model_config_id: str
     selected_provider: str
     router_version: str
     rationale: str
     matched_rule: str | None
+    escalated: bool
+    attempt_count: int
+    validation_status: str
+    validation_detail: str | None
     status: str
     response_text: str | None
     error_message: str | None
@@ -173,6 +185,7 @@ class RequestLogOut(BaseModel):
     input_tokens: int | None
     output_tokens: int | None
     estimated_cost_usd: float | None
+    trace_events: list[TraceEventOut]
     created_at: datetime
 
     @classmethod
@@ -185,11 +198,17 @@ class RequestLogOut(BaseModel):
             difficulty=log.difficulty,
             structured_output_required=log.structured_output_required,
             estimated_input_tokens=log.estimated_input_tokens,
+            confidence=log.confidence,
+            initial_model_config_id=log.initial_model_config_id,
             selected_model_config_id=log.selected_model_config_id,
             selected_provider=log.selected_provider,
             router_version=log.router_version,
             rationale=log.rationale,
             matched_rule=log.matched_rule,
+            escalated=log.escalated,
+            attempt_count=log.attempt_count,
+            validation_status=log.validation_status,
+            validation_detail=log.validation_detail,
             status=log.status,
             response_text=log.response_text,
             error_message=log.error_message,
@@ -197,6 +216,7 @@ class RequestLogOut(BaseModel):
             input_tokens=log.input_tokens,
             output_tokens=log.output_tokens,
             estimated_cost_usd=log.estimated_cost_usd,
+            trace_events=[TraceEventOut(**event) for event in log.trace_events],
             created_at=log.created_at,
         )
 
@@ -206,8 +226,11 @@ class RequestLogSummary(BaseModel):
     prompt_preview: str
     category: str
     difficulty: str
+    initial_model_config_id: str
     selected_model_config_id: str
+    escalated: bool
     status: str
+    validation_status: str
     latency_ms: float | None
     estimated_cost_usd: float | None
     created_at: datetime
@@ -220,9 +243,28 @@ class RequestLogSummary(BaseModel):
             prompt_preview=preview,
             category=log.category,
             difficulty=log.difficulty,
+            initial_model_config_id=log.initial_model_config_id,
             selected_model_config_id=log.selected_model_config_id,
+            escalated=log.escalated,
             status=log.status,
+            validation_status=log.validation_status,
             latency_ms=log.latency_ms,
             estimated_cost_usd=log.estimated_cost_usd,
             created_at=log.created_at,
         )
+
+
+class RoutingAnalytics(BaseModel):
+    """Live-computed from request_logs — never a fixed snapshot."""
+
+    total_requests: int
+    initial_model_counts: dict[str, int]
+    final_model_counts: dict[str, int]
+    escalation_count: int
+    escalation_rate: float | None
+    provider_error_count: int
+    avg_latency_ms: float | None
+    total_cost_usd: float | None
+    validation_passed: int
+    validation_failed: int
+    validation_not_validated: int

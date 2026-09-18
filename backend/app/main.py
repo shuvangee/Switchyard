@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.analytics import router as analytics_router
 from app.api.benchmarks import router as benchmarks_router
 from app.api.experiments import router as experiments_router
 from app.api.health import router as health_router
@@ -57,6 +58,7 @@ app.include_router(benchmarks_router)
 app.include_router(model_configs_router)
 app.include_router(experiments_router)
 app.include_router(routing_router)
+app.include_router(analytics_router)
 
 
 @app.get("/")
