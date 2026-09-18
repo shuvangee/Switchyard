@@ -1,0 +1,86 @@
+"""Centralized model registry and provider factory.
+
+This is the one place model names/config live — no other module should
+hard-code a model or provider name.
+"""
+
+from dataclasses import dataclass, field
+from typing import Any
+
+from app.core.config import Settings, get_settings
+from app.providers.base import Provider
+from app.providers.mock import MockProvider
+from app.providers.openai_provider import OpenAIProvider
+
+
+@dataclass(frozen=True)
+class ModelConfig:
+    id: str
+    provider: str
+    model_id: str
+    display_name: str
+    enabled: bool
+    input_cost_per_1k: float
+    output_cost_per_1k: float
+    capabilities: dict[str, Any] = field(default_factory=dict)
+
+
+def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
+    """Build the list of configured models.
+
+    A function rather than a module-level constant so enabling/disabling
+    real providers reflects current settings (useful in tests, which
+    construct their own Settings rather than relying on process env vars).
+    """
+    settings = settings or get_settings()
+    return [
+        ModelConfig(
+            id="mock-fast-v1",
+            provider="mock",
+            model_id="mock-fast-v1",
+            display_name="Mock Fast",
+            enabled=True,
+            input_cost_per_1k=0.0001,
+            output_cost_per_1k=0.0002,
+            capabilities={"notes": "Simulated small/cheap model: basic skill level, low latency."},
+        ),
+        ModelConfig(
+            id="mock-accurate-v1",
+            provider="mock",
+            model_id="mock-accurate-v1",
+            display_name="Mock Accurate",
+            enabled=True,
+            input_cost_per_1k=0.003,
+            output_cost_per_1k=0.006,
+            capabilities={"notes": "Simulated large/capable model: higher latency and cost."},
+        ),
+        ModelConfig(
+            id="mock-flaky-v1",
+            provider="mock",
+            model_id="mock-flaky-v1",
+            display_name="Mock Flaky",
+            enabled=True,
+            input_cost_per_1k=0.0002,
+            output_cost_per_1k=0.0004,
+            capabilities={"notes": "Simulated unreliable endpoint: ~25% simulated error rate."},
+        ),
+        ModelConfig(
+            id="openai-gpt-4o-mini",
+            provider="openai",
+            model_id="gpt-4o-mini",
+            display_name="GPT-4o mini",
+            enabled=bool(settings.openai_api_key),
+            input_cost_per_1k=0.00015,
+            output_cost_per_1k=0.0006,
+            capabilities={"notes": "Real provider; disabled unless OPENAI_API_KEY is set."},
+        ),
+    ]
+
+
+def get_provider(name: str, settings: Settings | None = None) -> Provider:
+    settings = settings or get_settings()
+    if name == "mock":
+        return MockProvider()
+    if name == "openai":
+        return OpenAIProvider(settings.openai_api_key)
+    raise ValueError(f"unknown provider: {name!r}")
