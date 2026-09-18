@@ -31,10 +31,14 @@ The project is built incrementally rather than as a single large system:
 
 ## Current status
 
-Project bootstrap. The repository structure, tooling, and documentation
-conventions are in place; no routing, benchmarking, provider integration,
-or evaluation logic exists yet. See `PROJECT_STATE.md` for the current
-objective and what's been completed.
+V0 complete: Switchyard is a working model performance lab. You can
+define benchmark tasks, run them against multiple models (a deterministic
+mock provider by default; a real OpenAI adapter if `OPENAI_API_KEY` is
+set), and inspect latency, token usage, estimated cost, and evaluation
+results per task/model pair through the API and frontend. No routing
+logic exists yet — V0's job is measuring raw model performance, not
+deciding between models. See `PROJECT_STATE.md` for what's been completed
+and what's next, and `docs/case-study/` for the reasoning behind it.
 
 ## Architecture direction
 
@@ -66,7 +70,9 @@ pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 ```
 
-Visit `http://localhost:8000/health`.
+Visit `http://localhost:8000/health` or `http://localhost:8000/docs`.
+Benchmark tasks and the model registry are synced into a local SQLite
+database (`backend/switchyard.db`) automatically on startup.
 
 ### Frontend
 
@@ -76,13 +82,33 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:3000`.
+Visit `http://localhost:3000`. Requires the backend running at the URL in
+`NEXT_PUBLIC_API_BASE_URL` (defaults to `http://localhost:8000`).
+
+### Running an experiment
+
+With both servers running, open `http://localhost:3000/experiments`,
+select one or more benchmark tasks and models, and start a run — or via
+the API directly:
+
+```bash
+curl -X POST http://localhost:8000/experiments \
+  -H "Content-Type: application/json" \
+  -d '{"task_ids": ["math-001"], "model_config_ids": ["mock-fast-v1", "mock-accurate-v1"]}'
+```
+
+### Adding a benchmark task
+
+Add a JSON file to `benchmarks/tasks/` (filename must match the task's
+`id`) and restart the backend — see `benchmarks/README.md` for the schema.
 
 ### Environment variables
 
 Copy `.env.example` to `.env` (backend) and/or `frontend/.env.local` as
-needed. No API keys are required for local development — mock providers
-(added in V0) run without paid API usage.
+needed. No API keys are required for local development — the mock
+provider (three models: fast/cheap, slow/accurate, flaky) runs without any
+paid API usage. Setting `OPENAI_API_KEY` enables the real OpenAI adapter
+in the model registry; without it, that model is listed but disabled.
 
 ## Contributing / working on this repo
 

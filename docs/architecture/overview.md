@@ -1,7 +1,8 @@
 # Architecture overview
 
-Status: bootstrap. This describes what exists right now, not the eventual
-full system — that grows incrementally alongside `PROJECT_STATE.md`.
+Status: V0 (model performance lab). This describes what exists right now,
+not the eventual full system — that grows incrementally alongside
+`PROJECT_STATE.md`.
 
 ## Repository shape
 
@@ -24,25 +25,30 @@ links them together.
 `backend/app/` is organized by responsibility rather than by feature, since
 the responsibilities are stable even as features are added:
 
-- `api/` — HTTP route definitions only (thin controllers).
-- `core/` — configuration and cross-cutting concerns (settings, logging).
-- `models/` — data models / ORM schema.
-- `providers/` — one adapter per AI provider (and a mock provider) behind a
-  shared interface, so routing/evaluation code is never coupled to a
-  specific vendor SDK.
-- `routing/` — routing strategies behind a shared interface, so a
-  rule-based strategy (V1) and a learned strategy (V3) can be swapped and
-  compared without touching call sites.
-- `evaluation/` — scoring of model responses, independent of which
-  provider or routing strategy produced them.
-- `experiments/` — orchestrates a benchmark run against a chosen provider
-  set and routing strategy, and records the result.
-- `db/` — persistence, SQLite initially.
-
-Only `api/health.py`, `core/config.py`, and `main.py` currently contain
-real logic. Everything else is a stub with a docstring describing its
-future responsibility — see `PROJECT_STATE.md` for what is actually
-implemented.
+- `api/` — HTTP route definitions (`benchmarks.py`, `model_configs.py`,
+  `experiments.py`), plus request/response schemas kept separate from the
+  ORM layer (`schemas.py`).
+- `core/` — configuration (`config.py`) and cross-cutting helpers
+  (`time.py`).
+- `models/` — `BenchmarkTaskORM`/`BenchmarkTaskSchema`, `ModelConfigORM`,
+  `ExperimentRunORM`/`ModelExecutionORM`, and the shared enums
+  (`TaskCategory`, `TaskDifficulty`, `EvaluationType`, `ExecutionStatus`,
+  `EvaluationStatus`, `RunStatus`).
+- `providers/` — the `Provider` interface, `MockProvider` (three
+  deterministic profiles), `OpenAIProvider` (real, disabled without a
+  key), pure cost estimation (`pricing.py`), and the single model registry
+  (`registry.py`) that builds `ModelConfig` objects and syncs them into
+  the `model_configs` table.
+- `evaluation/` — `exact_match`, `classification_label`, `valid_json`, and
+  `manual` strategies behind one `evaluate()` dispatcher.
+- `experiments/` — `loader.py` (validates benchmark task files and syncs
+  them into the DB) and `runner.py` (`run_experiment()`/`execute_single()`).
+- `db/` — SQLAlchemy engine/session (`session.py`), the declarative base
+  (`base.py`), and table creation (`init_db.py`).
+- `routing/` — still an empty stub. V0 deliberately measures raw model
+  performance with no routing decisions yet; this is where a rule-based
+  strategy (V1) and a learned strategy (V3) will live behind a shared
+  interface, swappable without touching call sites.
 
 ## Why these choices
 
