@@ -8,7 +8,7 @@ def test_route_easy_math_via_api(api_client):
     assert body["status"] == "success"
     assert body["response_text"] == "102"
     assert body["rationale"] != ""
-    assert body["router_version"] == "v1"
+    assert body["router_version"] == "v2"
 
 
 def test_route_with_explicit_category_hint(api_client):

@@ -16,7 +16,17 @@ from dataclasses import dataclass
 from app.models.enums import TaskCategory, TaskDifficulty
 from app.routing.analyzer import RequestAnalysis
 
-ROUTER_VERSION = "v1"
+ROUTER_VERSION = "v2"
+
+# Where escalation goes when a model's response fails validation, the
+# provider errors, or routing confidence was too low to trust the normal
+# rule. mock-accurate-v1 has no entry — it's already the strongest
+# configured model, so escalation from it simply has nowhere to go
+# (enforced as a bounded stop, not an error — see routing/service.py).
+ESCALATION_TARGETS: dict[str, str] = {
+    "mock-fast-v1": "mock-accurate-v1",
+    "mock-flaky-v1": "mock-accurate-v1",
+}
 
 # The 4 categories V0 can actually score (exact_match / classification_label
 # / valid_json). The other 4 use evaluation_type=manual and were never

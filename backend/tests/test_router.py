@@ -1,9 +1,9 @@
 import pytest
 
-from app.models.enums import TaskCategory, TaskDifficulty
+from app.models.enums import ConfidenceLevel, TaskCategory, TaskDifficulty
 from app.providers.registry import ModelConfig
 from app.routing.analyzer import RequestAnalysis
-from app.routing.router import RoutingError, decide_route
+from app.routing.router import RoutingError, _apply_low_confidence_override, decide_route, estimate_confidence
 from app.routing.rules import ROUTER_VERSION
 
 
@@ -83,3 +83,77 @@ def test_decision_carries_analysis_fields_through():
     assert decision.difficulty == TaskDifficulty.MEDIUM
     assert decision.structured_output_required is True
     assert decision.category_source == "explicit"
+
+
+# --- confidence ---
+
+
+def test_confidence_high_for_explicit_category():
+    analysis = _analysis(TaskCategory.MATH, TaskDifficulty.EASY)  # category_source="explicit"
+    assert estimate_confidence(analysis) == ConfidenceLevel.HIGH
+
+
+def test_confidence_medium_for_heuristic_specific_category():
+    analysis = RequestAnalysis(
+        category=TaskCategory.MATH,
+        category_source="heuristic",
+        difficulty=TaskDifficulty.EASY,
+        structured_output_required=False,
+        estimated_input_tokens=10,
+    )
+    assert estimate_confidence(analysis) == ConfidenceLevel.MEDIUM
+
+
+def test_confidence_low_for_heuristic_reasoning_fallback():
+    analysis = RequestAnalysis(
+        category=TaskCategory.REASONING,
+        category_source="heuristic",
+        difficulty=TaskDifficulty.EASY,
+        structured_output_required=False,
+        estimated_input_tokens=10,
+    )
+    assert estimate_confidence(analysis) == ConfidenceLevel.LOW
+
+
+def test_decide_route_reports_its_confidence():
+    decision = decide_route(_analysis(TaskCategory.MATH, TaskDifficulty.EASY), FULL_REGISTRY)
+    assert decision.confidence == ConfidenceLevel.HIGH  # explicit hint
+
+
+# --- low-confidence escalation override (mechanism-level tests) ---
+#
+# Under DEFAULT_RULES this override is currently a no-op in production:
+# the only category that produces LOW confidence (REASONING, when the
+# analyzer finds no signal at all) already routes to mock-accurate-v1,
+# which has no further escalation target. Tested directly here so the
+# mechanism itself is verified — it will matter the moment a category
+# that produces LOW confidence maps to a non-top-tier model.
+
+
+def test_low_confidence_override_swaps_to_escalation_target_when_available():
+    model_id, rationale, rule_name = _apply_low_confidence_override(
+        "mock-fast-v1", "original rationale", "some-rule", FULL_REGISTRY
+    )
+    assert model_id == "mock-accurate-v1"
+    assert "original rationale" in rationale
+    assert "confidence is low" in rationale.lower()
+    assert rule_name == "some-rule+low-confidence-escalation"
+
+
+def test_low_confidence_override_falls_back_when_target_unavailable():
+    registry = dict(FULL_REGISTRY)
+    registry["mock-accurate-v1"] = _model("mock-accurate-v1", enabled=False)
+    model_id, rationale, rule_name = _apply_low_confidence_override(
+        "mock-fast-v1", "original rationale", "some-rule", registry
+    )
+    assert model_id == "mock-fast-v1"
+    assert rationale == "original rationale"
+    assert rule_name == "some-rule"
+
+
+def test_low_confidence_override_no_op_when_no_escalation_target_configured():
+    model_id, rationale, rule_name = _apply_low_confidence_override(
+        "mock-accurate-v1", "original rationale", "some-rule", FULL_REGISTRY
+    )
+    assert model_id == "mock-accurate-v1"
+    assert rationale == "original rationale"
