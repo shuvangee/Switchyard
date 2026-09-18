@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     # Mainly used by tests to point at a fixture directory instead.
     benchmarks_dir: str | None = None
 
+    cors_allow_origins: list[str] = ["http://localhost:3000"]
+
 
 @lru_cache
 def get_settings() -> Settings:
