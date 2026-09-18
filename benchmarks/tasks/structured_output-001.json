@@ -1,0 +1,10 @@
+{
+  "id": "structured_output-001",
+  "title": "Extract a person record as JSON",
+  "category": "structured_output",
+  "difficulty": "easy",
+  "prompt": "Return a JSON object with keys \"name\" and \"age\" for: John is 30 years old.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"name\": \"\", \"age\": 0}",
+  "metadata": { "tags": ["json"] }
+}

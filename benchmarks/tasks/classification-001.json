@@ -1,0 +1,10 @@
+{
+  "id": "classification-001",
+  "title": "Sentiment classification - clear positive",
+  "category": "classification",
+  "difficulty": "easy",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: This product is absolutely great, I love it.",
+  "evaluation_type": "classification_label",
+  "expected_output": "positive",
+  "metadata": { "tags": ["sentiment"] }
+}

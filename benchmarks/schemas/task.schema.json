@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Switchyard benchmark task",
+  "description": "Documentation of the shape validated by backend/app/models/benchmark.py:BenchmarkTaskSchema. Not enforced programmatically (Pydantic already validates at load time) — kept here as a stable, tool-agnostic reference.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "title", "category", "difficulty", "prompt", "evaluation_type"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique task id. Must match the JSON file's name (without extension)."
+    },
+    "title": { "type": "string" },
+    "category": {
+      "type": "string",
+      "enum": [
+        "extraction",
+        "classification",
+        "summarization",
+        "math",
+        "reasoning",
+        "coding",
+        "debugging",
+        "structured_output"
+      ]
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["easy", "medium", "hard"]
+    },
+    "prompt": {
+      "type": "string",
+      "description": "The exact input sent to each model."
+    },
+    "evaluation_type": {
+      "type": "string",
+      "enum": ["exact_match", "classification_label", "valid_json", "manual"]
+    },
+    "expected_output": {
+      "type": ["string", "null"],
+      "description": "Required for exact_match/classification_label. For valid_json, an optional JSON object literal whose keys are checked against the response's keys. Omit or null for manual."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Free-form: tags, notes, anything not needed by evaluation logic."
+    }
+  }
+}

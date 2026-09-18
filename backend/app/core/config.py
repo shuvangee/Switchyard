@@ -22,10 +22,14 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./switchyard.db"
 
     # Provider API keys are optional in development: the mock provider
-    # (added in a later version) does not require any of these.
+    # does not require any of these.
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
     google_api_key: str | None = None
+
+    # Overrides the default (repo-root)/benchmarks/tasks directory.
+    # Mainly used by tests to point at a fixture directory instead.
+    benchmarks_dir: str | None = None
 
 
 @lru_cache

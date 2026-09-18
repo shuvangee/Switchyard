@@ -1,0 +1,10 @@
+{
+  "id": "classification-002",
+  "title": "Sentiment classification - subtle negative",
+  "category": "classification",
+  "difficulty": "medium",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: The service was disappointing and the shipment arrived slower than expected.",
+  "evaluation_type": "classification_label",
+  "expected_output": "negative",
+  "metadata": { "tags": ["sentiment", "subtle"] }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "extraction-002",
+  "title": "Extract the correct email among a distractor",
+  "category": "extraction",
+  "difficulty": "medium",
+  "prompt": "Extract the correct contact email address from the following text. For general inquiries see distractor@example.com. For support, reply to: real-target@example.com.",
+  "evaluation_type": "exact_match",
+  "expected_output": "real-target@example.com",
+  "metadata": { "tags": ["email", "distractor"] }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "structured_output-002",
+  "title": "Extract a place record as JSON",
+  "category": "structured_output",
+  "difficulty": "medium",
+  "prompt": "Return a JSON object with keys \"city\" and \"population\" for: Springfield has a population of 45000 people.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"city\": \"\", \"population\": 0}",
+  "metadata": { "tags": ["json"] }
+}
