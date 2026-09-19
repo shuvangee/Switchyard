@@ -205,3 +205,30 @@ this version's `EXPERIMENTS.md` entries is genuine but mock-only; V2's
 validation/escalation *mechanism* is real, but whether it's solving a
 real problem (vs. a problem specific to how MockProvider is built) is
 still unmeasured.
+
+## 2026-09-19 — Second real provider adapter: Gemini
+
+Added `GeminiProvider` (`backend/app/providers/gemini_provider.py`),
+following the exact shape of `OpenAIProvider` — plain `httpx` call to
+Google's `generateContent` endpoint, `ProviderError` on any failure,
+disabled without `GOOGLE_API_KEY`. Registered as `gemini-2.0-flash` in
+`registry.py` (pricing marked provisional — converted from Google's
+published rate, not yet confirmed against a real bill). Added
+`test_providers_gemini.py` (mirrors `test_providers_openai.py`, no real
+network calls — `httpx.post` monkeypatched) and two registry tests for
+the enabled/disabled-without-key behavior. 136 backend tests pass (up
+from 130).
+
+This closes the last structural gap before running real experiments: the
+codebase can now, in principle, call two different real providers behind
+the same interface, which is the actual point of the adapter pattern (see
+`DECISIONS.md`, "Provider adapter interface before any real provider
+integration"). No real Gemini call has been made in this environment —
+only mocked HTTP responses are exercised by tests. Running it for real
+still requires: a valid `GOOGLE_API_KEY` in a local, gitignored `.env`,
+and a pre-run cost estimate (request count × Gemini's per-token pricing)
+before spending anything, per CLAUDE.md's cost-constraint rule.
+
+Next: unchanged from V2's close — the highest-value step is still running
+real experiments (now possible against OpenAI or Gemini) and looking at
+what the results actually show before touching V3.

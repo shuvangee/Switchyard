@@ -25,9 +25,22 @@ def test_openai_model_enabled_with_key():
     assert openai_model.enabled is True
 
 
+def test_gemini_model_disabled_without_key():
+    registry = get_model_registry(Settings(google_api_key=None))
+    gemini_model = next(m for m in registry if m.provider == "gemini")
+    assert gemini_model.enabled is False
+
+
+def test_gemini_model_enabled_with_key():
+    registry = get_model_registry(Settings(google_api_key="fake-key"))
+    gemini_model = next(m for m in registry if m.provider == "gemini")
+    assert gemini_model.enabled is True
+
+
 def test_get_provider_returns_provider_instance():
     assert isinstance(get_provider("mock"), Provider)
     assert isinstance(get_provider("openai", Settings(openai_api_key="sk-fake")), Provider)
+    assert isinstance(get_provider("gemini", Settings(google_api_key="fake-key")), Provider)
 
 
 def test_get_provider_rejects_unknown_name():

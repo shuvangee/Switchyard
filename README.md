@@ -140,6 +140,8 @@ needed. No API keys are required for local development — the mock
 provider (three models: fast/cheap, slow/accurate, flaky) runs without any
 paid API usage. Setting `OPENAI_API_KEY` enables the real OpenAI adapter
 in the model registry; without it, that model is listed but disabled.
+Setting `GOOGLE_API_KEY` likewise enables the real Gemini adapter
+(`gemini-2.0-flash`).
 
 ## Contributing / working on this repo
 

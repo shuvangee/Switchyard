@@ -415,3 +415,32 @@ with escalation rate. Flagged here rather than silently shipped;
 revisit by deciding the semantics explicitly, then summing across
 `trace_events`' `model_completed` entries (or a per-attempt cost/latency
 list) rather than only the winning attempt.
+
+## 2026-09-19 — Second real provider adapter: Gemini, same pattern as OpenAI
+
+**Decision:** Added `GeminiProvider` (`backend/app/providers/gemini_provider.py`),
+calling Google's `generateContent` REST endpoint directly with `httpx`,
+gated on `GOOGLE_API_KEY` exactly like `OpenAIProvider` is gated on
+`OPENAI_API_KEY`. Registered as `gemini-2.0-flash` in the model registry.
+
+**Alternatives considered:** The `google-generativeai`/`google-genai` SDK.
+
+**Reasoning:** Same as the earlier OpenAI decision (see "httpx over the
+official OpenAI SDK") — the adapter needs exactly one operation
+(generate text, read back usage counts), `httpx` is already a dependency,
+and the `Provider` interface already isolates the rest of the app from
+this choice. Building a second real adapter on the same pattern as the
+first, rather than a different one, keeps the provider layer consistent
+and interview-defensible ("every real adapter is a thin httpx call behind
+the same interface," not "each vendor gets its own bespoke approach").
+
+**Trade-offs accepted:** Same as the OpenAI adapter — no SDK conveniences,
+and this adapter has not yet been called against the real API in this
+environment (verified only via mocked HTTP calls in
+`test_providers_gemini.py`, mirroring `test_providers_openai.py`).
+Pricing (`input_cost_per_1k=0.0001`, `output_cost_per_1k=0.0004`) is
+Google's published `gemini-2.0-flash` rate converted to per-1k tokens —
+config, not a measurement — and is marked provisional in the model
+registry's `capabilities.notes` until a real experiment run confirms it
+against an actual bill; per CLAUDE.md, no cost/latency number derived
+from it goes in `METRICS.md`/`EXPERIMENTS.md` until that happens.

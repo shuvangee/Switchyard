@@ -13,6 +13,7 @@ from app.core.config import Settings, get_settings
 from app.core.time import utcnow
 from app.models.model_config import ModelConfigORM
 from app.providers.base import Provider
+from app.providers.gemini_provider import GeminiProvider
 from app.providers.mock import MockProvider
 from app.providers.openai_provider import OpenAIProvider
 
@@ -78,6 +79,23 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
             output_cost_per_1k=0.0006,
             capabilities={"notes": "Real provider; disabled unless OPENAI_API_KEY is set."},
         ),
+        ModelConfig(
+            id="gemini-2.0-flash",
+            provider="gemini",
+            model_id="gemini-2.0-flash",
+            display_name="Gemini 2.0 Flash",
+            enabled=bool(settings.google_api_key),
+            input_cost_per_1k=0.0001,
+            output_cost_per_1k=0.0004,
+            capabilities={
+                "notes": (
+                    "Real provider; disabled unless GOOGLE_API_KEY is set. "
+                    "Pricing is Google's published per-1M-token rate converted to "
+                    "per-1k and not yet verified against a real invoice — treat as "
+                    "provisional until a real experiment run confirms actual cost."
+                )
+            },
+        ),
     ]
 
 
@@ -87,6 +105,8 @@ def get_provider(name: str, settings: Settings | None = None) -> Provider:
         return MockProvider()
     if name == "openai":
         return OpenAIProvider(settings.openai_api_key)
+    if name == "gemini":
+        return GeminiProvider(settings.google_api_key)
     raise ValueError(f"unknown provider: {name!r}")
 
 
