@@ -14,6 +14,11 @@ from app.providers.base import Provider, ProviderError, ProviderResult
 
 _GENERATE_CONTENT_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
+# Caps a single response so cost/latency stay bounded and estimable ahead of
+# a run — without this, an open-ended prompt (reasoning/coding/debugging/
+# summarization) has no limit on how much a real model can generate.
+_MAX_OUTPUT_TOKENS = 512
+
 
 class GeminiProvider(Provider):
     name = "gemini"
@@ -33,7 +38,10 @@ class GeminiProvider(Provider):
                     "x-goog-api-key": self._api_key,
                     "Content-Type": "application/json",
                 },
-                json={"contents": [{"parts": [{"text": prompt}]}]},
+                json={
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {"maxOutputTokens": _MAX_OUTPUT_TOKENS},
+                },
                 timeout=30.0,
             )
             response.raise_for_status()
