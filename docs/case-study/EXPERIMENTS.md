@@ -20,11 +20,12 @@ placeholder numbers, no illustrative examples with made-up data.
 
 ## Status
 
-All entries below use the mock provider (no `OPENAI_API_KEY` configured
-in this environment) — stated on every entry, not just here. They measure
-how the Switchyard *pipeline* behaves (routing, validation, escalation
-mechanics), not real-model quality/cost/latency. Real-provider experiments
-are the next objective in `PROJECT_STATE.md`.
+Entries before 2026-09-20 all use the mock provider (no `OPENAI_API_KEY`
+configured in this environment) — stated on every such entry, not just
+here. They measure how the Switchyard *pipeline* behaves (routing,
+validation, escalation mechanics), not real-model quality/cost/latency.
+The 2026-09-20 entry below is the first entry backed by a real (non-mock)
+provider call.
 
 ## Log
 
@@ -125,3 +126,55 @@ answer," not "correct." Worth remembering when reading `validation_passed`
 in `RoutingAnalytics` — it is not a proxy for "the router got it right,"
 except for categories (math, JSON) where passing genuinely implies
 correctness.
+
+## 2026-09-20 — Switchyard's first real-provider experiment: Gemini 3.6 Flash
+
+**Configuration:** `scripts/run_gemini_baseline.py`, the 12 existing
+benchmark tasks (unchanged from V0), one real model —
+`gemini-3.6-flash` via `GeminiProvider` — no mock models in this run,
+no routing (this bypasses `POST /route` entirely and calls the
+provider/experiment layer directly, same as `run_v0_baseline.py` does).
+Output capped at 512 tokens/call. Full raw output:
+`experiments/results/gemini-3.6-flash-baseline.json`.
+
+**Getting here took three model ids** (`gemini-2.0-flash` and
+`gemini-2.5-flash` both 404'd — retired for this account) — see
+`FAILURES_AND_LESSONS.md` for the full story. The initial 12-call attempt
+also hit `429 Too Many Requests` on 5 tasks (a real free-tier rate limit,
+not a bug) and one `503 Service Unavailable` (a transient server error) —
+both resolved by retrying with backoff, now built into the script.
+
+**Result — measured, not estimated:**
+
+| | Value |
+|---|---|
+| Tasks run | 12/12 |
+| Succeeded (after retries) | 12/12 |
+| Failed permanently | 0 |
+| Total input tokens | 334 |
+| Total output tokens | 353 |
+| Total real cost | **$0.00157** |
+| Avg latency (successful calls) | ~3,700 ms |
+| Deterministically-scored tasks marked `correct` by the evaluator | 3/8 |
+| Deterministically-scored tasks manually verified as substantively correct | 8/8 |
+
+**Interpretation:** The gap between "3/8 marked correct" and "8/8 actually
+correct" is not a Gemini quality finding — every deterministically-scored
+task got a right answer. It is an evaluator-design finding: `exact_match`
+and `valid_json` (`backend/app/evaluation/strategies.py`) require an exact
+whole-string match / a fence-free JSON payload respectively, which
+`MockProvider` was built to produce and a real conversational model is
+not. See `FAILURES_AND_LESSONS.md` (2026-09-20) for the full per-task
+breakdown and why this isn't patched in this session.
+
+On cost and latency, this single real run is honestly not comparable yet
+to the V0 mock baseline's per-model numbers — that comparison needs the
+mock and a real model run under the *same* evaluator and ideally the same
+task set repeated more than once (avg latency here, ~3.7s, is 5-70x every
+mock profile's latency, which is expected and not itself a finding: mock
+latency was simulated, this is a real network round trip). What this run
+does establish, for the first time in this project: the Gemini adapter
+works end to end against the live API, real token/cost accounting flows
+correctly through the existing experiment pipeline unmodified, and the
+project's evaluation layer has a real, previously-invisible bug that
+every future real-provider comparison needs to account for.

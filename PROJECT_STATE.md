@@ -10,10 +10,11 @@ V2 — validation, confidence, and escalation. Complete.
 
 ## Current objective
 
-None in progress. Before V3 (learned routing), the highest-value step is
-still what V1 and V2 both deferred: running real experiments against a
-real provider. Every routing rule and every V2 result is still
-mock-provider evidence only.
+None in progress. Switchyard's first real-provider experiment (Gemini)
+is now done — see Completed below. V3 (learned routing) is still not
+started: the 2026-09-19 data-readiness review found the existing dataset
+insufficient, and this one 12-task real-provider run, while genuine, does
+not change that conclusion by itself (see `docs/case-study/EXPERIMENTS.md`).
 
 ## Completed
 
@@ -71,18 +72,47 @@ Playground/Request History/Models frontend.
   requests only record the final attempt's latency/cost, not the sum
   across attempts — see `docs/case-study/DECISIONS.md`).
 
+**First real-provider experiment (2026-09-20):**
+- Added `GeminiProvider` (`backend/app/providers/gemini_provider.py`) and
+  `scripts/run_gemini_baseline.py`, which runs the 12 benchmark tasks
+  against exactly one real model_config_id (not mixed with mock data),
+  with retry-with-backoff on rate limits.
+- Getting a working model id took three attempts: `gemini-2.0-flash` and
+  `gemini-2.5-flash` both 404'd (retired for this key/account); Google's
+  own error message named `gemini-3.6-flash` as the replacement, which is
+  what's registered and was actually run. See
+  `docs/case-study/FAILURES_AND_LESSONS.md`.
+- Result: **12/12 tasks succeeded** (after 2 rate-limit retries + 1 manual
+  retry on a transient 503), real cost **$0.00157**, real tokens (334 in /
+  353 out), real latency (~3.7s avg — 5-70x slower than any mock profile).
+  Full data: `experiments/results/gemini-3.6-flash-baseline.json`.
+- **The important finding is not about Gemini — it's about V0's
+  evaluators.** Manually reading all 12 responses: all 8
+  deterministically-scored tasks got a substantively correct answer, but
+  the automated evaluator (`evaluate_exact_match`/`evaluate_valid_json`)
+  only marked 3/8 `correct`. The other 5 are false negatives — a real
+  model answers in full sentences and wraps JSON in markdown fences;
+  `exact_match` requires the whole normalized string to match, and
+  `evaluate_valid_json` calls `json.loads()` on the raw response with no
+  fence-stripping. Both were implicitly written against MockProvider's
+  terse, unwrapped output style. See `FAILURES_AND_LESSONS.md` for the
+  full breakdown — not fixed here, since fixing it was out of scope for
+  this run (see that entry for why fixing it isn't a small edit).
+
 ## Not implemented (by design, at this stage)
 
-Learned routing (V3), production analytics/observability polish (V4).
-No real experiment has been run against a real (non-mock) provider yet —
-every V2 result is genuine but mock-only, stated as such throughout.
+Learned routing (V3), production analytics/observability polish (V4). One
+real-provider run now exists (12 tasks, Gemini 3.6 Flash) but is a single
+run against one model — not enough by itself to redo the V3
+data-readiness verdict.
 
 ## Next objective
 
-Run real experiments against at least one real provider (requires an API
-key and awareness of cost before running) and record genuine results.
-That data should inform whether V1/V2's rules and validators hold up —
-and specifically whether the fast/accurate split and the escalation
-pattern observed here are real properties of model capability or
-artifacts of how MockProvider is built — before V3 (learned routing) is
-designed.
+Two candidates, not yet prioritized against each other:
+1. Fix V0's evaluation strategies to tolerate a real model's response
+   style (strip markdown fences, use substring/semantic matching instead
+   of whole-string equality) — otherwise every future real-provider
+   number this project reports understates real quality.
+2. Run more real-provider experiments (more tasks, repeated trials, the
+   4 never-graded categories, possibly a second real provider) to build
+   toward enough data for the V3 data-readiness bar.

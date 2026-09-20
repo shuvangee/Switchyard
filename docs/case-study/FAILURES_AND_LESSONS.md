@@ -165,3 +165,82 @@ providers won't have this specific failure mode (they don't need
 "one of:" phrasing to classify sentiment) — but it's a reminder that
 Playground responses routed to the mock provider will generally look
 worse on open-ended phrasing than the curated benchmark tasks do.
+
+## 2026-09-20 — Three model ids before one actually worked
+
+**What was tried:** Registered `gemini-2.0-flash` in the model registry
+based on general knowledge of Gemini's model lineup, then tried to run
+the 12-task real-provider experiment against it.
+
+**Why it didn't work:** `404 Not Found`. A live call to Gemini's
+`/v1beta/models` listing endpoint showed this key's account has no
+`gemini-2.0-flash` at all — it isn't in the available model list. Picked
+`gemini-2.5-flash` from that list instead (also cross-checked pricing via
+web search, since `ai.google.dev` is blocked by this environment's
+network policy) and tried again: also `404`, this time with an actual
+Google error body explaining why — `"This model models/gemini-2.5-flash
+is no longer available to new users. Please update your code to use
+models/gemini-3.6-flash."` Registered `gemini-3.6-flash` and it worked.
+
+**What changed:** Nothing structural — this is a lesson about external
+dependency drift, not a code bug. Both failed attempts cost genuinely
+$0.00 (a 404 happens before any token is generated or billed), so no
+budget was wasted chasing the wrong name. General lesson: for a
+fast-moving model API, don't trust a model id from training
+knowledge or even a recent web search as ground truth — verify against a
+live models-list call first, and when a real call 404s, read the error
+body before guessing again; Google's own error named the exact
+replacement model on the second attempt.
+
+## 2026-09-20 — V0's evaluators undercount a real model's correctness
+
+**What was tried:** Ran the 12 benchmark tasks for real against
+`gemini-3.6-flash` (Switchyard's first real-provider experiment — see
+`docs/case-study/EXPERIMENTS.md` for the full run). Of the 8 tasks with a
+deterministic evaluator (`exact_match`/`valid_json`), only 3 were marked
+`correct`.
+
+**Why it didn't work:** Reading the actual response text for the other 5,
+every one of them contains a substantively correct answer:
+- `math-001`: `"17 * 6 = **102**"` (102 is correct) → marked `incorrect`.
+- `math-002`: `"-8 + 15 = **7**"` (7 is correct) → marked `incorrect`.
+- `extraction-002`: `"The correct contact email address is
+  **real-target@example.com**."` (exactly the expected address) → marked
+  `incorrect`.
+- `structured_output-001`/`002`: valid JSON with exactly the right keys,
+  wrapped in a ```` ```json ... ``` ```` markdown fence → marked
+  `incorrect`.
+
+`evaluate_exact_match` (`backend/app/evaluation/strategies.py`) requires
+the *entire* normalized response to equal the expected string — it has no
+tolerance for a real model restating the question or adding a sentence
+around the answer. `evaluate_valid_json` calls `json.loads()` directly on
+the raw response with no markdown-fence stripping, so a real model's
+completely standard habit of wrapping code/JSON in a fence makes every
+such response fail parsing outright, regardless of whether the JSON
+inside is correct. Both strategies were written and tested exclusively
+against `MockProvider`, which was deliberately built to emit bare,
+unformatted answers (`"7"`, `{"name": "John", "age": 30}` with no fence)
+— so this bug was invisible for the entire V0/V1/V2 mock-only evidence
+base and only surfaced the moment a real, conversational model was used.
+
+**What changed:** Nothing yet — recorded as a scope boundary of this
+experiment, not fixed in this session, since fixing it responsibly means
+deciding a real tolerance policy (does "contains the exact substring"
+count? does a fenced JSON block get extracted before parsing? what about
+`102` vs `"102.0"`?) rather than a one-line patch, and this run's purpose
+was the smallest practical step toward getting real data, not revising
+V0's evaluation design. Flagged as the top item in
+`PROJECT_STATE.md`'s next objective.
+
+**Why this matters more than the specific bug:** This directly confirms
+the leakage/bias concern raised in the 2026-09-19 V3 data-readiness
+review — that V0's only "quality" labels are a function of MockProvider's
+specific output shape, not of real correctness. Now proven, not just
+argued: the raw automated score for this real run (3/8 correct) is not
+an honest measure of `gemini-3.6-flash`'s actual quality (manually
+verified: 8/8 substantively correct) — it is a measure of how closely a
+model's formatting habits happen to match MockProvider's. Any future
+real-provider comparison that trusts `evaluation_status` as-is without
+this correction will silently make every conversational real model look
+far worse than a terse one, regardless of actual answer quality.

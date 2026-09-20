@@ -232,3 +232,56 @@ before spending anything, per CLAUDE.md's cost-constraint rule.
 Next: unchanged from V2's close — the highest-value step is still running
 real experiments (now possible against OpenAI or Gemini) and looking at
 what the results actually show before touching V3.
+
+## 2026-09-20 — First real-provider experiment, and what it actually revealed
+
+Ran the 12 benchmark tasks for real against Gemini for the first time —
+the "smallest practical step" toward real data, deliberately not V3.
+Verified the adapter statically first (key loads, provider enabled), then
+got explicit cost approval before any live call, per CLAUDE.md's
+cost-visibility rule.
+
+Getting a working model id took three tries. `gemini-2.0-flash` (what was
+registered on 2026-09-19) 404'd — a live models-list call showed it isn't
+in this account's model set at all. Switched to `gemini-2.5-flash`
+(cross-checked pricing via web search, since `ai.google.dev` is blocked
+by this environment's network policy) — also 404'd, this time with
+Google's own error naming the replacement: `gemini-3.6-flash`. That one
+worked. Each dead end cost genuinely $0.00 (a 404 happens before any
+generation), and each swap was committed as its own `fix:` — see git log.
+Also fixed, found in passing: `.gitignore` never actually matched the
+project's real dev-DB filename (`switchyard.db`), only a generic
+`db.sqlite3` pattern that doesn't apply here.
+
+Added retry-with-backoff to `scripts/run_gemini_baseline.py` after the
+first full run hit real rate limits (`429`, 5/12 tasks) and one transient
+`503` — genuine real-provider failure modes the mock never modeled, since
+it doesn't simulate rate limiting. Final result: **12/12 tasks succeeded**,
+$0.00157 real cost, 334 input / 353 output tokens, ~3.7s avg latency.
+Saved permanently at `experiments/results/gemini-3.6-flash-baseline.json`
+(committed, not a throwaway dev DB — this one is meant to persist).
+
+The actual headline finding wasn't about Gemini. Of the 8
+deterministically-scored tasks, the automated evaluator marked only 3
+`correct` — reading the raw response text, all 8 were substantively
+right. `evaluate_exact_match` needs the whole response to equal the
+expected string with no tolerance for a real model restating the
+question; `evaluate_valid_json` calls `json.loads()` on the raw response
+with no markdown-fence stripping, so a completely normal
+` ```json ... ``` ` wrapper fails parsing outright. Both were written and
+tested exclusively against `MockProvider`'s deliberately bare output
+style, and the bug was invisible through all of V0/V1/V2 because nothing
+but the mock had ever been evaluated. This is exactly the leakage
+argument from the 2026-09-19 V3 data-readiness review, now demonstrated
+with a real model rather than argued abstractly: V0's "quality" scores are
+a function of matching the mock's format, not of real correctness. Full
+per-task detail in `FAILURES_AND_LESSONS.md`; not fixed in this session
+since it wasn't this run's scope, and fixing it responsibly needs a real
+tolerance policy decided deliberately, not a one-line patch.
+
+Next: fix the evaluator format-sensitivity (top of `PROJECT_STATE.md`'s
+next objective) before trusting any future real-provider quality number —
+otherwise every real model will look artificially worse than the mock,
+which would be a materially misleading basis for V3 or any routing
+decision. Running more real-provider data is still valuable but shouldn't
+happen on top of a known-broken scorer.
