@@ -96,23 +96,40 @@ Playground/Request History/Models frontend.
   `evaluate_valid_json` calls `json.loads()` on the raw response with no
   fence-stripping. Both were implicitly written against MockProvider's
   terse, unwrapped output style. See `FAILURES_AND_LESSONS.md` for the
-  full breakdown — not fixed here, since fixing it was out of scope for
-  this run (see that entry for why fixing it isn't a small edit).
+  full breakdown.
+
+**Evaluator fix (2026-09-20):** `evaluate_exact_match` now falls back to a
+word-bounded token match when whole-string equality fails;
+`evaluate_valid_json` now retries once with a markdown code fence
+stripped. Verified with no new API calls — `scripts/rescore_evaluator_fix.py`
+re-scored all 48 existing rows (36 mock, regenerated deterministically via
+`MockProvider`; 12 Gemini, using the real saved raw response text): exactly
+the 5 diagnosed rows changed, all `incorrect` → `correct`, zero
+regressions. Gemini's deterministically-scored tasks now read 8/8 correct.
+140 backend tests pass (up from 136). Full detail in
+`FAILURES_AND_LESSONS.md` (2026-09-20 entry, updated in place).
 
 ## Not implemented (by design, at this stage)
 
 Learned routing (V3), production analytics/observability polish (V4). One
 real-provider run now exists (12 tasks, Gemini 3.6 Flash) but is a single
-run against one model — not enough by itself to redo the V3
-data-readiness verdict.
+run against one model — not enough by itself to clear the V3
+data-readiness bar. Asked directly whether to proceed to V3 anyway
+(2026-09-20); decided to hold and collect more real data first rather than
+train on a dataset already diagnosed as insufficient three separate times.
 
 ## Next objective
 
-Two candidates, not yet prioritized against each other:
-1. Fix V0's evaluation strategies to tolerate a real model's response
-   style (strip markdown fences, use substring/semantic matching instead
-   of whole-string equality) — otherwise every future real-provider
-   number this project reports understates real quality.
-2. Run more real-provider experiments (more tasks, repeated trials, the
-   4 never-graded categories, possibly a second real provider) to build
-   toward enough data for the V3 data-readiness bar.
+Collect enough real data to responsibly revisit the V3 data-readiness
+verdict, in roughly this order:
+1. Expand the benchmark task set — a dozen-plus tasks per category, not
+   1-2, so a held-out split is possible.
+2. Grade the 4 categories that have never had a quality label
+   (coding, debugging, reasoning, summarization) — manual review or a
+   defined, documented judge — now that the evaluator bug is fixed and
+   won't contaminate the new labels.
+3. Run more real-provider experiments once the task set is expanded
+   (repeated trials for variance; a second real provider for
+   cross-provider signal).
+Not yet scoped or costed — propose a concrete plan and get sign-off
+(including any real API cost) before executing.
