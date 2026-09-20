@@ -1,11 +1,15 @@
-"""Run every enabled model against every benchmark task and report a
+"""Run every mock model against every benchmark task and report a
 per-category/difficulty breakdown.
 
 This is the evidence V1's routing rules (backend/app/routing/rules.py) are
-based on. It uses whatever providers are currently enabled in the model
-registry — with no OPENAI_API_KEY configured, that means the mock
-provider only, so treat this as an illustrative baseline about how the
-*system* behaves, not a claim about any real model's performance.
+based on. It is scoped to provider == "mock" explicitly — not "whatever is
+currently enabled" — so it stays a free, illustrative baseline about how
+the *system* behaves regardless of which real provider keys are present in
+.env. (An earlier version filtered by `enabled` instead, which silently
+started making real paid calls the moment a real provider key existed —
+see docs/case-study/FAILURES_AND_LESSONS.md, 2026-09-20.) For a real
+provider's baseline, use scripts/run_gemini_baseline.py instead, which
+requires an explicit model id and shows cost before running.
 
 Run from the repo root:
 
@@ -39,7 +43,7 @@ def main() -> None:
     sync_benchmark_tasks(session, tasks)
     sync_model_configs(session)
 
-    models = [m for m in get_model_registry() if m.enabled]
+    models = [m for m in get_model_registry() if m.provider == "mock"]
     task_by_id = {t.id: t for t in tasks}
 
     run = run_experiment(

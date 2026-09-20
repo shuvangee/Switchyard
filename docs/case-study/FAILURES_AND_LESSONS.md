@@ -264,3 +264,53 @@ MockProvider's. Any future real-provider comparison built on
 `evaluation_status` from before this fix would have silently made every
 conversational real model look far worse than a terse one, regardless of
 actual answer quality. Fixed now, before any such comparison was made.
+
+## 2026-09-20 — run_v0_baseline.py silently made real, unapproved paid calls
+
+**What was tried:** While expanding the benchmark set from 12 to 44 tasks
+(Phase 1 of the post-evaluator-fix data-collection plan), re-ran
+`scripts/run_v0_baseline.py` to regenerate the mock baseline against the
+larger task set — intended as a free, mock-only refresh, same as every
+prior use of this script.
+
+**Why it didn't work:** The script selected models via
+`[m for m in get_model_registry() if m.enabled]` — its own docstring even
+said this "means the mock provider only" *given* no `OPENAI_API_KEY` is
+configured. That assumption was true when the script was written (V1) but
+had silently gone false since V2's Gemini work: `backend/.env` now has a
+real `GOOGLE_API_KEY`, so `gemini-3.6-flash` is `enabled=True` in the
+registry. The script ran all 44 tasks against it without any cost
+estimate or approval — the exact thing CLAUDE.md's cost-visibility rule
+and this project's whole real-provider workflow (verify config → estimate
+cost → get approval → run) exists to prevent. It also overwrote the
+historical `v0-mock-baseline.json` with a run that mixed real Gemini rows
+into what's supposed to be a mock-only record.
+
+**Actual damage:** Real, but small. 44 Gemini calls were attempted; 42
+hit `429` rate limits and errored before generating anything (this
+script has no retry logic, unlike `run_gemini_baseline.py`); exactly 2
+succeeded, for a **total real cost of $0.0000585**. Caught immediately —
+`git diff --stat` showed the tracked results file had ballooned by ~2,000
+lines, which is what prompted investigating before doing anything else.
+The corrupted file was restored via `git checkout --` (safe: it was
+regenerable committed history, not uncommitted work) and the real mock
+baseline was regenerated cleanly after the fix below.
+
+**What changed:** `run_v0_baseline.py` now filters by
+`m.provider == "mock"` explicitly, not `m.enabled` — its job is to be a
+free, mock-only baseline regardless of which real provider keys exist in
+`.env`, so it should never again depend on an assumption about what
+happens to be configured. Docstring updated to say so directly and to
+point at `run_gemini_baseline.py` for an actual real-provider baseline,
+which already requires an explicit model id and shows cost before running.
+
+**General lesson:** A cost-safety property that depends on "no one has
+configured a real key yet" is not a real safety property — it quietly
+expires the moment the project's own stated next objective (get a real
+provider working) succeeds. Any script whose safety assumption is
+"nothing real is enabled right now" needs to instead be explicit about
+what it runs, the moment more than one provider type can plausibly be
+enabled in the same environment. Also: `git diff --stat` on a "small"
+change is a cheap, effective tripwire for exactly this kind of silent
+scope expansion — worth checking before assuming a script run did what
+was intended, not just after something looks wrong.
