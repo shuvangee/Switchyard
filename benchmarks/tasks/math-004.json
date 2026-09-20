@@ -1,0 +1,10 @@
+{
+  "id": "math-004",
+  "title": "Two-digit multiplication",
+  "category": "math",
+  "difficulty": "medium",
+  "prompt": "What is 23 * 4?",
+  "evaluation_type": "exact_match",
+  "expected_output": "92",
+  "metadata": { "tags": ["arithmetic"] }
+}

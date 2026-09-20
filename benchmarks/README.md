@@ -36,8 +36,14 @@ later, routing decisions.
 
 ## Current task set
 
-12 sample tasks across all 8 categories (extraction, classification,
-summarization, math, reasoning, coding, debugging, structured_output),
-spanning easy/medium/hard — enough to exercise every evaluation type and
-demonstrate the system end to end. This is a starter set for exercising
-the pipeline, not a comprehensive benchmark suite.
+44 tasks across all 8 categories (extraction, classification,
+summarization, math, reasoning, coding, debugging, structured_output;
+5-6 tasks each), spanning easy/medium/hard. Expanded from the original 12
+(2026-09-20, Phase 1 of the post-V2 data-collection plan — see
+`PROJECT_STATE.md`) specifically to give the 4 auto-scored categories
+(math, extraction, classification, structured_output) enough tasks to
+mean something beyond 1-2 examples, and to give the 4 manual categories
+(coding, debugging, reasoning, summarization) a written grading rubric in
+`metadata.notes` for each task, since those were never graded before.
+Still far short of what a learned router would need — see the V3
+data-readiness reviews in `docs/case-study/` for what "enough" means.

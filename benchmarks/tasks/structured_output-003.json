@@ -1,0 +1,10 @@
+{
+  "id": "structured_output-003",
+  "title": "Structured extraction - product and price",
+  "category": "structured_output",
+  "difficulty": "easy",
+  "prompt": "Return a JSON object with keys \"product\" and \"price\" for: The item called Widget costs 25 dollars.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"product\": \"\", \"price\": 0}",
+  "metadata": { "tags": ["json"] }
+}

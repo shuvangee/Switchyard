@@ -1,0 +1,13 @@
+{
+  "id": "reasoning-002",
+  "title": "Modus tollens puzzle",
+  "category": "reasoning",
+  "difficulty": "easy",
+  "prompt": "If it is raining, Sam brings an umbrella. Sam did not bring an umbrella today. Is it raining? Explain your reasoning.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["logic"],
+    "notes": "Correct answer: No. By modus tollens, since bringing an umbrella is required if it's raining, and Sam did not bring one, it cannot be raining. Graded manually."
+  }
+}

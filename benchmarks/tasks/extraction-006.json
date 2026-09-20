@@ -1,0 +1,10 @@
+{
+  "id": "extraction-006",
+  "title": "Email extraction - cued, no distractor",
+  "category": "extraction",
+  "difficulty": "easy",
+  "prompt": "For help with your order, please contact: maria@example.io.",
+  "evaluation_type": "exact_match",
+  "expected_output": "maria@example.io",
+  "metadata": { "tags": ["email"] }
+}

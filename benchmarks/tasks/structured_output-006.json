@@ -1,0 +1,10 @@
+{
+  "id": "structured_output-006",
+  "title": "Structured extraction - title and count",
+  "category": "structured_output",
+  "difficulty": "medium",
+  "prompt": "Return a JSON object with keys \"title\" and \"count\" for: The article titled Deep Learning Basics has 12 comments.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"title\": \"\", \"count\": 0}",
+  "metadata": { "tags": ["json"] }
+}

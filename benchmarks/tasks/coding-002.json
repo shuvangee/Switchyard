@@ -1,0 +1,13 @@
+{
+  "id": "coding-002",
+  "title": "Write an is_even function",
+  "category": "coding",
+  "difficulty": "easy",
+  "prompt": "Write a Python function `is_even(n)` that returns True if n is even, False otherwise.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python"],
+    "notes": "Correct: returns `n % 2 == 0` (or equivalent). No sandboxed execution; graded manually."
+  }
+}

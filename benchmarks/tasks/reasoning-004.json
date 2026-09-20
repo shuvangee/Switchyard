@@ -1,0 +1,13 @@
+{
+  "id": "reasoning-004",
+  "title": "Pet ownership logic puzzle",
+  "category": "reasoning",
+  "difficulty": "hard",
+  "prompt": "Three friends, Alex, Bailey, and Casey, each own a different pet: a cat, a dog, and a fish. Alex does not own the cat or the fish. Bailey does not own the fish. Who owns which pet? Explain your reasoning.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["logic"],
+    "notes": "Correct answer: Alex owns the dog (excluded from cat and fish, so dog is the only option left). Bailey owns the cat (excluded from fish, and dog is already taken by Alex). Casey owns the fish (the only pet remaining). Graded manually."
+  }
+}

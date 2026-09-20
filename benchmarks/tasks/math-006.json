@@ -1,0 +1,10 @@
+{
+  "id": "math-006",
+  "title": "Subtraction with decimals",
+  "category": "math",
+  "difficulty": "hard",
+  "prompt": "What is 7.5 - 2.25?",
+  "evaluation_type": "exact_match",
+  "expected_output": "5.25",
+  "metadata": { "tags": ["arithmetic", "decimal"] }
+}

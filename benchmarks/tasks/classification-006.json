@@ -1,0 +1,10 @@
+{
+  "id": "classification-006",
+  "title": "Sentiment classification - clear positive, support context",
+  "category": "classification",
+  "difficulty": "medium",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: Customer support was incredibly helpful and fixed my issue within minutes.",
+  "evaluation_type": "classification_label",
+  "expected_output": "positive",
+  "metadata": { "tags": ["sentiment"] }
+}

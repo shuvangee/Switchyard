@@ -1,0 +1,13 @@
+{
+  "id": "reasoning-003",
+  "title": "Train catch-up puzzle",
+  "category": "reasoning",
+  "difficulty": "medium",
+  "prompt": "A train leaves the station at 2:00pm traveling at 60 mph. Another train leaves the same station at 3:00pm traveling at 90 mph in the same direction. At what time does the second train catch up to the first? Explain your reasoning.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["logic", "math-reasoning"],
+    "notes": "Correct answer: 5:00pm. At 3:00pm the first train has a 60-mile head start; the second train closes the gap at 30 mph (90-60), taking 2 hours (60/30) to catch up: 3:00pm + 2h = 5:00pm. Graded manually."
+  }
+}

@@ -118,18 +118,35 @@ data-readiness bar. Asked directly whether to proceed to V3 anyway
 (2026-09-20); decided to hold and collect more real data first rather than
 train on a dataset already diagnosed as insufficient three separate times.
 
-## Next objective
+## Data-collection plan (in progress)
 
-Collect enough real data to responsibly revisit the V3 data-readiness
-verdict, in roughly this order:
-1. Expand the benchmark task set — a dozen-plus tasks per category, not
-   1-2, so a held-out split is possible.
-2. Grade the 4 categories that have never had a quality label
-   (coding, debugging, reasoning, summarization) — manual review or a
-   defined, documented judge — now that the evaluator bug is fixed and
-   won't contaminate the new labels.
-3. Run more real-provider experiments once the task set is expanded
-   (repeated trials for variance; a second real provider for
-   cross-provider signal).
-Not yet scoped or costed — propose a concrete plan and get sign-off
-(including any real API cost) before executing.
+Collecting enough real data to responsibly revisit the V3 data-readiness
+verdict. Explicitly asked whether to skip ahead to V3 anyway (2026-09-20)
+and decided against it — see "Not implemented" above.
+
+**Phase 1 — expand the benchmark set (done, 2026-09-20):**
+- 12 → 44 tasks (4 new per category, all 8 categories now have 5-6 tasks
+  spanning easy/medium/hard, up from 1-2).
+- The 4 auto-scored categories (math, extraction, classification,
+  structured_output) got real `expected_output` values.
+- The 4 manual categories (coding, debugging, reasoning, summarization)
+  got a written grading rubric in each task's `metadata.notes` — chosen
+  over an LLM-judge specifically so a human (not another model) makes the
+  first real quality calls for these categories.
+- Mock baseline regenerated against all 44 tasks — free, no real cost.
+- **Incident during this phase:** regenerating the mock baseline via
+  `scripts/run_v0_baseline.py` also made 44 real, unapproved Gemini calls
+  (real cost: $0.0000585) because the script selected models by
+  `enabled`, not by provider — an assumption that broke the moment a real
+  API key existed. Fixed (now scoped to `provider == "mock"` explicitly)
+  and the corrupted results file was restored from git. Full write-up:
+  `docs/case-study/FAILURES_AND_LESSONS.md` (2026-09-20).
+
+**Phase 2 — manual grading of the 4 previously-unscored categories:**
+Not started. Needs real responses generated for the new + existing tasks
+in these categories (mock and/or real provider), then the user grading
+each against its rubric.
+
+**Phase 3 — re-run real-provider experiments on the expanded set:**
+Not started. Needs a cost estimate and approval before any call, same as
+the first Gemini run.

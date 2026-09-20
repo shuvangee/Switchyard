@@ -1,0 +1,10 @@
+{
+  "id": "extraction-004",
+  "title": "Email extraction - one distractor before the cued address",
+  "category": "extraction",
+  "difficulty": "medium",
+  "prompt": "For general inquiries email info@example.org, but please reply to: support-team@example.com for order status.",
+  "evaluation_type": "exact_match",
+  "expected_output": "support-team@example.com",
+  "metadata": { "tags": ["email", "distractor"] }
+}

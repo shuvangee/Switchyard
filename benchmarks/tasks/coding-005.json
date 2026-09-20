@@ -1,0 +1,13 @@
+{
+  "id": "coding-005",
+  "title": "Write a unique_items function preserving order",
+  "category": "coding",
+  "difficulty": "medium",
+  "prompt": "Write a Python function `unique_items(lst)` that returns a list of the unique items in lst, preserving their original order.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python"],
+    "notes": "Correct: preserves first-occurrence order — e.g. via a seen-set with an explicit loop, or dict.fromkeys(lst). A bare `list(set(lst))` is wrong because set order is not guaranteed to match input order. Graded manually."
+  }
+}

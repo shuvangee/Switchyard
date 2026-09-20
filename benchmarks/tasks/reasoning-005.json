@@ -1,0 +1,13 @@
+{
+  "id": "reasoning-005",
+  "title": "Fruit purchase system of equations",
+  "category": "reasoning",
+  "difficulty": "medium",
+  "prompt": "A shop sells apples for $2 each and oranges for $3 each. Jordan spent $17 total and bought 6 pieces of fruit. How many apples and how many oranges did Jordan buy? Explain your reasoning.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["logic", "math-reasoning"],
+    "notes": "Correct answer: 1 apple and 5 oranges. Solving a + o = 6 and 2a + 3o = 17 gives a = 1, o = 5 (check: 2(1) + 3(5) = 17). Graded manually."
+  }
+}

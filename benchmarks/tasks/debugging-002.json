@@ -1,0 +1,13 @@
+{
+  "id": "debugging-002",
+  "title": "Find the bug in an average function",
+  "category": "debugging",
+  "difficulty": "medium",
+  "prompt": "The following Python function is supposed to return the average of a list of numbers but crashes on an empty list.\n\ndef average(nums):\n    return sum(nums) / len(nums)\n\nIdentify the bug and explain the fix.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "debugging"],
+    "notes": "Bug: division by zero when nums is empty. Fix should check for the empty case first (e.g. `if not nums: return 0`) before dividing. Graded manually."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "summarization-005",
+  "title": "Summarize a login flow redesign update",
+  "category": "summarization",
+  "difficulty": "medium",
+  "prompt": "Summarize the following update in one sentence: The mobile app's login flow was redesigned to use biometric authentication by default, reducing average login time from 8 seconds to 2 seconds in early testing.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization"],
+    "notes": "Correct: mentions the biometric redesign and the login-time improvement (8s to 2s). Omitting the change entirely is incorrect; omitting only the specific numbers is a minor deduction, not a failure. Graded manually."
+  }
+}

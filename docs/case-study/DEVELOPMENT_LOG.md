@@ -285,3 +285,49 @@ otherwise every real model will look artificially worse than the mock,
 which would be a materially misleading basis for V3 or any routing
 decision. Running more real-provider data is still valuable but shouldn't
 happen on top of a known-broken scorer.
+
+## 2026-09-20 — Evaluator fix, then V3 reconsidered and held, then Phase 1 of data collection
+
+Fixed the evaluator bug from the entry above: `evaluate_exact_match` now
+falls back to a word-bounded token match when whole-string equality
+fails; `evaluate_valid_json` retries once with a markdown code fence
+stripped. Verified with zero new API calls — `scripts/rescore_evaluator_fix.py`
+regenerated the 36 mock responses (deterministic, not a real call) and
+reused the 12 real Gemini responses already captured, re-scoring all 48
+against the fixed strategies: exactly the 5 diagnosed rows changed,
+`incorrect` → `correct`, zero regressions. 140 tests pass.
+
+Then asked directly to proceed to V3 anyway. Rather than silently comply
+or silently refuse, laid out three concrete options (collect more data
+first; run V3 now as an honest negative-result experiment on the current
+thin data; build V3 infrastructure without training yet) and let the
+decision be made explicitly — chose to collect more data first, keeping
+V3 at zero lines of code, consistent with three separate data-readiness
+reviews this session.
+
+Started that data collection: expanded `benchmarks/tasks/` from 12 to 44
+(4 new tasks per category), with real `expected_output` values for the
+4 auto-scored categories and a written grading rubric in `metadata.notes`
+for the 4 manual categories, since the user chose manual grading over an
+LLM-judge for those. All 44 validated via the real loader before use.
+
+**A real incident happened while regenerating the mock baseline.**
+Re-running `scripts/run_v0_baseline.py` — previously always free, since
+it selected models by `enabled` and no real provider used to be enabled —
+silently made 44 real Gemini calls with no cost estimate or approval,
+because `GOOGLE_API_KEY` now exists in `.env` from the 2026-09-19 work.
+42 calls hit rate limits and errored (no retry logic in this script);
+2 succeeded, for a real cost of $0.0000585. It also overwrote the
+historical `v0-mock-baseline.json` with mixed real/mock data. Caught via
+`git diff --stat` showing a ~2,000-line change before doing anything
+else with the output; restored the file from git (safe — regenerable
+committed history) and fixed the actual bug: the script now filters by
+`provider == "mock"` explicitly rather than `enabled`, so this class of
+mistake can't recur regardless of what gets added to `.env` later. Full
+incident write-up in `FAILURES_AND_LESSONS.md`. Regenerated the mock
+baseline cleanly afterward — 132 rows (44 tasks × 3 mock models), $0 real
+cost, 140 tests still passing.
+
+Next: Phase 2 (manual grading of the 4 previously-unscored categories)
+and Phase 3 (real-provider experiments on the expanded set, cost estimate
+first) are both unstarted.

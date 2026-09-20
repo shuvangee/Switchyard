@@ -1,0 +1,13 @@
+{
+  "id": "summarization-002",
+  "title": "Summarize a short support update",
+  "category": "summarization",
+  "difficulty": "easy",
+  "prompt": "Summarize the following update in one sentence: The support team resolved all outstanding customer tickets and closed out the sprint a day early.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization"],
+    "notes": "Correct: a one-sentence summary capturing both that tickets were resolved and the sprint finished early, with no fabricated details. Graded manually."
+  }
+}
