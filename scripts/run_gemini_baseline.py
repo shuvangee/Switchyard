@@ -17,7 +17,7 @@ Run from the repo root:
 
 import json
 import sys
-from collections import defaultdict
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
@@ -33,8 +33,28 @@ from app.experiments.loader import (  # noqa: E402
 from app.experiments.runner import run_experiment  # noqa: E402
 from app.providers.registry import sync_model_configs  # noqa: E402
 
-MODEL_CONFIG_ID = "gemini-2.5-flash"
-RESULTS_FILENAME = "gemini-2.5-flash-baseline.json"
+MODEL_CONFIG_ID = "gemini-3.6-flash"
+RESULTS_FILENAME = "gemini-3.6-flash-baseline.json"
+MAX_RETRY_ROUNDS = 2
+RETRY_BACKOFF_SECONDS = 20
+
+
+def _to_record(execution, task_by_id) -> dict:
+    task = task_by_id[execution.task_id]
+    return {
+        "task_id": execution.task_id,
+        "category": task.category.value,
+        "difficulty": task.difficulty.value,
+        "evaluation_type": task.evaluation_type.value,
+        "model_config_id": execution.model_config_id,
+        "status": execution.status,
+        "latency_ms": execution.latency_ms,
+        "input_tokens": execution.input_tokens,
+        "output_tokens": execution.output_tokens,
+        "estimated_cost_usd": execution.estimated_cost_usd,
+        "evaluation_status": execution.evaluation_status,
+        "error_message": execution.error_message,
+    }
 
 
 def main() -> None:
@@ -54,33 +74,33 @@ def main() -> None:
         session,
         task_ids=[t.id for t in tasks],
         model_config_ids=[MODEL_CONFIG_ID],
-        name="gemini-2.0-flash-baseline",
+        name=f"{MODEL_CONFIG_ID}-baseline",
     )
+    records_by_task = {e.task_id: _to_record(e, task_by_id) for e in run.executions}
 
-    records = []
-    for execution in run.executions:
-        task = task_by_id[execution.task_id]
-        records.append(
-            {
-                "task_id": execution.task_id,
-                "category": task.category.value,
-                "difficulty": task.difficulty.value,
-                "evaluation_type": task.evaluation_type.value,
-                "model_config_id": execution.model_config_id,
-                "status": execution.status,
-                "latency_ms": execution.latency_ms,
-                "input_tokens": execution.input_tokens,
-                "output_tokens": execution.output_tokens,
-                "estimated_cost_usd": execution.estimated_cost_usd,
-                "evaluation_status": execution.evaluation_status,
-                "error_message": execution.error_message,
-            }
+    # A real provider rate-limits in a way the mock never does — retry only
+    # the failed tasks, with backoff, rather than re-spending on every task.
+    for round_num in range(1, MAX_RETRY_ROUNDS + 1):
+        failed_task_ids = [tid for tid, r in records_by_task.items() if r["status"] != "success"]
+        if not failed_task_ids:
+            break
+        print(f"retry round {round_num}: {len(failed_task_ids)} task(s) failed, waiting {RETRY_BACKOFF_SECONDS}s...")
+        time.sleep(RETRY_BACKOFF_SECONDS)
+        retry_run = run_experiment(
+            session,
+            task_ids=failed_task_ids,
+            model_config_ids=[MODEL_CONFIG_ID],
+            name=f"{MODEL_CONFIG_ID}-baseline-retry-{round_num}",
         )
+        for execution in retry_run.executions:
+            records_by_task[execution.task_id] = _to_record(execution, task_by_id)
+
+    records = [records_by_task[t.id] for t in tasks]
 
     output = {
         "run_id": run.id,
         "created_at": run.created_at.isoformat(),
-        "provider_note": "real Gemini API call (gemini-2.0-flash) — Switchyard's first real-provider experiment",
+        "provider_note": f"real Gemini API call ({MODEL_CONFIG_ID}) — Switchyard's first real-provider experiment",
         "task_count": len(tasks),
         "model_ids": [MODEL_CONFIG_ID],
         "executions": records,

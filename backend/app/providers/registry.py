@@ -80,23 +80,29 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
             capabilities={"notes": "Real provider; disabled unless OPENAI_API_KEY is set."},
         ),
         ModelConfig(
-            id="gemini-2.5-flash",
+            id="gemini-3.6-flash",
             provider="gemini",
-            model_id="gemini-2.5-flash",
-            display_name="Gemini 2.5 Flash",
+            model_id="gemini-3.6-flash",
+            display_name="Gemini 3.6 Flash",
             enabled=bool(settings.google_api_key),
-            input_cost_per_1k=0.0003,
-            output_cost_per_1k=0.0025,
+            input_cost_per_1k=0.00075,
+            output_cost_per_1k=0.00375,
             capabilities={
                 "notes": (
                     "Real provider; disabled unless GOOGLE_API_KEY is set. "
-                    "gemini-2.0-flash (the model first registered here) returned "
-                    "404 for this key/API version and was replaced with "
-                    "gemini-2.5-flash, confirmed available via a live models-list "
-                    "call. Pricing is sourced from third-party aggregators "
-                    "(ai.google.dev is blocked by this environment's network "
-                    "policy) — treat as provisional until verified against a "
-                    "real invoice or Google's own pricing page directly."
+                    "Two prior model ids (gemini-2.0-flash, gemini-2.5-flash) "
+                    "both 404'd against the live API — Google's own error message "
+                    "for the second named gemini-3.6-flash as the current "
+                    "replacement, which is what's registered here. Pricing is "
+                    "sourced from third-party aggregators (ai.google.dev is "
+                    "blocked by this environment's network policy) — introductory "
+                    "rate through 2026-12-31, rising after. Treat as provisional "
+                    "until verified against a real invoice or Google's own pricing "
+                    "page directly. Thinking tokens (this is a reasoning-capable "
+                    "model) bill at the output rate and count against "
+                    "maxOutputTokens, so the adapter's 512-token cap still bounds "
+                    "total cost — but may leave less room for the visible answer "
+                    "on harder prompts."
                 )
             },
         ),
