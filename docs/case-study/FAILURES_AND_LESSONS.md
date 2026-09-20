@@ -224,23 +224,43 @@ unformatted answers (`"7"`, `{"name": "John", "age": 30}` with no fence)
 — so this bug was invisible for the entire V0/V1/V2 mock-only evidence
 base and only surfaced the moment a real, conversational model was used.
 
-**What changed:** Nothing yet — recorded as a scope boundary of this
-experiment, not fixed in this session, since fixing it responsibly means
-deciding a real tolerance policy (does "contains the exact substring"
-count? does a fenced JSON block get extracted before parsing? what about
-`102` vs `"102.0"`?) rather than a one-line patch, and this run's purpose
-was the smallest practical step toward getting real data, not revising
-V0's evaluation design. Flagged as the top item in
-`PROJECT_STATE.md`'s next objective.
+**What changed (fixed 2026-09-20, same day, in a separate deliberate pass —
+not a same-session reflex patch):** Two targeted fixes to
+`backend/app/evaluation/strategies.py`, scoped to exactly the two
+confirmed root causes and nothing else:
+- `evaluate_exact_match` now falls back to a **word-bounded token match**
+  (`\bexpected\b` against the normalized response) when whole-string
+  equality fails — so `"17 * 6 = **102**"` matches expected `"102"`, but
+  expected `"7"` still correctly does *not* match inside `"17"` (verified
+  with a dedicated regression test).
+- `evaluate_valid_json` now retries once with a markdown code fence
+  stripped (` ```json ... ``` `) before giving up on `json.loads()`.
+- `evaluate_classification_label` and the JSON key-comparison logic were
+  left untouched — step 1's diagnosis never implicated them.
+
+**Verification (no new API calls):** Re-scored all 48 existing rows —
+the 36 mock rows via `MockProvider` (a deterministic hash-seeded function
+of `(model_id, prompt)`, so regenerating its output is a pure local
+computation reproducing the original run's exact text, not a new call)
+and the 12 Gemini rows via the actual raw response text already captured
+during the real run. Script: `scripts/rescore_evaluator_fix.py`. Result:
+**exactly the 5 diagnosed Gemini rows changed, all from `incorrect` to
+`correct`; zero regressions** (no row that was `correct` under the old
+evaluator became anything else). All 36 mock rows were unchanged — the
+mock's bare output style was always compatible with the old, stricter
+evaluator, which is itself confirmation of the root cause: the evaluator
+was never wrong for mock-shaped text, only for real-model-shaped text.
+Gemini's deterministically-scored tasks now read **8/8 correct**, matching
+the manual review exactly.
 
 **Why this matters more than the specific bug:** This directly confirms
 the leakage/bias concern raised in the 2026-09-19 V3 data-readiness
-review — that V0's only "quality" labels are a function of MockProvider's
+review — that V0's only "quality" labels were a function of MockProvider's
 specific output shape, not of real correctness. Now proven, not just
-argued: the raw automated score for this real run (3/8 correct) is not
-an honest measure of `gemini-3.6-flash`'s actual quality (manually
-verified: 8/8 substantively correct) — it is a measure of how closely a
-model's formatting habits happen to match MockProvider's. Any future
-real-provider comparison that trusts `evaluation_status` as-is without
-this correction will silently make every conversational real model look
-far worse than a terse one, regardless of actual answer quality.
+argued: the original raw automated score for the Gemini run (3/8 correct)
+was not an honest measure of `gemini-3.6-flash`'s actual quality — it was
+a measure of how closely a model's formatting habits happened to match
+MockProvider's. Any future real-provider comparison built on
+`evaluation_status` from before this fix would have silently made every
+conversational real model look far worse than a terse one, regardless of
+actual answer quality. Fixed now, before any such comparison was made.
