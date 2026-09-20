@@ -80,19 +80,23 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
             capabilities={"notes": "Real provider; disabled unless OPENAI_API_KEY is set."},
         ),
         ModelConfig(
-            id="gemini-2.0-flash",
+            id="gemini-2.5-flash",
             provider="gemini",
-            model_id="gemini-2.0-flash",
-            display_name="Gemini 2.0 Flash",
+            model_id="gemini-2.5-flash",
+            display_name="Gemini 2.5 Flash",
             enabled=bool(settings.google_api_key),
-            input_cost_per_1k=0.0001,
-            output_cost_per_1k=0.0004,
+            input_cost_per_1k=0.0003,
+            output_cost_per_1k=0.0025,
             capabilities={
                 "notes": (
                     "Real provider; disabled unless GOOGLE_API_KEY is set. "
-                    "Pricing is Google's published per-1M-token rate converted to "
-                    "per-1k and not yet verified against a real invoice — treat as "
-                    "provisional until a real experiment run confirms actual cost."
+                    "gemini-2.0-flash (the model first registered here) returned "
+                    "404 for this key/API version and was replaced with "
+                    "gemini-2.5-flash, confirmed available via a live models-list "
+                    "call. Pricing is sourced from third-party aggregators "
+                    "(ai.google.dev is blocked by this environment's network "
+                    "policy) — treat as provisional until verified against a "
+                    "real invoice or Google's own pricing page directly."
                 )
             },
         ),

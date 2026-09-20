@@ -33,8 +33,8 @@ from app.experiments.loader import (  # noqa: E402
 from app.experiments.runner import run_experiment  # noqa: E402
 from app.providers.registry import sync_model_configs  # noqa: E402
 
-MODEL_CONFIG_ID = "gemini-2.0-flash"
-RESULTS_FILENAME = "gemini-2.0-flash-baseline.json"
+MODEL_CONFIG_ID = "gemini-2.5-flash"
+RESULTS_FILENAME = "gemini-2.5-flash-baseline.json"
 
 
 def main() -> None:

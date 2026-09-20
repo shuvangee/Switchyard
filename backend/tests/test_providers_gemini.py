@@ -10,7 +10,7 @@ from app.providers.gemini_provider import GeminiProvider
 def test_raises_without_api_key():
     provider = GeminiProvider(api_key=None)
     with pytest.raises(ProviderError, match="not configured"):
-        provider.generate("gemini-2.0-flash", "hello")
+        provider.generate("gemini-2.5-flash", "hello")
 
 
 def test_normalizes_successful_response(monkeypatch):
@@ -27,7 +27,7 @@ def test_normalizes_successful_response(monkeypatch):
 
     monkeypatch.setattr(httpx, "post", fake_post)
     provider = GeminiProvider(api_key="fake-key")
-    result = provider.generate("gemini-2.0-flash", "hello")
+    result = provider.generate("gemini-2.5-flash", "hello")
 
     assert result.text == "hi there"
     assert result.input_tokens == 5
@@ -44,7 +44,7 @@ def test_raises_on_http_error(monkeypatch):
     monkeypatch.setattr(httpx, "post", fake_post)
     provider = GeminiProvider(api_key="fake-key")
     with pytest.raises(ProviderError, match="Gemini request failed"):
-        provider.generate("gemini-2.0-flash", "hello")
+        provider.generate("gemini-2.5-flash", "hello")
 
 
 def test_raises_on_malformed_response(monkeypatch):
@@ -55,4 +55,4 @@ def test_raises_on_malformed_response(monkeypatch):
     monkeypatch.setattr(httpx, "post", fake_post)
     provider = GeminiProvider(api_key="fake-key")
     with pytest.raises(ProviderError, match="unexpected Gemini response shape"):
-        provider.generate("gemini-2.0-flash", "hello")
+        provider.generate("gemini-2.5-flash", "hello")
