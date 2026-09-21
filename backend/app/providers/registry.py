@@ -14,6 +14,7 @@ from app.core.time import utcnow
 from app.models.model_config import ModelConfigORM
 from app.providers.base import Provider
 from app.providers.gemini_provider import GeminiProvider
+from app.providers.grok_provider import GrokProvider
 from app.providers.mock import MockProvider
 from app.providers.openai_provider import OpenAIProvider
 
@@ -109,6 +110,28 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
                 )
             },
         ),
+        ModelConfig(
+            id="grok-4.1-fast",
+            provider="grok",
+            model_id="grok-4.1-fast",
+            display_name="Grok 4.1 Fast",
+            enabled=bool(settings.xai_api_key),
+            input_cost_per_1k=0.0002,
+            output_cost_per_1k=0.0005,
+            capabilities={
+                "notes": (
+                    "Real provider; disabled unless XAI_API_KEY is set. "
+                    "Model id and pricing are UNVERIFIED — sourced from "
+                    "third-party aggregators (docs.x.ai was not directly "
+                    "checked), which disagreed with each other on xAI's "
+                    "current flagship model name. Given how often "
+                    "gemini-*'s model ids 404'd this same week, treat this "
+                    "id as a best guess pending a live API call the moment "
+                    "a real XAI_API_KEY exists — do not trust it as fact "
+                    "until then."
+                )
+            },
+        ),
     ]
 
 
@@ -120,6 +143,8 @@ def get_provider(name: str, settings: Settings | None = None) -> Provider:
         return OpenAIProvider(settings.openai_api_key)
     if name == "gemini":
         return GeminiProvider(settings.google_api_key)
+    if name == "grok":
+        return GrokProvider(settings.xai_api_key)
     raise ValueError(f"unknown provider: {name!r}")
 
 

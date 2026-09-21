@@ -1,0 +1,53 @@
+"""Real provider adapter: xAI's Grok API (OpenAI-compatible Chat Completions).
+
+Uses `httpx` directly, matching the OpenAI/Gemini adapters — a thin
+adapter, not a wrapper around every SDK feature. Disabled (raises
+ProviderError) whenever no API key is configured, so it never runs by
+accident in local development.
+"""
+
+import time
+
+import httpx
+
+from app.providers.base import Provider, ProviderError, ProviderResult
+
+_CHAT_COMPLETIONS_URL = "https://api.x.ai/v1/chat/completions"
+
+
+class GrokProvider(Provider):
+    name = "grok"
+
+    def __init__(self, api_key: str | None) -> None:
+        self._api_key = api_key
+
+    def generate(self, model_id: str, prompt: str) -> ProviderResult:
+        if not self._api_key:
+            raise ProviderError("Grok provider is not configured (missing XAI_API_KEY)")
+
+        started = time.perf_counter()
+        try:
+            response = httpx.post(
+                _CHAT_COMPLETIONS_URL,
+                headers={"Authorization": f"Bearer {self._api_key}"},
+                json={"model": model_id, "messages": [{"role": "user", "content": prompt}]},
+                timeout=30.0,
+            )
+            response.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise ProviderError(f"Grok request failed: {exc}") from exc
+        latency_ms = (time.perf_counter() - started) * 1000
+
+        data = response.json()
+        try:
+            text = data["choices"][0]["message"]["content"]
+        except (KeyError, IndexError) as exc:
+            raise ProviderError(f"unexpected Grok response shape: {exc}") from exc
+
+        usage = data.get("usage", {})
+        return ProviderResult(
+            text=text,
+            input_tokens=usage.get("prompt_tokens"),
+            output_tokens=usage.get("completion_tokens"),
+            latency_ms=latency_ms,
+        )

@@ -37,10 +37,23 @@ def test_gemini_model_enabled_with_key():
     assert gemini_model.enabled is True
 
 
+def test_grok_model_disabled_without_key():
+    registry = get_model_registry(Settings(xai_api_key=None))
+    grok_model = next(m for m in registry if m.provider == "grok")
+    assert grok_model.enabled is False
+
+
+def test_grok_model_enabled_with_key():
+    registry = get_model_registry(Settings(xai_api_key="fake-key"))
+    grok_model = next(m for m in registry if m.provider == "grok")
+    assert grok_model.enabled is True
+
+
 def test_get_provider_returns_provider_instance():
     assert isinstance(get_provider("mock"), Provider)
     assert isinstance(get_provider("openai", Settings(openai_api_key="sk-fake")), Provider)
     assert isinstance(get_provider("gemini", Settings(google_api_key="fake-key")), Provider)
+    assert isinstance(get_provider("grok", Settings(xai_api_key="fake-key")), Provider)
 
 
 def test_get_provider_rejects_unknown_name():
