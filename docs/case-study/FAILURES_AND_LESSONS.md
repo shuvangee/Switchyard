@@ -314,3 +314,62 @@ enabled in the same environment. Also: `git diff --stat` on a "small"
 change is a cheap, effective tripwire for exactly this kind of silent
 scope expansion — worth checking before assuming a script run did what
 was intended, not just after something looks wrong.
+
+## 2026-09-21 — Gemini free tier is 20 requests/day per model, and thinking tokens ate the answer
+
+**What was tried:** Ran `scripts/generate_manual_grading_responses.py`
+against the 20 manual-eval-type tasks (coding/debugging/reasoning/
+summarization) to get real Gemini responses for the user to grade
+(Phase 2 of the data-collection plan).
+
+**Finding 1 — the free tier has a hard daily cap, not just a per-minute
+one.** The first attempt (same day as the `run_v0_baseline.py` incident)
+failed all 20/20 with `429`. Reading the actual response body (not just
+the status code) rather than assuming "rate limit, retry":
+```
+"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier",
+"quotaValue": "20"
+```
+This is a **daily** quota of 20 requests for `gemini-3.6-flash`,
+exhausted between the original 12-task experiment, the accidental
+44-call incident, and this attempt's own 20 tries. Retrying with backoff
+(as `run_gemini_baseline.py`'s retry logic does for `429`s) cannot help
+here — the fix is waiting for the quota to reset, not backing off
+further. Confirmed reset the next day (2026-09-21) with a single test
+call before re-running for real. Result once retried: 18/20 succeeded
+(a diagnostic call plus this run's 20 attempts used the full daily quota
+again before the last 2 — `reasoning-004`, `summarization-001` — got a
+response), real cost $0.004310.
+
+**Finding 2 — a bigger problem, found while reviewing the 18 responses
+before handing them to the user for grading.** Most had suspiciously low
+`output_tokens` (16-21) and text cut off mid-sentence — e.g. `coding-001`:
+`"Include input validation for negative numbers and non-integers.\n    *   Option"`.
+`gemini-3.6-flash` is a reasoning ("thinking") model: a diagnostic call
+with an artificially low 10-token cap returned `"content": {}` (literally
+no visible text) with `"thoughtsTokenCount": 7` — confirming thinking
+tokens are billed against the *same* `maxOutputTokens` cap as the visible
+answer. At the adapter's existing cap of 512, most of the budget was
+apparently consumed by invisible thinking, leaving only ~16-20 tokens for
+the actual response on these open-ended prompts, and truncating it.
+
+**What changed:** `GeminiProvider._MAX_OUTPUT_TOKENS` raised from 512 to
+2048 (`backend/app/providers/gemini_provider.py`). The flawed batch
+(`experiments/results/manual-grading-gemini-3.6-flash.{json,md}`) was
+kept as the raw record but marked at the top of the `.md` file as **not
+gradeable as-is** — grading truncated fragments against a quality rubric
+would conflate "hit an artificial token limit" with "the model doesn't
+know the answer," producing misleading manual-grading data for the case
+study. Needs regenerating once the daily quota allows.
+
+**Why this matters:** Two real, load-bearing operational constraints of
+building on a free tier that mock development never surfaces: (1) daily
+request quotas, not just per-minute rate limits, cap how much real data
+can be collected per day — directly relevant to planning Phase 2/3 of
+data collection; (2) a fixed token cap tuned for one model
+(`gemini-2.0-flash`, non-reasoning) silently produced degraded data once
+the registered model changed to a reasoning model — the same category of
+mistake as the `run_v0_baseline.py` incident above (an assumption baked
+into a constant quietly stopped holding once something else in the
+project changed), just in adapter config instead of model-selection
+logic.

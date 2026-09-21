@@ -100,9 +100,12 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
                     "until verified against a real invoice or Google's own pricing "
                     "page directly. Thinking tokens (this is a reasoning-capable "
                     "model) bill at the output rate and count against "
-                    "maxOutputTokens, so the adapter's 512-token cap still bounds "
-                    "total cost — but may leave less room for the visible answer "
-                    "on harder prompts."
+                    "maxOutputTokens, confirmed 2026-09-21 to actually truncate "
+                    "responses at the adapter's original 512-token cap (raised to "
+                    "2048) — see docs/case-study/FAILURES_AND_LESSONS.md. Free "
+                    "tier is capped at 20 requests/day for this model "
+                    "(GenerateRequestsPerDayPerProjectPerModel-FreeTier), a hard "
+                    "daily quota, not just a per-minute rate limit."
                 )
             },
         ),

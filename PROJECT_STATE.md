@@ -142,10 +142,25 @@ and decided against it — see "Not implemented" above.
   and the corrupted results file was restored from git. Full write-up:
   `docs/case-study/FAILURES_AND_LESSONS.md` (2026-09-20).
 
-**Phase 2 — manual grading of the 4 previously-unscored categories:**
-Not started. Needs real responses generated for the new + existing tasks
-in these categories (mock and/or real provider), then the user grading
-each against its rubric.
+**Phase 2 — manual grading of the 4 previously-unscored categories
+(in progress, 2026-09-21):**
+- Generated real Gemini responses for all 20 tasks
+  (`scripts/generate_manual_grading_responses.py`) — mock's response to
+  these is always its generic templated fallback, not worth grading.
+- 18/20 succeeded ($0.004310 real cost); 2 (`reasoning-004`,
+  `summarization-001`) still need a response — blocked by Gemini's
+  free-tier **daily** quota (20 requests/day/model, not just a per-minute
+  limit — see `FAILURES_AND_LESSONS.md`).
+- **The 18 collected responses are not gradeable as generated** — most
+  are truncated mid-sentence. `gemini-3.6-flash` is a reasoning model;
+  invisible thinking tokens counted against the same 512-token cap as the
+  visible answer, leaving as little as ~16 tokens for the real response.
+  Cap raised to 2048 in `backend/app/providers/gemini_provider.py`; the
+  flawed batch is kept at `experiments/results/manual-grading-gemini-3.6-flash.{json,md}`
+  as a record but flagged at the top of the `.md` file as not to be
+  graded. Needs regenerating once the daily quota allows.
+- **Not yet done:** regenerate all 20 with the fixed cap, then the user
+  grades each against its `metadata.notes` rubric.
 
 **Phase 3 — re-run real-provider experiments on the expanded set:**
 Not started. Needs a cost estimate and approval before any call, same as

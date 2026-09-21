@@ -17,7 +17,14 @@ _GENERATE_CONTENT_URL = "https://generativelanguage.googleapis.com/v1beta/models
 # Caps a single response so cost/latency stay bounded and estimable ahead of
 # a run — without this, an open-ended prompt (reasoning/coding/debugging/
 # summarization) has no limit on how much a real model can generate.
-_MAX_OUTPUT_TOKENS = 512
+#
+# gemini-3.6-flash is a reasoning ("thinking") model: invisible thinking
+# tokens are billed at the output rate and count against this same cap
+# (confirmed 2026-09-21 — see docs/case-study/FAILURES_AND_LESSONS.md).
+# At 512, most manual-category responses were dominated by thinking,
+# leaving only ~16-20 tokens for the actual visible answer and truncating
+# it mid-sentence. Raised to leave real headroom for both.
+_MAX_OUTPUT_TOKENS = 2048
 
 
 class GeminiProvider(Provider):
