@@ -100,9 +100,22 @@ def main() -> None:
         for tid in failed_ids:
             rows_by_id[tid] = _call(provider, tasks_by_id[tid], model_config)
 
-    rows = [rows_by_id[t.id] for t in tasks]
-
+    # Never let a failed attempt clobber a previously-successful, already-paid-for
+    # response on disk — e.g. a run that hits the daily quota partway through
+    # should not erase responses a prior run already captured.
     json_path = REPO_ROOT / "experiments/results/manual-grading-gemini-3.6-flash.json"
+    reused = []
+    if json_path.exists():
+        existing = json.loads(json_path.read_text())
+        existing_by_id = {r["task_id"]: r for r in existing.get("tasks", [])}
+        for tid, row in rows_by_id.items():
+            if row["status"] != "success" and existing_by_id.get(tid, {}).get("status") == "success":
+                rows_by_id[tid] = existing_by_id[tid]
+                reused.append(tid)
+    if reused:
+        print(f"kept {len(reused)} previously-successful response(s), not overwritten: {reused}")
+
+    rows = [rows_by_id[t.id] for t in tasks]
     json_path.write_text(json.dumps({"model_id": MODEL_CONFIG_ID, "tasks": rows}, indent=2) + "\n")
 
     md_lines = [

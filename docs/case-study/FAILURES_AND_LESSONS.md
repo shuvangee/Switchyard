@@ -373,3 +373,41 @@ mistake as the `run_v0_baseline.py` incident above (an assumption baked
 into a constant quietly stopped holding once something else in the
 project changed), just in adapter config instead of model-selection
 logic.
+
+## 2026-09-21 — Re-running the generation script nearly destroyed the 18 real responses already captured
+
+**What was tried:** Re-ran `scripts/generate_manual_grading_responses.py`
+the next day, expecting the daily quota (see the entry above) to have
+reset given the calendar date had rolled over.
+
+**Why it didn't work:** It hadn't — all 20 attempts (plus retries) still
+hit `429`, real cost $0.00 as before. Google's free-tier daily quota
+evidently doesn't reset simply on calendar-date rollover from this
+environment's perspective; exactly when it resets is still unconfirmed.
+
+**The actual damage, caught before committing anything:** The script
+unconditionally overwrote `manual-grading-gemini-3.6-flash.{json,md}`
+with this run's all-failure results — which meant it replaced the 18
+real (if previously truncated) responses already captured and committed
+on 2026-09-20 with blank `FAILED` entries, discarding real, already-paid-
+for data for zero benefit. `git diff --stat` showed a large deletion-heavy
+diff before anything was committed, which is what caught it — same
+tripwire habit as the `run_v0_baseline.py` incident. Restored via
+`git checkout --` (safe: regenerable committed history).
+
+**What changed:** The script now loads the existing results file (if any)
+before writing, and for any task where this run's attempt failed but a
+previous run already has a `success` row for that task, it keeps the old
+row instead of overwriting it with the failure. A partial run can now
+only ever add data, never silently erase what a previous run already
+paid for.
+
+**General lesson:** Any script whose entire job is "write real,
+API-purchased data to a file" needs to treat that file as monotonically
+additive, not something to blindly overwrite — a later run failing
+(rate limit, quota, network) is not evidence that earlier successful
+data stopped being valid. This is the second time in two days a
+`git diff --stat` check before trusting a "did this work" summary caught
+real, silent data loss before it got committed — worth treating as a
+standing habit for any script that writes to a committed results file,
+not a one-off save.

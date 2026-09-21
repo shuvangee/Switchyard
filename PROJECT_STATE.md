@@ -159,8 +159,19 @@ and decided against it — see "Not implemented" above.
   flawed batch is kept at `experiments/results/manual-grading-gemini-3.6-flash.{json,md}`
   as a record but flagged at the top of the `.md` file as not to be
   graded. Needs regenerating once the daily quota allows.
-- **Not yet done:** regenerate all 20 with the fixed cap, then the user
-  grades each against its `metadata.notes` rubric.
+- **2026-09-21 retry:** attempted regeneration again — quota had *not*
+  reset despite the calendar date rolling over (exact reset timing still
+  unconfirmed). The script also had its own bug: it would have silently
+  overwritten the 18 real responses already captured with blank failures.
+  Fixed (script now only ever adds successful responses, never erases a
+  previously-successful one) and the near-loss was caught via
+  `git diff --stat` before committing — full write-up in
+  `FAILURES_AND_LESSONS.md`. State unchanged: still 18/20 real (but
+  truncated, not gradeable) responses on file.
+- **Not yet done:** regenerate all 20 with the fixed 2048-token cap, once
+  the daily quota allows, then the user grades each against its
+  `metadata.notes` rubric. V3 training itself remains at zero lines of
+  code — this is still prerequisite data collection, not V3.
 
 **Phase 3 — re-run real-provider experiments on the expanded set:**
 Not started. Needs a cost estimate and approval before any call, same as
