@@ -1,0 +1,13 @@
+{
+  "id": "summarization-001",
+  "title": "Summarize a short product update",
+  "category": "summarization",
+  "difficulty": "medium",
+  "prompt": "Summarize the following update in one sentence: The team shipped the new billing dashboard this week, fixed three long-standing sync bugs, and began migrating the notification service off the legacy queue, with full migration expected by the end of next month.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization"],
+    "notes": "No deterministic evaluator for summary quality in V0; requires manual review."
+  }
+}

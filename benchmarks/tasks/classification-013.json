@@ -1,0 +1,13 @@
+{
+  "id": "classification-013",
+  "title": "Sentiment classification - mixed signal, negative dominates (hard)",
+  "category": "classification",
+  "difficulty": "hard",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: The build quality is excellent, but honestly the customer service ruined the whole experience for me and I'm returning it.",
+  "evaluation_type": "classification_label",
+  "expected_output": "negative",
+  "metadata": {
+    "tags": ["sentiment", "mixed", "hard"],
+    "hard_reason": "Positive opener (build quality excellent) should NOT win - the customer's actual conclusion and action (returning it) are negative; tests whether the model weighs the real verdict over the first clause."
+  }
+}

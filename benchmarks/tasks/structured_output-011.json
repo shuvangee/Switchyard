@@ -1,0 +1,13 @@
+{
+  "id": "structured_output-011",
+  "title": "Structured extraction - inferred boolean from indirect phrasing (hard)",
+  "category": "structured_output",
+  "difficulty": "hard",
+  "prompt": "Return a JSON object with keys \"is_available\", \"price\", and \"restock_date\" for: The item is currently out of stock, priced at $49.99, expected back in stock by the 15th of next month.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"is_available\": false, \"price\": 0, \"restock_date\": \"\"}",
+  "metadata": {
+    "tags": ["json", "hard"],
+    "hard_reason": "is_available must be INFERRED as false from 'out of stock' - the text never states a literal true/false."
+  }
+}

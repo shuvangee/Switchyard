@@ -1,0 +1,10 @@
+{
+  "id": "extraction-001",
+  "title": "Extract a single email address",
+  "category": "extraction",
+  "difficulty": "easy",
+  "prompt": "Extract the email address from the following text. Reply to: alice@example.com to confirm your registration.",
+  "evaluation_type": "exact_match",
+  "expected_output": "alice@example.com",
+  "metadata": { "tags": ["email", "single-match"] }
+}

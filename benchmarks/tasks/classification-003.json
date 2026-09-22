@@ -1,0 +1,10 @@
+{
+  "id": "classification-003",
+  "title": "Sentiment classification - enthusiastic positive",
+  "category": "classification",
+  "difficulty": "easy",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: This is amazing, it exceeded my expectations in every way!",
+  "evaluation_type": "classification_label",
+  "expected_output": "positive",
+  "metadata": { "tags": ["sentiment"] }
+}

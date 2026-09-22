@@ -15,6 +15,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!frontend/lib/
 lib64/
 parts/
 sdist/
@@ -60,6 +61,11 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+
+# Switchyard's own dev database (backend/switchyard.db) — local state,
+# synced from benchmarks/ and the model registry on every startup.
+*.db
+*.db-journal
 
 # Flask stuff:
 instance/

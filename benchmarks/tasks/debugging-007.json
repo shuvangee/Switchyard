@@ -1,0 +1,14 @@
+{
+  "id": "debugging-007",
+  "title": "Find the bug in a second_largest function",
+  "category": "debugging",
+  "difficulty": "medium",
+  "prompt": "This function is supposed to return the second largest number in a list but crashes when the list has duplicates of the largest value.\n\ndef second_largest(nums):\n    unique = sorted(set(nums))\n    return unique[-2]\n\nIdentify the bug and explain the fix.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "debugging"],
+    "notes": "Bug: if all values are identical (e.g. [5, 5, 5]), `unique` has only 1 element and unique[-2] raises IndexError. Fix should handle the case where fewer than 2 distinct values exist. Graded manually.",
+    "known_ambiguity": "What the fixed function SHOULD return for input like [5,5,5] is itself underspecified (return 5 again? raise a clear error? return None?) - flagged as a known spec gap, same class of issue as is_anagram had before its prompt was fixed. Not resolved here; grade generously for any reasonable, explicitly-stated choice."
+  }
+}

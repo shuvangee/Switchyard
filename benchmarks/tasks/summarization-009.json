@@ -1,0 +1,14 @@
+{
+  "id": "summarization-009",
+  "title": "Summarize a multi-item security audit (hard)",
+  "category": "summarization",
+  "difficulty": "hard",
+  "prompt": "Summarize the following in two sentences: The company's annual security audit uncovered two medium-severity vulnerabilities in the authentication service and one low-severity issue in the logging pipeline; the authentication vulnerabilities have already been patched and deployed to production, while the logging issue is scheduled for the next sprint since it poses no immediate risk, and a follow-up penetration test is planned for next quarter to confirm the fixes.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization", "hard"],
+    "hard_reason": "Long, dense sentence with multiple entities at different severities and timelines - easy to conflate 'already fixed' with 'scheduled' with 'planned'.",
+    "notes": "Correct: two sentences correctly separating what's DONE (auth vulnerabilities patched/deployed) from what's SCHEDULED (logging issue, next sprint) from what's PLANNED (pen test, next quarter). Graded manually, checking all three states are kept distinct."
+  }
+}

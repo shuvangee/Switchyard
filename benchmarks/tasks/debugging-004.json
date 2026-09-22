@@ -1,0 +1,13 @@
+{
+  "id": "debugging-004",
+  "title": "Find the bug in a dedupe function",
+  "category": "debugging",
+  "difficulty": "hard",
+  "prompt": "This function is supposed to remove duplicates from a list while preserving order, but sometimes returns items out of order.\n\ndef dedupe(items):\n    return list(set(items))\n\nIdentify the bug and explain the fix.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "debugging"],
+    "notes": "Bug: converting to a set discards insertion order (sets are unordered). Fix should use a seen-set with an explicit loop, or `dict.fromkeys(items)`. Graded manually."
+  }
+}

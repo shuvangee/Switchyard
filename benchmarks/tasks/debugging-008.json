@@ -1,0 +1,13 @@
+{
+  "id": "debugging-008",
+  "title": "Find the bug in a title_case function",
+  "category": "debugging",
+  "difficulty": "medium",
+  "prompt": "This function is supposed to capitalize the first letter of every word in a sentence but only capitalizes the very first word.\n\ndef title_case(s):\n    return s[0].upper() + s[1:]\n\nIdentify the bug and explain the fix.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "debugging"],
+    "notes": "Bug: only touches the first character of the whole string, not each word. Fix should split on spaces, capitalize each word, and rejoin (or use str.title(), with a note on its own apostrophe edge cases). Graded manually."
+  }
+}

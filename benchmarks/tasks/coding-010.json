@@ -1,0 +1,21 @@
+{
+  "id": "coding-010",
+  "title": "Write a longest_increasing_run function (hard)",
+  "category": "coding",
+  "difficulty": "hard",
+  "prompt": "Write a Python function `longest_increasing_run(nums)` that returns the length of the longest strictly increasing consecutive run in a list of numbers.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "hard"],
+    "hard_reason": "Off-by-one errors are common here - e.g. [1,2,2,3] should give 2 (the run breaks at the repeated 2), not 3; also check empty-list and single-element edge cases.",
+    "notes": "Correct: tracks a running count that resets when the sequence stops strictly increasing, keeping the max seen. No sandboxed execution yet; graded manually.",
+    "test_cases": [
+      { "input": [[1, 2, 3, 2, 3, 4, 5]], "expected": 4 },
+      { "input": [[1, 2, 2, 3]], "expected": 2 },
+      { "input": [[]], "expected": 0 },
+      { "input": [[5]], "expected": 1 },
+      { "input": [[5, 4, 3, 2, 1]], "expected": 1 }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "math-003",
+  "title": "Basic addition",
+  "category": "math",
+  "difficulty": "easy",
+  "prompt": "What is 9 + 4?",
+  "evaluation_type": "exact_match",
+  "expected_output": "13",
+  "metadata": { "tags": ["arithmetic"] }
+}

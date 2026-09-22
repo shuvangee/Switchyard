@@ -1,0 +1,78 @@
+{
+  "router_version": "learned-v1",
+  "trained_at": "2026-09-22T03:52:31.685943+00:00",
+  "n_training_rows": 24,
+  "excluded_task_counts": {
+    "manual_eval_type": 20,
+    "no_correct_candidate": 0,
+    "no_executions": 0
+  },
+  "feature_names": [
+    "category=extraction",
+    "category=classification",
+    "category=summarization",
+    "category=math",
+    "category=reasoning",
+    "category=coding",
+    "category=debugging",
+    "category=structured_output",
+    "difficulty_ordinal",
+    "structured_output_required",
+    "estimated_input_tokens"
+  ],
+  "target_classes": [
+    "gemini-3.6-flash",
+    "mock-accurate-v1",
+    "mock-fast-v1"
+  ],
+  "training_target_definition": "cheapest candidate model with a recorded CORRECT outcome for each task, among tasks with a deterministic evaluator",
+  "evaluation_method": "leave-one-out cross-validation (n=24 too small for a held-out split)",
+  "comparison": [
+    {
+      "strategy": "learned-v1",
+      "n_rows": 24,
+      "n_evaluable": 23,
+      "n_unknown_outcome": 1,
+      "accuracy_on_evaluable": 0.5652173913043478,
+      "total_cost_usd_on_evaluable": 0.00031010000000000017,
+      "avg_cost_usd_on_evaluable": 1.3482608695652182e-05
+    },
+    {
+      "strategy": "always-cheapest",
+      "n_rows": 24,
+      "n_evaluable": 24,
+      "n_unknown_outcome": 0,
+      "accuracy_on_evaluable": 0.5833333333333334,
+      "total_cost_usd_on_evaluable": 5.85e-05,
+      "avg_cost_usd_on_evaluable": 2.4375e-06
+    },
+    {
+      "strategy": "always-strongest",
+      "n_rows": 24,
+      "n_evaluable": 24,
+      "n_unknown_outcome": 0,
+      "accuracy_on_evaluable": 0.9583333333333334,
+      "total_cost_usd_on_evaluable": 0.0017549999999999994,
+      "avg_cost_usd_on_evaluable": 7.312499999999997e-05
+    },
+    {
+      "strategy": "v2",
+      "n_rows": 24,
+      "n_evaluable": 24,
+      "n_unknown_outcome": 0,
+      "accuracy_on_evaluable": 0.75,
+      "total_cost_usd_on_evaluable": 0.0009865,
+      "avg_cost_usd_on_evaluable": 4.1104166666666665e-05
+    },
+    {
+      "strategy": "random",
+      "n_rows": 24,
+      "n_evaluable": 24,
+      "n_unknown_outcome": 0,
+      "accuracy_on_evaluable": 0.7291666666666666,
+      "total_cost_usd_on_evaluable": 0.0007715,
+      "avg_cost_usd_on_evaluable": 3.214583333333333e-05
+    }
+  ],
+  "decision_tree_text": "|--- category=structured_output <= 0.50\n|   |--- category=extraction <= 0.50\n|   |   |--- class: mock-fast-v1\n|   |--- category=extraction >  0.50\n|   |   |--- class: gemini-3.6-flash\n|--- category=structured_output >  0.50\n|   |--- estimated_input_tokens <= 23.50\n|   |   |--- class: mock-fast-v1\n|   |--- estimated_input_tokens >  23.50\n|   |   |--- class: mock-fast-v1\n"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "reasoning-013",
+  "title": "Clock hand angle at 3:15 (hard)",
+  "category": "reasoning",
+  "difficulty": "hard",
+  "prompt": "A clock shows 3:15. What is the angle between the hour and minute hands? Explain your reasoning.",
+  "evaluation_type": "exact_match",
+  "expected_output": "7.5",
+  "metadata": {
+    "tags": ["logic", "math-reasoning", "hard", "classic-gotcha"],
+    "hard_reason": "Classic gotcha: naive answers assume the hour hand is still exactly at the 3, missing that it has moved 1/4 of the way toward 4 by 15 minutes past the hour.",
+    "notes": "Hour hand at 3:15 is at 90 + (15/60)*30 = 97.5 degrees from 12; minute hand at 15 minutes is at 90 degrees from 12; difference = 7.5 degrees."
+  }
+}

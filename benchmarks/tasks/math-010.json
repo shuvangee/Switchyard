@@ -1,0 +1,10 @@
+{
+  "id": "math-010",
+  "title": "Parenthesized order of operations",
+  "category": "math",
+  "difficulty": "medium",
+  "prompt": "What is (8 + 4) * (6 - 2)?",
+  "evaluation_type": "exact_match",
+  "expected_output": "48",
+  "metadata": { "tags": ["arithmetic", "order-of-operations"] }
+}

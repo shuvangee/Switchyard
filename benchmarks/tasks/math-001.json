@@ -1,0 +1,10 @@
+{
+  "id": "math-001",
+  "title": "Single-step multiplication",
+  "category": "math",
+  "difficulty": "easy",
+  "prompt": "What is 17 * 6?",
+  "evaluation_type": "exact_match",
+  "expected_output": "102",
+  "metadata": { "tags": ["arithmetic"] }
+}

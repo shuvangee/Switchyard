@@ -1,0 +1,13 @@
+{
+  "id": "debugging-005",
+  "title": "Find the bug in a find_max function",
+  "category": "debugging",
+  "difficulty": "medium",
+  "prompt": "This function is supposed to find the maximum value in a list but returns the wrong answer for lists containing only negative numbers.\n\ndef find_max(nums):\n    best = 0\n    for n in nums:\n        if n > best:\n            best = n\n    return best\n\nIdentify the bug and explain the fix.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "debugging"],
+    "notes": "Bug: initializing best = 0 means nothing beats it when every number is negative, so 0 is returned instead of the true (negative) maximum. Fix should initialize best = nums[0] (or float('-inf')). Graded manually."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "math-012",
+  "title": "Rate and unit conversion (hard)",
+  "category": "math",
+  "difficulty": "hard",
+  "prompt": "A train travels 60 miles in 45 minutes. At that rate, how many miles does it travel in exactly 2 hours?",
+  "evaluation_type": "exact_match",
+  "expected_output": "160",
+  "metadata": {
+    "tags": ["arithmetic", "word-problem", "hard"],
+    "hard_reason": "Requires correctly deriving the rate (60mi/45min = 1.333mi/min) and converting 2 hours to minutes before multiplying - a genuine multi-step reasoning task, not pattern-matched arithmetic."
+  }
+}

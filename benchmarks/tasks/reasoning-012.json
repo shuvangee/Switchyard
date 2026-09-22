@@ -1,0 +1,14 @@
+{
+  "id": "reasoning-012",
+  "title": "Mislabeled boxes puzzle (hard)",
+  "category": "reasoning",
+  "difficulty": "hard",
+  "prompt": "Three boxes are labeled 'Apples', 'Oranges', and 'Apples and Oranges' — but all three labels are wrong. You may pick one fruit from one box to look at before deciding what's actually in each box. Which box should you pick from, and how do you determine the contents of all three? Explain your reasoning.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["logic", "hard", "classic-puzzle"],
+    "hard_reason": "The classic 'mislabeled boxes' logic puzzle - genuinely difficult multi-step deduction, well-known to trip up pattern-matching over real reasoning about the constraint that ALL labels are wrong.",
+    "notes": "Correct answer: pick from the box labeled 'Apples and Oranges'. Since its label is wrong, it must contain only apples or only oranges - whichever fruit you draw tells you that box's true contents, and the remaining two follow by elimination (since every label is wrong). Kept manual: the box-to-pick is a short answer, but verifying the full derivation is genuinely open-ended, and a partial auto-check would misleadingly imply the whole answer was validated. Graded manually."
+  }
+}

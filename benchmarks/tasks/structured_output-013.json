@@ -1,0 +1,13 @@
+{
+  "id": "structured_output-013",
+  "title": "Structured extraction - computed discount percent (hard)",
+  "category": "structured_output",
+  "difficulty": "hard",
+  "prompt": "Return a JSON object with keys \"product\", \"original_price\", and \"discount_percent\" for: The jacket originally priced at $120 is now on sale for $90.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"product\": \"\", \"original_price\": 0, \"discount_percent\": 0}",
+  "metadata": {
+    "tags": ["json", "hard"],
+    "hard_reason": "discount_percent is never stated directly - must be computed as (120-90)/120 = 25%, a real arithmetic+extraction combination."
+  }
+}

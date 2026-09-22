@@ -1,0 +1,14 @@
+{
+  "id": "reasoning-010",
+  "title": "Chickens and cows heads/legs puzzle (hard)",
+  "category": "reasoning",
+  "difficulty": "hard",
+  "prompt": "A farmer has chickens and cows. Together they have 35 heads and 94 legs. How many cows does the farmer have? Explain your reasoning.",
+  "evaluation_type": "exact_match",
+  "expected_output": "12",
+  "metadata": {
+    "tags": ["logic", "math-reasoning", "hard"],
+    "hard_reason": "Classic two-variable simultaneous equations problem; real models sometimes mix up which animal has which leg coefficient.",
+    "notes": "Narrowed from the original draft (which asked for both chickens AND cows) to ask for cows only, since exact_match can only cleanly verify a single value. c + k = 35 (heads), 2c + 4k = 94 (legs) -> k = 12 cows (and c = 23 chickens, not checked by this task)."
+  }
+}

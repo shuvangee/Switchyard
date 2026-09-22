@@ -1,0 +1,10 @@
+{
+  "id": "classification-005",
+  "title": "Sentiment classification - mixed but net negative",
+  "category": "classification",
+  "difficulty": "hard",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: It does what it says, but shipping was slow and support never responded to my questions, which was frustrating.",
+  "evaluation_type": "classification_label",
+  "expected_output": "negative",
+  "metadata": { "tags": ["sentiment", "mixed", "subtle"] }
+}

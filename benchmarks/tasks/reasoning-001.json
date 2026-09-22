@@ -1,0 +1,10 @@
+{
+  "id": "reasoning-001",
+  "title": "Simple ordering puzzle",
+  "category": "reasoning",
+  "difficulty": "medium",
+  "prompt": "Alice is taller than Bob. Bob is taller than Carol. Who is the shortest? Explain your reasoning.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": { "tags": ["logic"], "notes": "Correct answer is Carol; graded manually in V0." }
+}

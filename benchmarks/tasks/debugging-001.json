@@ -1,0 +1,13 @@
+{
+  "id": "debugging-001",
+  "title": "Find the bug in a list-sum function",
+  "category": "debugging",
+  "difficulty": "hard",
+  "prompt": "The following Python function is supposed to return the sum of all numbers in a list but returns the wrong result for some inputs. Identify the bug and explain the fix.\n\ndef total(nums):\n    return sum(nums[1:])",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "debugging"],
+    "notes": "Bug: nums[1:] skips the first element; should be nums[:] or nums."
+  }
+}

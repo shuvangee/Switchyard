@@ -1,0 +1,13 @@
+{
+  "id": "structured_output-010",
+  "title": "Structured extraction - onboarding record, 4 keys (hard)",
+  "category": "structured_output",
+  "difficulty": "hard",
+  "prompt": "Return a JSON object with keys \"name\", \"email\", \"department\", and \"start_date\" for: New hire onboarding — Maria Lopez (maria.lopez@example.com) joins the Engineering team starting March 3rd.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"name\": \"\", \"email\": \"\", \"department\": \"\", \"start_date\": \"\"}",
+  "metadata": {
+    "tags": ["json", "hard"],
+    "hard_reason": "Four keys to track simultaneously raises the odds a model drops or renames one."
+  }
+}

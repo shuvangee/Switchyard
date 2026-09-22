@@ -1,0 +1,21 @@
+{
+  "id": "debugging-012",
+  "title": "Find the bug in an is_power_of_two function (hard)",
+  "category": "debugging",
+  "difficulty": "hard",
+  "prompt": "This function is supposed to return True if a number is a power of two but returns True for 0 as well, which is incorrect.\n\ndef is_power_of_two(n):\n    return n & (n - 1) == 0\n\nIdentify the bug and explain the fix.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "debugging", "hard", "bitwise"],
+    "hard_reason": "Requires correctly tracing bitwise logic: n=0 gives 0 & -1 == 0, a false positive. Real models sometimes struggle to trace bitwise operations correctly.",
+    "notes": "Fix: add an explicit `n > 0` check, e.g. `return n > 0 and n & (n - 1) == 0`. Graded manually.",
+    "test_cases": [
+      { "input": [0], "expected": false },
+      { "input": [1], "expected": true },
+      { "input": [2], "expected": true },
+      { "input": [3], "expected": false },
+      { "input": [1024], "expected": true }
+    ]
+  }
+}

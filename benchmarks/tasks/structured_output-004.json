@@ -1,0 +1,10 @@
+{
+  "id": "structured_output-004",
+  "title": "Structured extraction - city, country, population",
+  "category": "structured_output",
+  "difficulty": "medium",
+  "prompt": "Provide a JSON object with keys \"city\", \"country\", and \"population\" for: Tokyo, Japan has around 14000000 residents.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"city\": \"\", \"country\": \"\", \"population\": 0}",
+  "metadata": { "tags": ["json"] }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "coding-004",
+  "title": "Write an is_palindrome function",
+  "category": "coding",
+  "difficulty": "hard",
+  "prompt": "Write a Python function `is_palindrome(s)` that returns True if s reads the same forwards and backwards, ignoring case and spaces.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python"],
+    "notes": "Correct: normalizes case and strips spaces before comparing the string to its reverse. Edge case worth checking: an empty string (after stripping) should return True. Graded manually.",
+    "test_cases": [
+      { "input": ["racecar"], "expected": true },
+      { "input": ["hello"], "expected": false },
+      { "input": ["A man a plan a canal Panama"], "expected": true },
+      { "input": [""], "expected": true },
+      { "input": ["No lemon no melon"], "expected": true }
+    ]
+  }
+}

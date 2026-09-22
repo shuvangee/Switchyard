@@ -1,0 +1,14 @@
+{
+  "id": "reasoning-009",
+  "title": "Desk seating logic puzzle (hard)",
+  "category": "reasoning",
+  "difficulty": "hard",
+  "prompt": "Four coworkers — Ana, Ben, Cara, and Deo — sit in a row of four desks numbered 1 to 4. Ana sits next to Ben. Cara sits at desk 1. Deo does not sit at desk 4. Ben sits at a higher-numbered desk than Ana. Where does everyone sit? Explain your reasoning.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["logic", "hard", "constraint-satisfaction"],
+    "hard_reason": "Multi-constraint logic puzzle with several valid-seeming partial deductions - requires systematic elimination, more constraints than any existing reasoning task.",
+    "notes": "Fixed from the original draft: added 'Ben sits at a higher-numbered desk than Ana' to fully determine the answer (the earlier version left Ana/Ben's exact desks ambiguous). Correct answer: Cara=1, Deo=2, Ana=3, Ben=4. Kept as manual grading rather than exact_match - the answer is four separate facts, a poor fit for a single-value string match. Graded manually."
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "classification-004",
+  "title": "Sentiment classification - genuinely neutral",
+  "category": "classification",
+  "difficulty": "medium",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: The product works as described. Nothing more, nothing less.",
+  "evaluation_type": "classification_label",
+  "expected_output": "neutral",
+  "metadata": { "tags": ["sentiment", "neutral"] }
+}

@@ -1,0 +1,10 @@
+{
+  "id": "math-009",
+  "title": "Rectangle area word problem",
+  "category": "math",
+  "difficulty": "medium",
+  "prompt": "A rectangle has a length of 14 and a width of 9. What is its area?",
+  "evaluation_type": "exact_match",
+  "expected_output": "126",
+  "metadata": { "tags": ["arithmetic", "word-problem"] }
+}

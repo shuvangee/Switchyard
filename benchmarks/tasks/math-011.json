@@ -1,0 +1,13 @@
+{
+  "id": "math-011",
+  "title": "Two-digit multiplication (hard)",
+  "category": "math",
+  "difficulty": "hard",
+  "prompt": "What is 37 * 48?",
+  "evaluation_type": "exact_match",
+  "expected_output": "1776",
+  "metadata": {
+    "tags": ["arithmetic", "hard"],
+    "hard_reason": "Two-digit x two-digit multiplication with no shortcut pattern - a fast/cheap model is prone to slip a digit; a careful model should still get this exactly right."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "summarization-011",
+  "title": "Summarize a ticketing system migration",
+  "category": "summarization",
+  "difficulty": "medium",
+  "prompt": "Summarize the following update in one sentence: The support team migrated to a new ticketing system this week, which is expected to reduce average response time from 6 hours to 2 hours once fully adopted.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization"],
+    "notes": "Correct: mentions the migration event and the expected improvement, ideally with both the before (6h) and after (2h) numbers. Graded manually."
+  }
+}

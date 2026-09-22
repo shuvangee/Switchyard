@@ -1,0 +1,19 @@
+{
+  "id": "coding-006",
+  "title": "Write a sum_of_digits function",
+  "category": "coding",
+  "difficulty": "easy",
+  "prompt": "Write a Python function `sum_of_digits(n)` that returns the sum of the digits of a non-negative integer n.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python"],
+    "notes": "Correct: e.g. sum_of_digits(123) == 6, via string conversion or repeated modulo/divide. No sandboxed execution yet; graded manually.",
+    "test_cases": [
+      { "input": [123], "expected": 6 },
+      { "input": [0], "expected": 0 },
+      { "input": [9999], "expected": 36 },
+      { "input": [1000], "expected": 1 }
+    ]
+  }
+}

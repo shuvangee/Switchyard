@@ -1,0 +1,13 @@
+{
+  "id": "summarization-003",
+  "title": "Summarize a quarterly revenue update",
+  "category": "summarization",
+  "difficulty": "medium",
+  "prompt": "Summarize the following in one sentence: Q3 revenue grew 12% year over year driven by strong subscription renewals, though new customer acquisition slowed compared to Q2 due to increased competition.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization"],
+    "notes": "Correct: captures both the revenue growth (12% YoY, driven by renewals) and the slowdown in new customer acquisition (due to competition) — a summary that drops either half is incomplete. Graded manually."
+  }
+}

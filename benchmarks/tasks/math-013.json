@@ -1,0 +1,14 @@
+{
+  "id": "math-013",
+  "title": "Large number carry (hard)",
+  "category": "math",
+  "difficulty": "hard",
+  "prompt": "What is 999,999 + 1?",
+  "evaluation_type": "exact_match",
+  "expected_output": "1000000",
+  "metadata": {
+    "tags": ["arithmetic", "hard"],
+    "hard_reason": "Large-number digit-carry is a known LLM failure mode (models sometimes answer 999,000 or misplace a digit).",
+    "evaluator_risk": "expected_output has no commas; a correct answer formatted as '1,000,000' will NOT match exact_match's word-boundary token check (commas break the token boundary). Flagging this as a known scoring risk, not silently working around it - see the response text if this task scores incorrect despite a plausible-looking answer."
+  }
+}

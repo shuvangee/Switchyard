@@ -1,0 +1,13 @@
+{
+  "id": "extraction-011",
+  "title": "Email extraction - near-identical addresses differing by TLD (hard)",
+  "category": "extraction",
+  "difficulty": "hard",
+  "prompt": "Emails on file: r.chen@example.com (personal), r.chen@example.org (work, preferred for all business correspondence), r.chen@example.net (old, inactive). Which one should be used for business correspondence?",
+  "evaluation_type": "exact_match",
+  "expected_output": "r.chen@example.org",
+  "metadata": {
+    "tags": ["email", "distractor", "hard"],
+    "hard_reason": "Three near-identical addresses differing only by TLD; requires correctly parsing the parenthetical qualifiers rather than pattern-matching on the local part."
+  }
+}

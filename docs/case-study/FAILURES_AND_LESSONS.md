@@ -12,7 +12,433 @@ happens.
 - Why it didn't work (root cause, not just symptom).
 - What changed as a result.
 
-## Status
+## Log
 
-Nothing to report yet — project bootstrap has not surfaced any failed
-approaches. Entries are added as they actually occur.
+## 2026-09-18 — Greedy email regex swallowed trailing sentence punctuation
+
+**What was tried:** The mock provider's extraction heuristic used
+`[\w.+-]+@[\w-]+\.[\w.-]+` to pull an email address out of a prompt.
+
+**Why it didn't work:** The trailing `[\w.-]+` is greedy and happily
+consumes a sentence-ending period, so `"...reply to: alice@example.com."`
+extracted `alice@example.com.` (with the period) instead of the email.
+A test asserting the exact extracted string caught it immediately.
+
+**What changed:** Tightened the TLD portion to `[a-zA-Z]{2,}` (letters
+only), so the regex naturally stops before trailing punctuation. General
+lesson: a "match everything email-shaped" regex needs an explicit,
+narrower boundary at the end, not a permissive one — the failure mode is
+silent (still looks like a plausible email) rather than a crash.
+
+## 2026-09-18 — Name extraction matched the instruction sentence, not the data
+
+**What was tried:** For structured-output prompts like `Return a JSON
+object with keys "name" and "age" for: John is 30 years old.`, extracting
+a "name" value via `\b([A-Z][a-z]+)\b` searched over the whole prompt.
+
+**Why it didn't work:** "Return" — the first word of the instruction
+sentence — is also capitalized, and regex search finds it before "John".
+
+**What changed:** Introduced a convention (data always follows `for:` in
+these prompts) and restricted the search to the substring after that
+marker. General lesson: when a prompt mixes instruction text and data,
+targeting a substring by a delimiting convention beats trying to write a
+smarter pattern that guesses which capitalized word is "the real one."
+
+## 2026-09-18 — "Chained math" didn't chain the way it looked like it would
+
+**What was tried:** To make the "capable" mock profile handle a harder,
+multi-step arithmetic prompt, the first design used `re.finditer` to find
+every `number op number` match in the prompt and applied them in sequence
+(so "10 + 5, then * 2" would resolve as `(10+5)*2`).
+
+**Why it didn't work:** `finditer` only returns *non-overlapping* matches,
+and once a match consumes a number, that number is gone from the string
+for the next search. "10 + 5, then * 2" only contains one `number op
+number` pattern at all ("10 + 5") — "then * 2" has no number *before* the
+operator, so there was never a second match to chain. Both profiles
+silently returned the same (single-operation) answer; a test that actually
+asserted the two profiles differed caught this before it shipped.
+
+**What changed:** Replaced "chaining multiple regex matches" with a
+simpler, more robust distinction: the "basic" profile's regex only
+recognizes positive integers, while "capable" also handles a leading minus
+sign and decimals. A prompt like `-8 + 15` then genuinely produces
+different (and differently *wrong*, for basic) answers, without depending
+on a multi-match regex trick that only worked for the one example prompt
+it was written against. General lesson: a "does the assertion I wrote
+about my regex's behavior actually hold" test is worth writing before
+trusting a regex trick to generalize past the one input you tried it on.
+
+## 2026-09-18 — Test isolation required not using TestClient's context manager
+
+**What was tried:** The natural way to test a FastAPI app end to end is
+`with TestClient(app) as client: ...`, which runs the app's real
+startup/shutdown lifespan.
+
+**Why it would have been a problem:** `app.main`'s lifespan syncs
+benchmark tasks and the model registry into the database built from
+*production* `Settings` (`sqlite:///./switchyard.db` by default) — running
+it during tests would create/modify a real file on disk, with behavior
+depending on the test runner's current working directory.
+
+**What changed:** API tests override the `get_db` dependency with a
+session bound to an isolated in-memory database seeded directly in the
+fixture, and construct `TestClient(app)` *without* the `with` block —
+Starlette only sends lifespan events when the client is used as a context
+manager, so the real lifespan (and the real engine it touches) never runs
+during tests. Verified with a filesystem check after the full test suite
+that no `.db` file was created outside of `:memory:`.
+
+## 2026-09-18 — SQLAlchemy reserves `metadata` as a model attribute
+
+**What was tried:** Naming a benchmark task's free-form JSON column
+`metadata`, matching the field name used in the benchmark task schema.
+
+**Why it didn't work:** SQLAlchemy's `DeclarativeBase` already defines
+`metadata` as the class attribute holding the table registry
+(`Base.metadata`) — a column named `metadata` on the model collides with
+it.
+
+**What changed:** Named the ORM column `task_metadata` and mapped it to
+the API/schema field `metadata` explicitly in `BenchmarkTaskOut` rather
+than relying on attribute-name matching. General lesson: `metadata` (and a
+handful of other SQLAlchemy-reserved names) needs a different column name
+at the ORM layer even when it's the most natural field name for the
+domain/API.
+
+## 2026-09-18 — Word-count difficulty estimation misroutes negative-number math
+
+**What was tried:** V1's request analyzer estimates difficulty purely from
+prompt word count (see `DECISIONS.md`). "What is -8 + 15?" is 5 words, so
+it's estimated `easy` and routed to `mock-fast-v1` under the
+easy-deterministic-to-fast rule.
+
+**Why it didn't work:** `mock-fast-v1`'s "basic" math heuristic only
+recognizes positive integers (this was already known from V0 — see the
+"chained math" entry above); it reads "-8 + 15" as "8 + 15" and answers
+`23`, not `7`. Word count has no relationship to *numeric* complexity, so
+the one thing that actually determines whether this specific model gets
+the answer right — a leading minus sign — is invisible to the difficulty
+estimator entirely. Confirmed live: routing the identical arithmetic
+problem with more words around it ("Please carefully work through this
+arithmetic problem... what is negative eight plus fifteen, i.e. -8 + 15?")
+crosses the word-count threshold into `medium`, correctly routes to
+`mock-accurate-v1`, and gets `7` — the *only* reason it's now correct is
+that the rephrasing happened to be longer, not that the router understood
+anything about the math.
+
+**What changed:** Nothing — documented deliberately rather than patched.
+A quick fix (e.g. "math + contains a minus sign → hard") would just be
+teaching the analyzer MockProvider's specific internals again, which
+`DECISIONS.md` already rejected once for the same reason: it would stop
+meaning anything the moment a real provider replaces the mock. This is a
+real, load-bearing limitation of V1: an explainable rule-based router is
+still only as good as the difficulty signal feeding it, and V1's signal is
+genuinely weak. Recorded here as the concrete argument for V2 (confidence/
+escalation, which can catch a wrong answer after the fact instead of
+requiring a perfect prediction beforehand).
+
+## 2026-09-18 — Mock classification heuristic doesn't generalize to Playground phrasing
+
+**What was tried:** Routing a freeform Playground request — "Classify the
+sentiment of this review as positive, negative, or neutral: I absolutely
+love this, it is great." — through the router.
+
+**Why it didn't work:** Routing itself was correct (category=
+classification, difficulty=easy, model=mock-fast-v1, exactly per the
+evidence-based rule). But the response was the generic fallback string
+("[mock:basic] Response to prompt: ...") instead of an actual label,
+because `MockProvider._try_classification` only recognizes the literal
+phrase `"one of: X, Y, Z"` (matching how the V0 benchmark tasks are
+worded) — "as positive, negative, or neutral" doesn't match that pattern,
+so the classification heuristic silently declines and falls through.
+
+**What changed:** Nothing, and this is a different kind of limitation than
+the one above — worth distinguishing clearly. The *router* made a
+perfectly reasonable, well-evidenced decision; the *mock provider's* own
+naive heuristic just wasn't built to handle phrasing beyond the curated
+benchmark set it was designed against (documented already in `mock.py`'s
+module docstring). It's a preexisting, known constraint of the mock
+surfacing in a new context (freeform input) rather than a new bug. Real
+providers won't have this specific failure mode (they don't need
+"one of:" phrasing to classify sentiment) — but it's a reminder that
+Playground responses routed to the mock provider will generally look
+worse on open-ended phrasing than the curated benchmark tasks do.
+
+## 2026-09-20 — Three model ids before one actually worked
+
+**What was tried:** Registered `gemini-2.0-flash` in the model registry
+based on general knowledge of Gemini's model lineup, then tried to run
+the 12-task real-provider experiment against it.
+
+**Why it didn't work:** `404 Not Found`. A live call to Gemini's
+`/v1beta/models` listing endpoint showed this key's account has no
+`gemini-2.0-flash` at all — it isn't in the available model list. Picked
+`gemini-2.5-flash` from that list instead (also cross-checked pricing via
+web search, since `ai.google.dev` is blocked by this environment's
+network policy) and tried again: also `404`, this time with an actual
+Google error body explaining why — `"This model models/gemini-2.5-flash
+is no longer available to new users. Please update your code to use
+models/gemini-3.6-flash."` Registered `gemini-3.6-flash` and it worked.
+
+**What changed:** Nothing structural — this is a lesson about external
+dependency drift, not a code bug. Both failed attempts cost genuinely
+$0.00 (a 404 happens before any token is generated or billed), so no
+budget was wasted chasing the wrong name. General lesson: for a
+fast-moving model API, don't trust a model id from training
+knowledge or even a recent web search as ground truth — verify against a
+live models-list call first, and when a real call 404s, read the error
+body before guessing again; Google's own error named the exact
+replacement model on the second attempt.
+
+## 2026-09-20 — V0's evaluators undercount a real model's correctness
+
+**What was tried:** Ran the 12 benchmark tasks for real against
+`gemini-3.6-flash` (Switchyard's first real-provider experiment — see
+`docs/case-study/EXPERIMENTS.md` for the full run). Of the 8 tasks with a
+deterministic evaluator (`exact_match`/`valid_json`), only 3 were marked
+`correct`.
+
+**Why it didn't work:** Reading the actual response text for the other 5,
+every one of them contains a substantively correct answer:
+- `math-001`: `"17 * 6 = **102**"` (102 is correct) → marked `incorrect`.
+- `math-002`: `"-8 + 15 = **7**"` (7 is correct) → marked `incorrect`.
+- `extraction-002`: `"The correct contact email address is
+  **real-target@example.com**."` (exactly the expected address) → marked
+  `incorrect`.
+- `structured_output-001`/`002`: valid JSON with exactly the right keys,
+  wrapped in a ```` ```json ... ``` ```` markdown fence → marked
+  `incorrect`.
+
+`evaluate_exact_match` (`backend/app/evaluation/strategies.py`) requires
+the *entire* normalized response to equal the expected string — it has no
+tolerance for a real model restating the question or adding a sentence
+around the answer. `evaluate_valid_json` calls `json.loads()` directly on
+the raw response with no markdown-fence stripping, so a real model's
+completely standard habit of wrapping code/JSON in a fence makes every
+such response fail parsing outright, regardless of whether the JSON
+inside is correct. Both strategies were written and tested exclusively
+against `MockProvider`, which was deliberately built to emit bare,
+unformatted answers (`"7"`, `{"name": "John", "age": 30}` with no fence)
+— so this bug was invisible for the entire V0/V1/V2 mock-only evidence
+base and only surfaced the moment a real, conversational model was used.
+
+**What changed (fixed 2026-09-20, same day, in a separate deliberate pass —
+not a same-session reflex patch):** Two targeted fixes to
+`backend/app/evaluation/strategies.py`, scoped to exactly the two
+confirmed root causes and nothing else:
+- `evaluate_exact_match` now falls back to a **word-bounded token match**
+  (`\bexpected\b` against the normalized response) when whole-string
+  equality fails — so `"17 * 6 = **102**"` matches expected `"102"`, but
+  expected `"7"` still correctly does *not* match inside `"17"` (verified
+  with a dedicated regression test).
+- `evaluate_valid_json` now retries once with a markdown code fence
+  stripped (` ```json ... ``` `) before giving up on `json.loads()`.
+- `evaluate_classification_label` and the JSON key-comparison logic were
+  left untouched — step 1's diagnosis never implicated them.
+
+**Verification (no new API calls):** Re-scored all 48 existing rows —
+the 36 mock rows via `MockProvider` (a deterministic hash-seeded function
+of `(model_id, prompt)`, so regenerating its output is a pure local
+computation reproducing the original run's exact text, not a new call)
+and the 12 Gemini rows via the actual raw response text already captured
+during the real run. Script: `scripts/rescore_evaluator_fix.py`. Result:
+**exactly the 5 diagnosed Gemini rows changed, all from `incorrect` to
+`correct`; zero regressions** (no row that was `correct` under the old
+evaluator became anything else). All 36 mock rows were unchanged — the
+mock's bare output style was always compatible with the old, stricter
+evaluator, which is itself confirmation of the root cause: the evaluator
+was never wrong for mock-shaped text, only for real-model-shaped text.
+Gemini's deterministically-scored tasks now read **8/8 correct**, matching
+the manual review exactly.
+
+**Why this matters more than the specific bug:** This directly confirms
+the leakage/bias concern raised in the 2026-09-19 V3 data-readiness
+review — that V0's only "quality" labels were a function of MockProvider's
+specific output shape, not of real correctness. Now proven, not just
+argued: the original raw automated score for the Gemini run (3/8 correct)
+was not an honest measure of `gemini-3.6-flash`'s actual quality — it was
+a measure of how closely a model's formatting habits happened to match
+MockProvider's. Any future real-provider comparison built on
+`evaluation_status` from before this fix would have silently made every
+conversational real model look far worse than a terse one, regardless of
+actual answer quality. Fixed now, before any such comparison was made.
+
+## 2026-09-20 — run_v0_baseline.py silently made real, unapproved paid calls
+
+**What was tried:** While expanding the benchmark set from 12 to 44 tasks
+(Phase 1 of the post-evaluator-fix data-collection plan), re-ran
+`scripts/run_v0_baseline.py` to regenerate the mock baseline against the
+larger task set — intended as a free, mock-only refresh, same as every
+prior use of this script.
+
+**Why it didn't work:** The script selected models via
+`[m for m in get_model_registry() if m.enabled]` — its own docstring even
+said this "means the mock provider only" *given* no `OPENAI_API_KEY` is
+configured. That assumption was true when the script was written (V1) but
+had silently gone false since V2's Gemini work: `backend/.env` now has a
+real `GOOGLE_API_KEY`, so `gemini-3.6-flash` is `enabled=True` in the
+registry. The script ran all 44 tasks against it without any cost
+estimate or approval — the exact thing CLAUDE.md's cost-visibility rule
+and this project's whole real-provider workflow (verify config → estimate
+cost → get approval → run) exists to prevent. It also overwrote the
+historical `v0-mock-baseline.json` with a run that mixed real Gemini rows
+into what's supposed to be a mock-only record.
+
+**Actual damage:** Real, but small. 44 Gemini calls were attempted; 42
+hit `429` rate limits and errored before generating anything (this
+script has no retry logic, unlike `run_gemini_baseline.py`); exactly 2
+succeeded, for a **total real cost of $0.0000585**. Caught immediately —
+`git diff --stat` showed the tracked results file had ballooned by ~2,000
+lines, which is what prompted investigating before doing anything else.
+The corrupted file was restored via `git checkout --` (safe: it was
+regenerable committed history, not uncommitted work) and the real mock
+baseline was regenerated cleanly after the fix below.
+
+**What changed:** `run_v0_baseline.py` now filters by
+`m.provider == "mock"` explicitly, not `m.enabled` — its job is to be a
+free, mock-only baseline regardless of which real provider keys exist in
+`.env`, so it should never again depend on an assumption about what
+happens to be configured. Docstring updated to say so directly and to
+point at `run_gemini_baseline.py` for an actual real-provider baseline,
+which already requires an explicit model id and shows cost before running.
+
+**General lesson:** A cost-safety property that depends on "no one has
+configured a real key yet" is not a real safety property — it quietly
+expires the moment the project's own stated next objective (get a real
+provider working) succeeds. Any script whose safety assumption is
+"nothing real is enabled right now" needs to instead be explicit about
+what it runs, the moment more than one provider type can plausibly be
+enabled in the same environment. Also: `git diff --stat` on a "small"
+change is a cheap, effective tripwire for exactly this kind of silent
+scope expansion — worth checking before assuming a script run did what
+was intended, not just after something looks wrong.
+
+## 2026-09-21 — Gemini free tier is 20 requests/day per model, and thinking tokens ate the answer
+
+**What was tried:** Ran `scripts/generate_manual_grading_responses.py`
+against the 20 manual-eval-type tasks (coding/debugging/reasoning/
+summarization) to get real Gemini responses for the user to grade
+(Phase 2 of the data-collection plan).
+
+**Finding 1 — the free tier has a hard daily cap, not just a per-minute
+one.** The first attempt (same day as the `run_v0_baseline.py` incident)
+failed all 20/20 with `429`. Reading the actual response body (not just
+the status code) rather than assuming "rate limit, retry":
+```
+"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier",
+"quotaValue": "20"
+```
+This is a **daily** quota of 20 requests for `gemini-3.6-flash`,
+exhausted between the original 12-task experiment, the accidental
+44-call incident, and this attempt's own 20 tries. Retrying with backoff
+(as `run_gemini_baseline.py`'s retry logic does for `429`s) cannot help
+here — the fix is waiting for the quota to reset, not backing off
+further. Confirmed reset the next day (2026-09-21) with a single test
+call before re-running for real. Result once retried: 18/20 succeeded
+(a diagnostic call plus this run's 20 attempts used the full daily quota
+again before the last 2 — `reasoning-004`, `summarization-001` — got a
+response), real cost $0.004310.
+
+**Finding 2 — a bigger problem, found while reviewing the 18 responses
+before handing them to the user for grading.** Most had suspiciously low
+`output_tokens` (16-21) and text cut off mid-sentence — e.g. `coding-001`:
+`"Include input validation for negative numbers and non-integers.\n    *   Option"`.
+`gemini-3.6-flash` is a reasoning ("thinking") model: a diagnostic call
+with an artificially low 10-token cap returned `"content": {}` (literally
+no visible text) with `"thoughtsTokenCount": 7` — confirming thinking
+tokens are billed against the *same* `maxOutputTokens` cap as the visible
+answer. At the adapter's existing cap of 512, most of the budget was
+apparently consumed by invisible thinking, leaving only ~16-20 tokens for
+the actual response on these open-ended prompts, and truncating it.
+
+**What changed:** `GeminiProvider._MAX_OUTPUT_TOKENS` raised from 512 to
+2048 (`backend/app/providers/gemini_provider.py`). The flawed batch
+(`experiments/results/manual-grading-gemini-3.6-flash.{json,md}`) was
+kept as the raw record but marked at the top of the `.md` file as **not
+gradeable as-is** — grading truncated fragments against a quality rubric
+would conflate "hit an artificial token limit" with "the model doesn't
+know the answer," producing misleading manual-grading data for the case
+study. Needs regenerating once the daily quota allows.
+
+**Why this matters:** Two real, load-bearing operational constraints of
+building on a free tier that mock development never surfaces: (1) daily
+request quotas, not just per-minute rate limits, cap how much real data
+can be collected per day — directly relevant to planning Phase 2/3 of
+data collection; (2) a fixed token cap tuned for one model
+(`gemini-2.0-flash`, non-reasoning) silently produced degraded data once
+the registered model changed to a reasoning model — the same category of
+mistake as the `run_v0_baseline.py` incident above (an assumption baked
+into a constant quietly stopped holding once something else in the
+project changed), just in adapter config instead of model-selection
+logic.
+
+## 2026-09-21 — Re-running the generation script nearly destroyed the 18 real responses already captured
+
+**What was tried:** Re-ran `scripts/generate_manual_grading_responses.py`
+the next day, expecting the daily quota (see the entry above) to have
+reset given the calendar date had rolled over.
+
+**Why it didn't work:** It hadn't — all 20 attempts (plus retries) still
+hit `429`, real cost $0.00 as before. Google's free-tier daily quota
+evidently doesn't reset simply on calendar-date rollover from this
+environment's perspective; exactly when it resets is still unconfirmed.
+
+**The actual damage, caught before committing anything:** The script
+unconditionally overwrote `manual-grading-gemini-3.6-flash.{json,md}`
+with this run's all-failure results — which meant it replaced the 18
+real (if previously truncated) responses already captured and committed
+on 2026-09-20 with blank `FAILED` entries, discarding real, already-paid-
+for data for zero benefit. `git diff --stat` showed a large deletion-heavy
+diff before anything was committed, which is what caught it — same
+tripwire habit as the `run_v0_baseline.py` incident. Restored via
+`git checkout --` (safe: regenerable committed history).
+
+**What changed:** The script now loads the existing results file (if any)
+before writing, and for any task where this run's attempt failed but a
+previous run already has a `success` row for that task, it keeps the old
+row instead of overwriting it with the failure. A partial run can now
+only ever add data, never silently erase what a previous run already
+paid for.
+
+**General lesson:** Any script whose entire job is "write real,
+API-purchased data to a file" needs to treat that file as monotonically
+additive, not something to blindly overwrite — a later run failing
+(rate limit, quota, network) is not evidence that earlier successful
+data stopped being valid. This is the second time in two days a
+`git diff --stat` check before trusting a "did this work" summary caught
+real, silent data loss before it got committed — worth treating as a
+standing habit for any script that writes to a committed results file,
+not a one-off save.
+
+## 2026-09-22 — A verified fix was never actually applied to its own data file
+
+**What was tried:** Building V3's training dataset from
+`experiments/results/gemini-3.6-flash-baseline.json`, which should have
+had the evaluator-fix corrections from 2026-09-20 already applied — that
+fix had been explicitly verified via `scripts/rescore_evaluator_fix.py`,
+which reported the 5 affected rows changing from `incorrect` to
+`correct`.
+
+**Why it didn't work:** `rescore_evaluator_fix.py` computed the corrected
+scores and printed them — it never wrote them back to the JSON file it
+read from. The committed file still had the original, wrong
+`evaluation_status` values for those 5 rows, over a day after the fix was
+"verified." Caught only because building the V3 dataset meant reading
+that file's `evaluation_status` values directly and noticing they didn't
+match what had already been reported as fixed.
+
+**What changed:** Patched the file directly (the 5 specific rows already
+identified by the earlier verification — no new judgment calls, just
+applying a result already computed and reported) before using it for
+anything. Confirmed via `grep -c` that exactly 8 rows now read `correct`,
+matching the earlier 8/8 verification.
+
+**General lesson:** "Verified via a script that printed the right answer"
+and "the committed file actually has the right answer" are two different
+claims, and this project conflated them for a day and a half. A
+verification step that computes a corrected value without writing it
+back doesn't fix anything — it just proves a fix *would* work. Any future
+"we confirmed X is correct now" claim needs to end with a check that the
+file on disk actually reflects X, not just that a script printed X once.

@@ -1,0 +1,13 @@
+{
+  "id": "summarization-008",
+  "title": "Summarize an onboarding audit",
+  "category": "summarization",
+  "difficulty": "medium",
+  "prompt": "Summarize the following update in one sentence: The design team completed a full audit of the onboarding flow and identified six areas for improvement, prioritizing the three with the highest expected impact on user activation.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization"],
+    "notes": "Correct: mentions the audit completion, that six areas were found, and that three were prioritized by impact. Graded manually."
+  }
+}

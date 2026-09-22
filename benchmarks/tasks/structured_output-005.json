@@ -1,0 +1,10 @@
+{
+  "id": "structured_output-005",
+  "title": "Structured extraction - name, role, years experience",
+  "category": "structured_output",
+  "difficulty": "hard",
+  "prompt": "Return a JSON object with keys \"name\", \"role\", and \"years_experience\" for: Priya has worked as a Senior Engineer for 8 years.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"name\": \"\", \"role\": \"\", \"years_experience\": 0}",
+  "metadata": { "tags": ["json"] }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "summarization-004",
+  "title": "Summarize a database migration incident",
+  "category": "summarization",
+  "difficulty": "hard",
+  "prompt": "Summarize the following in two sentences: The engineering team migrated the primary database to a new provider over the weekend with zero downtime, but discovered afterward that a subset of analytics events were not being recorded correctly during the transition window, affecting roughly 4 hours of data; a backfill job has been scheduled to reconstruct the missing events from raw logs by end of week.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization"],
+    "notes": "Correct: two sentences covering (1) the migration succeeded with zero downtime, and (2) a ~4-hour analytics data gap was found with a backfill scheduled. Mark incomplete if it drops the backfill plan or the downtime detail. Graded manually."
+  }
+}

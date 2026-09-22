@@ -1,0 +1,14 @@
+{
+  "id": "summarization-010",
+  "title": "Summarize mixed quarterly feedback (hard)",
+  "category": "summarization",
+  "difficulty": "hard",
+  "prompt": "Summarize the following in one sentence: Customer feedback this quarter was mixed — satisfaction with product quality rose to 88%, the highest in company history, but satisfaction with shipping times dropped to 61%, the lowest in two years, largely attributed to a carrier change made in month two of the quarter.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization", "hard"],
+    "hard_reason": "Contains two opposing trends in one update - a lazy summary reports only the positive or only the negative; a correct one needs both, plus the causal note.",
+    "notes": "Correct: mentions BOTH the record-high product satisfaction (88%) AND the 2-year-low shipping satisfaction (61%, tied to the carrier change). Graded manually - dropping either direction is a failure."
+  }
+}

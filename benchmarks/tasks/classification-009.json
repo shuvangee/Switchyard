@@ -1,0 +1,10 @@
+{
+  "id": "classification-009",
+  "title": "Sentiment classification - minimal descriptive neutral",
+  "category": "classification",
+  "difficulty": "easy",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: Three stars. It's okay.",
+  "evaluation_type": "classification_label",
+  "expected_output": "neutral",
+  "metadata": { "tags": ["sentiment", "neutral"] }
+}

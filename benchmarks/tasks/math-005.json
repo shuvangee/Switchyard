@@ -1,0 +1,10 @@
+{
+  "id": "math-005",
+  "title": "Addition with a negative operand",
+  "category": "math",
+  "difficulty": "hard",
+  "prompt": "What is -12 + 5?",
+  "evaluation_type": "exact_match",
+  "expected_output": "-7",
+  "metadata": { "tags": ["arithmetic", "negative-number"] }
+}

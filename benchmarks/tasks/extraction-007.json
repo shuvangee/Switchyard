@@ -1,0 +1,10 @@
+{
+  "id": "extraction-007",
+  "title": "Email extraction - pick the right one among two purposes",
+  "category": "extraction",
+  "difficulty": "medium",
+  "prompt": "Please send your resume to careers@example.com. For general questions, use info@example.com instead. What email address should be used for a job application?",
+  "evaluation_type": "exact_match",
+  "expected_output": "careers@example.com",
+  "metadata": { "tags": ["email", "distractor"] }
+}

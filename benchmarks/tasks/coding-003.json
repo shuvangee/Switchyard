@@ -1,0 +1,19 @@
+{
+  "id": "coding-003",
+  "title": "Reverse a string without slicing",
+  "category": "coding",
+  "difficulty": "medium",
+  "prompt": "Write a Python function `reverse_string(s)` that returns the reverse of the input string without using slicing.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python"],
+    "notes": "Correct: builds the reversed string via a loop, recursion, or reversed()/join() — does not use s[::-1] (that's the one thing the prompt explicitly disallows). Graded manually.",
+    "test_cases": [
+      { "input": ["hello"], "expected": "olleh" },
+      { "input": [""], "expected": "" },
+      { "input": ["a"], "expected": "a" },
+      { "input": ["Python3"], "expected": "3nohtyP" }
+    ]
+  }
+}

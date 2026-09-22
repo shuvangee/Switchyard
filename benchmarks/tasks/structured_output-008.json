@@ -1,0 +1,10 @@
+{
+  "id": "structured_output-008",
+  "title": "Structured extraction - book author, year, genre",
+  "category": "structured_output",
+  "difficulty": "medium",
+  "prompt": "Return a JSON object with keys \"author\", \"year\", and \"genre\" for: The novel Dune was written by Frank Herbert in 1965 and is a science fiction classic.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"author\": \"\", \"year\": 0, \"genre\": \"\"}",
+  "metadata": { "tags": ["json"] }
+}

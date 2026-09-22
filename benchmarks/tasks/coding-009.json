@@ -1,0 +1,24 @@
+{
+  "id": "coding-009",
+  "title": "Write a group_anagrams function (hard)",
+  "category": "coding",
+  "difficulty": "hard",
+  "prompt": "Write a Python function `group_anagrams(words)` that takes a list of strings and returns a list of lists, where each inner list contains words that are anagrams of each other.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "hard"],
+    "hard_reason": "Requires the sorted-letters-as-key grouping technique (or equivalent); a multi-step algorithm, not a one-liner.",
+    "notes": "Correct: groups words with identical sorted-letter signatures into the same inner list. No sandboxed execution yet; graded manually.",
+    "test_cases": [
+      {
+        "input": [["eat", "tea", "tan", "ate", "nat", "bat"]],
+        "expected": [["eat", "tea", "ate"], ["tan", "nat"], ["bat"]],
+        "note": "order-insensitive: compare as a set of frozensets, not literal list equality"
+      },
+      { "input": [[]], "expected": [] },
+      { "input": [["abc"]], "expected": [["abc"]] },
+      { "input": [["ab", "ba", "cd"]], "expected": [["ab", "ba"], ["cd"]], "note": "order-insensitive" }
+    ]
+  }
+}
