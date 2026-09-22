@@ -168,3 +168,102 @@ def test_retry_limit_enforced_when_escalated_attempt_also_fails_validation(db_se
     assert event_types.count("model_completed") == MAX_ATTEMPTS
     assert event_types.count("escalating") == 1  # only one hop: fast has exactly one target
     assert event_types[-1] == "returned"
+
+
+def test_provider_error_on_escalation_preserves_earlier_completed_response(db_session, monkeypatch):
+    """Regression test: a provider error on the escalation attempt used to
+    overwrite the only completed response with None, so the request was
+    persisted as a bare error even though an earlier attempt had already
+    produced a response (it just failed validation). The "return the best
+    attempt" contract in this module's docstring requires that earlier
+    response to survive.
+    """
+    _seed_models(db_session)
+
+    from app.evaluation.validation import ValidationOutcome
+    from app.providers.base import ProviderResult
+
+    monkeypatch.setattr(
+        "app.routing.service.validate_response",
+        lambda category, prompt, response: ValidationOutcome(ValidationStatus.FAILED, "forced failure"),
+    )
+
+    call_count = {"n": 0}
+
+    def fake_attempt(model, prompt):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            return (
+                ProviderResult(text="first attempt answer", input_tokens=10, output_tokens=5, latency_ms=100.0),
+                None,
+            )
+        return None, "escalation target is down"
+
+    monkeypatch.setattr("app.routing.service._attempt", fake_attempt)
+
+    log = handle_routed_request(db_session, prompt="What is 17 * 6?")
+
+    assert log.status == ExecutionStatus.SUCCESS.value  # a real response exists, not a bare error
+    assert log.response_text == "first attempt answer"
+    assert log.error_message == "escalation target is down"  # kept for context, doesn't hide the response
+    assert log.selected_model_config_id == "mock-fast-v1"  # the model that produced the returned response
+    assert log.attempt_count == MAX_ATTEMPTS
+    assert log.escalated is True
+    assert log.latency_ms == 100.0  # only the successful attempt's latency
+    assert log.input_tokens == 10
+    assert log.output_tokens == 5
+    assert log.estimated_cost_usd is not None
+
+
+def test_cost_and_latency_accumulate_across_a_validation_escalation(db_session, monkeypatch):
+    """Regression test: only the FINAL attempt's cost/latency/tokens used
+    to be recorded, even when an earlier attempt was also a real, billed
+    call — silently dropping its cost from analytics on every validation-
+    triggered escalation that ultimately succeeded.
+    """
+    _seed_models(db_session)
+
+    from app.evaluation.validation import ValidationOutcome
+    from app.providers.base import ProviderResult
+    from app.providers.pricing import estimate_cost_usd
+    from app.providers.registry import get_model_registry
+
+    validation_calls = {"n": 0}
+
+    def fake_validate(category, prompt, response):
+        validation_calls["n"] += 1
+        status = ValidationStatus.FAILED if validation_calls["n"] == 1 else ValidationStatus.PASSED
+        return ValidationOutcome(status, "forced")
+
+    monkeypatch.setattr("app.routing.service.validate_response", fake_validate)
+
+    def fake_attempt(model, prompt):
+        if model.id == "mock-fast-v1":
+            return ProviderResult(text="wrong", input_tokens=100, output_tokens=50, latency_ms=200.0), None
+        return ProviderResult(text="right", input_tokens=80, output_tokens=40, latency_ms=300.0), None
+
+    monkeypatch.setattr("app.routing.service._attempt", fake_attempt)
+
+    log = handle_routed_request(db_session, prompt="What is 17 * 6?")
+
+    assert log.status == ExecutionStatus.SUCCESS.value
+    assert log.response_text == "right"  # the response that actually passed validation
+    assert log.attempt_count == 2
+    assert log.escalated is True
+    assert log.input_tokens == 180  # 100 + 80 - both attempts were real, billed calls
+    assert log.output_tokens == 90  # 50 + 40
+    assert log.latency_ms == 500.0  # 200 + 300
+
+    registry = {m.id: m for m in get_model_registry(Settings(openai_api_key=None))}
+    expected_cost = estimate_cost_usd(
+        input_cost_per_1k=registry["mock-fast-v1"].input_cost_per_1k,
+        output_cost_per_1k=registry["mock-fast-v1"].output_cost_per_1k,
+        input_tokens=100,
+        output_tokens=50,
+    ) + estimate_cost_usd(
+        input_cost_per_1k=registry["mock-accurate-v1"].input_cost_per_1k,
+        output_cost_per_1k=registry["mock-accurate-v1"].output_cost_per_1k,
+        input_tokens=80,
+        output_tokens=40,
+    )
+    assert log.estimated_cost_usd == pytest.approx(expected_cost)

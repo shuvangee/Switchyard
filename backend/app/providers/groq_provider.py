@@ -6,6 +6,7 @@ ProviderError) whenever no API key is configured, so it never runs by
 accident in local development.
 """
 
+import json
 import time
 
 import httpx
@@ -50,7 +51,10 @@ class GroqProvider(Provider):
             raise ProviderError(f"Groq request failed: {exc}") from exc
         latency_ms = (time.perf_counter() - started) * 1000
 
-        data = response.json()
+        try:
+            data = response.json()
+        except json.JSONDecodeError as exc:
+            raise ProviderError(f"Groq returned a non-JSON response: {exc}") from exc
         try:
             text = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError) as exc:

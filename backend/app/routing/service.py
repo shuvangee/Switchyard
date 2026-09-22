@@ -106,6 +106,26 @@ def handle_routed_request(
     validation_status = ValidationStatus.NOT_VALIDATED
     validation_detail: str | None = None
 
+    # Tracks the most recent attempt that actually produced a response,
+    # separately from `result` (which reflects only the LATEST attempt and
+    # gets overwritten to None by a subsequent provider error) — otherwise a
+    # provider error on the final escalation attempt erases an earlier
+    # completed response that the "return the best attempt" contract above
+    # promises to keep.
+    last_success_result: ProviderResult | None = None
+    last_success_model_id: str | None = None
+
+    # Every successful attempt is a real, billed call, even when its
+    # response is later superseded by an escalation — accumulated
+    # separately from the per-attempt `result` so a validation-triggered
+    # escalation doesn't silently drop an earlier attempt's cost/latency
+    # from analytics (only the final attempt's numbers were kept before).
+    total_latency_ms = 0.0
+    total_input_tokens = 0
+    total_output_tokens = 0
+    total_cost_usd = 0.0
+    metrics_known = True
+
     while attempt_count < MAX_ATTEMPTS:
         attempt_count += 1
         model = model_lookup[current_model_id]
@@ -115,14 +135,42 @@ def handle_routed_request(
             trace.append(TraceEvent.now("provider_error", f"{current_model_id}: {error_message}"))
             next_model_id = _next_escalation_model(current_model_id, model_lookup, attempt_count)
             if next_model_id is None:
-                trace.append(
-                    TraceEvent.now("returned", "provider error with no further escalation available")
-                )
+                if last_success_result is not None:
+                    trace.append(
+                        TraceEvent.now(
+                            "returned",
+                            "provider error with no further escalation available; "
+                            "returning earlier best attempt",
+                        )
+                    )
+                else:
+                    trace.append(
+                        TraceEvent.now(
+                            "returned", "provider error with no further escalation available"
+                        )
+                    )
                 break
             trace.append(TraceEvent.now("escalating", f"provider error -> {next_model_id}"))
             current_model_id = next_model_id
             escalated = True
             continue
+
+        last_success_result = result
+        last_success_model_id = current_model_id
+        total_latency_ms += result.latency_ms
+        if result.input_tokens is None or result.output_tokens is None:
+            metrics_known = False
+        else:
+            total_input_tokens += result.input_tokens
+            total_output_tokens += result.output_tokens
+        attempt_cost = estimate_cost_usd(
+            input_cost_per_1k=model.input_cost_per_1k,
+            output_cost_per_1k=model.output_cost_per_1k,
+            input_tokens=result.input_tokens,
+            output_tokens=result.output_tokens,
+        )
+        if attempt_cost is not None:
+            total_cost_usd += attempt_cost
 
         trace.append(TraceEvent.now("model_completed", f"{current_model_id} latency={result.latency_ms:.0f}ms"))
         outcome = validate_response(analysis.category, prompt, result.text)
@@ -146,20 +194,28 @@ def handle_routed_request(
         current_model_id = next_model_id
         escalated = True
 
-    final_model = model_lookup[current_model_id]
-    if result is not None:
+    # The response we actually return: the latest attempt if it succeeded,
+    # otherwise the last attempt that did (see last_success_result above) —
+    # never a bare error when an earlier completed response exists.
+    best_result = result if result is not None else last_success_result
+    best_model_id = current_model_id if result is not None else last_success_model_id
+
+    if best_result is not None:
+        final_model = model_lookup[best_model_id]
         status = ExecutionStatus.SUCCESS.value
-        response_text = result.text
-        latency_ms = result.latency_ms
-        input_tokens = result.input_tokens
-        output_tokens = result.output_tokens
-        cost = estimate_cost_usd(
-            input_cost_per_1k=final_model.input_cost_per_1k,
-            output_cost_per_1k=final_model.output_cost_per_1k,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-        )
+        response_text = best_result.text
+        latency_ms = total_latency_ms
+        if metrics_known:
+            input_tokens = total_input_tokens
+            output_tokens = total_output_tokens
+            cost = total_cost_usd
+        else:
+            input_tokens = None
+            output_tokens = None
+            cost = None
     else:
+        final_model = model_lookup[current_model_id]
+        best_model_id = current_model_id
         status = ExecutionStatus.ERROR.value
         response_text = None
         latency_ms = None
@@ -177,7 +233,7 @@ def handle_routed_request(
         estimated_input_tokens=analysis.estimated_input_tokens,
         confidence=decision.confidence.value,
         initial_model_config_id=initial_model_id,
-        selected_model_config_id=current_model_id,
+        selected_model_config_id=best_model_id,
         selected_provider=final_model.provider,
         router_version=decision.router_version,
         rationale=decision.rationale,

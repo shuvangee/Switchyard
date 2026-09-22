@@ -56,3 +56,14 @@ def test_raises_on_malformed_response(monkeypatch):
     provider = GrokProvider(api_key="fake-key")
     with pytest.raises(ProviderError, match="unexpected Grok response shape"):
         provider.generate("grok-4.1-fast", "hello")
+
+
+def test_raises_on_non_json_response(monkeypatch):
+    def fake_post(url, headers, json, timeout):
+        request = httpx.Request("POST", url)
+        return httpx.Response(200, content=b"not json", request=request)
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    provider = GrokProvider(api_key="fake-key")
+    with pytest.raises(ProviderError, match="Grok returned a non-JSON response"):
+        provider.generate("grok-4.1-fast", "hello")

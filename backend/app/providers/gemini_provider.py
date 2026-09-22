@@ -6,6 +6,7 @@ approach — a thin adapter, not a wrapper around every SDK feature. Disabled
 by accident in local development.
 """
 
+import json
 import time
 
 import httpx
@@ -56,16 +57,30 @@ class GeminiProvider(Provider):
             raise ProviderError(f"Gemini request failed: {exc}") from exc
         latency_ms = (time.perf_counter() - started) * 1000
 
-        data = response.json()
+        try:
+            data = response.json()
+        except json.JSONDecodeError as exc:
+            raise ProviderError(f"Gemini returned a non-JSON response: {exc}") from exc
         try:
             text = data["candidates"][0]["content"]["parts"][0]["text"]
         except (KeyError, IndexError) as exc:
             raise ProviderError(f"unexpected Gemini response shape: {exc}") from exc
 
         usage = data.get("usageMetadata", {})
+        # This is a reasoning model: invisible thinking tokens are billed at
+        # the output rate and reported separately from the visible answer's
+        # tokens — both must be counted, or cost is systematically
+        # understated whenever thinking is used (see the cap note above).
+        candidates_tokens = usage.get("candidatesTokenCount")
+        thoughts_tokens = usage.get("thoughtsTokenCount")
+        if candidates_tokens is None and thoughts_tokens is None:
+            output_tokens = None
+        else:
+            output_tokens = (candidates_tokens or 0) + (thoughts_tokens or 0)
+
         return ProviderResult(
             text=text,
             input_tokens=usage.get("promptTokenCount"),
-            output_tokens=usage.get("candidatesTokenCount"),
+            output_tokens=output_tokens,
             latency_ms=latency_ms,
         )

@@ -56,3 +56,14 @@ def test_raises_on_malformed_response(monkeypatch):
     provider = OpenAIProvider(api_key="fake-key")
     with pytest.raises(ProviderError, match="unexpected OpenAI response shape"):
         provider.generate("gpt-4o-mini", "hello")
+
+
+def test_raises_on_non_json_response(monkeypatch):
+    def fake_post(url, headers, json, timeout):
+        request = httpx.Request("POST", url)
+        return httpx.Response(200, content=b"not json", request=request)
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    provider = OpenAIProvider(api_key="fake-key")
+    with pytest.raises(ProviderError, match="OpenAI returned a non-JSON response"):
+        provider.generate("gpt-4o-mini", "hello")
