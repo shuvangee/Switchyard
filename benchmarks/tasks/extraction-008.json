@@ -1,0 +1,10 @@
+{
+  "id": "extraction-008",
+  "title": "Email extraction - plus-addressing",
+  "category": "extraction",
+  "difficulty": "easy",
+  "prompt": "Contact john.smith+jobs@example.com regarding open positions. What is the contact email address?",
+  "evaluation_type": "exact_match",
+  "expected_output": "john.smith+jobs@example.com",
+  "metadata": { "tags": ["email", "plus-addressing"] }
+}

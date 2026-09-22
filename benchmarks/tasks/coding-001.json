@@ -8,6 +8,12 @@
   "expected_output": null,
   "metadata": {
     "tags": ["python"],
-    "notes": "No sandboxed code execution in V0; graded manually."
+    "notes": "No sandboxed code execution in V0; graded manually.",
+    "test_cases": [
+      { "input": [0], "expected": 1 },
+      { "input": [1], "expected": 1 },
+      { "input": [5], "expected": 120 },
+      { "input": [10], "expected": 3628800 }
+    ]
   }
 }

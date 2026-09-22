@@ -1,0 +1,13 @@
+{
+  "id": "debugging-006",
+  "title": "Find the bug in an is_empty function",
+  "category": "debugging",
+  "difficulty": "easy",
+  "prompt": "This function is supposed to check if a string is empty but always returns False, even for empty strings.\n\ndef is_empty(s):\n    if s == None:\n        return True\n    return False\n\nIdentify the bug and explain the fix.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "debugging"],
+    "notes": "Bug: checks for None instead of an empty string (''). Fix should check `len(s) == 0` or `not s`. Graded manually."
+  }
+}

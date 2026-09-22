@@ -1,0 +1,13 @@
+{
+  "id": "extraction-013",
+  "title": "Email extraction - two legitimate addresses, purpose-specific (hard)",
+  "category": "extraction",
+  "difficulty": "hard",
+  "prompt": "The invoice was sent from billing@example.com, but if you have questions about the charge, please reach out to accounts-receivable@example.com instead. Which email address should be used for questions about the charge?",
+  "evaluation_type": "exact_match",
+  "expected_output": "accounts-receivable@example.com",
+  "metadata": {
+    "tags": ["email", "distractor", "hard"],
+    "hard_reason": "Two equally legitimate-looking addresses; the correct answer is the one explicitly tied to 'questions about the charge', not the sender address."
+  }
+}

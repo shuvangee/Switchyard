@@ -1,0 +1,10 @@
+{
+  "id": "math-007",
+  "title": "Two-step order of operations",
+  "category": "math",
+  "difficulty": "medium",
+  "prompt": "What is 144 / 12 * 3?",
+  "evaluation_type": "exact_match",
+  "expected_output": "36",
+  "metadata": { "tags": ["arithmetic", "order-of-operations"] }
+}

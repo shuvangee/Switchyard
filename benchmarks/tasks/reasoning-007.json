@@ -1,0 +1,13 @@
+{
+  "id": "reasoning-007",
+  "title": "Marbles ratio puzzle",
+  "category": "reasoning",
+  "difficulty": "medium",
+  "prompt": "A bag contains only red and blue marbles. There are 3 times as many red marbles as blue marbles, and 24 marbles total. How many blue marbles are there? Explain your reasoning.",
+  "evaluation_type": "exact_match",
+  "expected_output": "6",
+  "metadata": {
+    "tags": ["logic", "math-reasoning"],
+    "notes": "r = 3b, r + b = 24 -> 4b = 24 -> b = 6 blue marbles (18 red)."
+  }
+}

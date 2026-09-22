@@ -1,0 +1,10 @@
+{
+  "id": "classification-007",
+  "title": "Sentiment classification - double negative resolves positive",
+  "category": "classification",
+  "difficulty": "medium",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: Not bad at all, actually really solid for the price.",
+  "evaluation_type": "classification_label",
+  "expected_output": "positive",
+  "metadata": { "tags": ["sentiment", "negation"] }
+}

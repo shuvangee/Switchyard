@@ -1,0 +1,13 @@
+{
+  "id": "extraction-010",
+  "title": "Email extraction - deprecated address distractor (hard)",
+  "category": "extraction",
+  "difficulty": "hard",
+  "prompt": "Our old support address noreply@example.com is being retired. Please use support-2026@example.com going forward for all inquiries. Which email address should be used for inquiries going forward?",
+  "evaluation_type": "exact_match",
+  "expected_output": "support-2026@example.com",
+  "metadata": {
+    "tags": ["email", "distractor", "hard"],
+    "hard_reason": "Requires parsing deprecation language ('being retired', 'going forward') rather than grabbing the first-mentioned, normal-looking support address."
+  }
+}

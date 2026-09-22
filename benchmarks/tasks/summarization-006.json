@@ -1,0 +1,13 @@
+{
+  "id": "summarization-006",
+  "title": "Summarize a referral program launch",
+  "category": "summarization",
+  "difficulty": "medium",
+  "prompt": "Summarize the following update in one sentence: The marketing team launched a new referral program this week that gives existing customers a $10 credit for every successful referral, with early results showing a 15% increase in signups compared to last month.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization"],
+    "notes": "Correct: mentions the referral program launch, the incentive ($10 credit), and the result (15% signup increase). Graded manually."
+  }
+}

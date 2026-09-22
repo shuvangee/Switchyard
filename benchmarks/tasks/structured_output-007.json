@@ -1,0 +1,10 @@
+{
+  "id": "structured_output-007",
+  "title": "Structured extraction - order item and quantity",
+  "category": "structured_output",
+  "difficulty": "easy",
+  "prompt": "Return a JSON object with keys \"item\" and \"quantity\" for: The order includes 5 units of SKU-1042.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"item\": \"\", \"quantity\": 0}",
+  "metadata": { "tags": ["json"] }
+}

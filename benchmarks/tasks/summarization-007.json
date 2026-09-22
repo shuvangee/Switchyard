@@ -1,0 +1,13 @@
+{
+  "id": "summarization-007",
+  "title": "Summarize an app crash and hotfix",
+  "category": "summarization",
+  "difficulty": "medium",
+  "prompt": "Summarize the following in one sentence: The mobile app crashed for approximately 20% of iOS users during the update rollout yesterday; the issue has since been identified as a memory leak and a hotfix has already been deployed.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization"],
+    "notes": "Correct: mentions the crash and its scope (20% of iOS users), the root cause (memory leak), and that a hotfix is already deployed. Graded manually."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "reasoning-011",
+  "title": "Day-of-week arithmetic",
+  "category": "reasoning",
+  "difficulty": "medium",
+  "prompt": "If today is Wednesday, what day of the week will it be 10 days from now? Explain your reasoning.",
+  "evaluation_type": "exact_match",
+  "expected_output": "Saturday",
+  "metadata": {
+    "tags": ["logic"],
+    "notes": "10 mod 7 = 3, Wednesday + 3 days = Saturday."
+  }
+}

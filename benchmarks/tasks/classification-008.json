@@ -1,0 +1,10 @@
+{
+  "id": "classification-008",
+  "title": "Sentiment classification - negated expectation",
+  "category": "classification",
+  "difficulty": "medium",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: I expected to hate it, but I don't.",
+  "evaluation_type": "classification_label",
+  "expected_output": "positive",
+  "metadata": { "tags": ["sentiment", "negation"] }
+}

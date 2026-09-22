@@ -1,0 +1,13 @@
+{
+  "id": "classification-012",
+  "title": "Sentiment classification - hedged double negative (hard)",
+  "category": "classification",
+  "difficulty": "hard",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: I wouldn't say it's bad, but I also wouldn't recommend it to a friend.",
+  "evaluation_type": "classification_label",
+  "expected_output": "negative",
+  "metadata": {
+    "tags": ["sentiment", "hedging", "hard", "judgment-call"],
+    "hard_reason": "Genuinely ambiguous between neutral and negative - graded negative because the net recommendation ('wouldn't recommend') is the actionable conclusion, despite the softening opener."
+  }
+}

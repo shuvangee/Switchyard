@@ -1,0 +1,18 @@
+{
+  "id": "debugging-013",
+  "title": "Find the bug in a to_dict function",
+  "category": "debugging",
+  "difficulty": "medium",
+  "prompt": "This function is supposed to convert a list of (key, value) tuples into a dictionary, keeping the LAST value when a key repeats, but it keeps the FIRST value instead.\n\ndef to_dict(pairs):\n    d = {}\n    for k, v in pairs:\n        if k not in d:\n            d[k] = v\n    return d\n\nIdentify the bug and explain the fix.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "debugging"],
+    "notes": "Bug: the `if k not in d` guard prevents later duplicate keys from overwriting earlier ones. Fix should assign unconditionally: `d[k] = v`. Graded manually.",
+    "test_cases": [
+      { "input": [[["a", 1], ["a", 2]]], "expected": { "a": 2 } },
+      { "input": [[["a", 1], ["b", 2]]], "expected": { "a": 1, "b": 2 } },
+      { "input": [[]], "expected": {} }
+    ]
+  }
+}

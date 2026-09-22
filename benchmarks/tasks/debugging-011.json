@@ -1,0 +1,18 @@
+{
+  "id": "debugging-011",
+  "title": "Find the bug in a remove_vowels function",
+  "category": "debugging",
+  "difficulty": "medium",
+  "prompt": "This function is supposed to remove all vowels from a string but leaves some in.\n\ndef remove_vowels(s):\n    vowels = 'aeiou'\n    return ''.join([c for c in s if c not in vowels])\n\nIdentify the bug and explain the fix.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "debugging"],
+    "notes": "Bug: doesn't handle uppercase vowels (e.g. 'A', 'E'). Fix should check against both cases, or lowercase the comparison. Graded manually.",
+    "test_cases": [
+      { "input": ["Hello"], "expected": "Hll" },
+      { "input": ["AEIOU"], "expected": "" },
+      { "input": ["xyz"], "expected": "xyz" }
+    ]
+  }
+}

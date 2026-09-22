@@ -1,0 +1,10 @@
+{
+  "id": "extraction-012",
+  "title": "Email extraction - 'do not reply' distractor phrase",
+  "category": "extraction",
+  "difficulty": "medium",
+  "prompt": "To unsubscribe, do not reply to this email. For support, write to help-desk@example.com. What email address should be used for support?",
+  "evaluation_type": "exact_match",
+  "expected_output": "help-desk@example.com",
+  "metadata": { "tags": ["email", "distractor"] }
+}

@@ -146,7 +146,14 @@ def test_real_project_data_produces_the_expected_row_count():
     """Regression check against the actual committed experiment data —
     catches silent dataset drift (e.g. a new benchmark task file added
     without updating this expectation).
+
+    2026-09-22: benchmarks/tasks/ expanded from 44 to 104 tasks (60 new),
+    but no experiment has been run against the new tasks yet — row count
+    is unchanged (24) until that happens; the manual_eval_type count grew
+    from 20 to 47 because more manual-eval tasks now exist, independent
+    of whether any executions have been recorded for them.
     """
     rows, excluded = build_training_rows()
     assert len(rows) == 24
-    assert excluded["manual_eval_type"] == 20
+    assert excluded["manual_eval_type"] == 47
+    assert excluded["no_executions"] == 33

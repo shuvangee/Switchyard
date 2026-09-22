@@ -1,0 +1,10 @@
+{
+  "id": "structured_output-009",
+  "title": "Structured extraction - temperature and unit",
+  "category": "structured_output",
+  "difficulty": "medium",
+  "prompt": "Return a JSON object with keys \"temperature\" and \"unit\" for: It's currently 72 degrees Fahrenheit outside.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"temperature\": 0, \"unit\": \"\"}",
+  "metadata": { "tags": ["json"] }
+}

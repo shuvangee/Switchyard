@@ -1,0 +1,19 @@
+{
+  "id": "coding-008",
+  "title": "Write a one-level flatten function",
+  "category": "coding",
+  "difficulty": "medium",
+  "prompt": "Write a Python function `flatten(nested)` that takes a list which may contain nested lists (only one level deep) and returns a single flattened list.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python"],
+    "notes": "Correct: e.g. flatten([1, [2, 3], 4]) == [1, 2, 3, 4]; only needs to handle one level of nesting per the spec. No sandboxed execution yet; graded manually.",
+    "test_cases": [
+      { "input": [[1, [2, 3], 4]], "expected": [1, 2, 3, 4] },
+      { "input": [[]], "expected": [] },
+      { "input": [[[1, 2], [3, 4]]], "expected": [1, 2, 3, 4] },
+      { "input": [[1, 2, 3]], "expected": [1, 2, 3] }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "debugging-010",
+  "title": "Find the bug in a running_total function (hard)",
+  "category": "debugging",
+  "difficulty": "hard",
+  "prompt": "This function is supposed to compute a running total but occasionally returns a list one element shorter than the input.\n\ndef running_total(nums):\n    totals = []\n    total = 0\n    for i in range(len(nums) - 1):\n        total += nums[i]\n        totals.append(total)\n    return totals\n\nIdentify the bug and explain the fix.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "debugging", "hard"],
+    "hard_reason": "range(len(nums) - 1) silently skips the last element - an easy-to-miss off-by-one inside a range() call.",
+    "notes": "Fix: should be range(len(nums)), not range(len(nums) - 1). Graded manually.",
+    "test_cases": [
+      { "input": [[1, 2, 3]], "expected": [1, 3, 6] },
+      { "input": [[]], "expected": [] },
+      { "input": [[5]], "expected": [5] }
+    ]
+  }
+}

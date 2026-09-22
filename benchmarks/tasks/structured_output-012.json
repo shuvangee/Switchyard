@@ -1,0 +1,10 @@
+{
+  "id": "structured_output-012",
+  "title": "Structured extraction - duration requires unit conversion",
+  "category": "structured_output",
+  "difficulty": "medium",
+  "prompt": "Return a JSON object with keys \"title\" and \"duration_minutes\" for: The meeting titled 'Q3 Planning' is scheduled to run for one hour and thirty minutes.",
+  "evaluation_type": "valid_json",
+  "expected_output": "{\"title\": \"\", \"duration_minutes\": 0}",
+  "metadata": { "tags": ["json", "unit-conversion"] }
+}

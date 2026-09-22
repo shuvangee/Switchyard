@@ -1,0 +1,10 @@
+{
+  "id": "math-008",
+  "title": "Percentage calculation",
+  "category": "math",
+  "difficulty": "medium",
+  "prompt": "What is 15% of 240?",
+  "evaluation_type": "exact_match",
+  "expected_output": "36",
+  "metadata": { "tags": ["arithmetic", "percentage"] }
+}

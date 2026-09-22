@@ -1,0 +1,10 @@
+{
+  "id": "extraction-009",
+  "title": "Email extraction - from a signature block with a phone distractor",
+  "category": "extraction",
+  "difficulty": "medium",
+  "prompt": "Best regards,\nJane Doe\nSenior Analyst\njane.doe@example-corp.io\n(555) 123-4567\n\nExtract Jane's email address from this signature.",
+  "evaluation_type": "exact_match",
+  "expected_output": "jane.doe@example-corp.io",
+  "metadata": { "tags": ["email", "distractor", "unstructured-text"] }
+}

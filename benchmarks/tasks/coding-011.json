@@ -1,0 +1,19 @@
+{
+  "id": "coding-011",
+  "title": "Write a merge_dicts function",
+  "category": "coding",
+  "difficulty": "medium",
+  "prompt": "Write a Python function `merge_dicts(d1, d2)` that merges two dictionaries, and when a key exists in both, keeps the value from d2.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python"],
+    "notes": "Correct: e.g. via {**d1, **d2} or an explicit loop where d2 overwrites d1 on collision. No sandboxed execution yet; graded manually.",
+    "test_cases": [
+      { "input": [{ "a": 1, "b": 2 }, { "b": 3, "c": 4 }], "expected": { "a": 1, "b": 3, "c": 4 } },
+      { "input": [{}, { "x": 1 }], "expected": { "x": 1 } },
+      { "input": [{ "x": 1 }, {}], "expected": { "x": 1 } },
+      { "input": [{}, {}], "expected": {} }
+    ]
+  }
+}

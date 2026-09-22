@@ -8,6 +8,12 @@
   "expected_output": null,
   "metadata": {
     "tags": ["python"],
-    "notes": "Correct: preserves first-occurrence order — e.g. via a seen-set with an explicit loop, or dict.fromkeys(lst). A bare `list(set(lst))` is wrong because set order is not guaranteed to match input order. Graded manually."
+    "notes": "Correct: preserves first-occurrence order — e.g. via a seen-set with an explicit loop, or dict.fromkeys(lst). A bare `list(set(lst))` is wrong because set order is not guaranteed to match input order. Graded manually.",
+    "test_cases": [
+      { "input": [[1, 2, 2, 3, 1]], "expected": [1, 2, 3] },
+      { "input": [[]], "expected": [] },
+      { "input": [["a", "b", "a", "c"]], "expected": ["a", "b", "c"] },
+      { "input": [[5, 5, 5]], "expected": [5] }
+    ]
   }
 }

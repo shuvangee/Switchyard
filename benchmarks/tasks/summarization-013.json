@@ -1,0 +1,13 @@
+{
+  "id": "summarization-013",
+  "title": "Summarize an early quarter close",
+  "category": "summarization",
+  "difficulty": "medium",
+  "prompt": "Summarize the following update in one sentence: The finance team closed the books for Q3 two days ahead of schedule this quarter, the fastest close in the company's history.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization"],
+    "notes": "Correct: mentions the early close (2 days ahead) and that it's a company record. Graded manually."
+  }
+}

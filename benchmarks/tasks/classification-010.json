@@ -1,0 +1,13 @@
+{
+  "id": "classification-010",
+  "title": "Sentiment classification - purely factual statement",
+  "category": "classification",
+  "difficulty": "medium",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: This is exactly what I ordered, delivered on time.",
+  "evaluation_type": "classification_label",
+  "expected_output": "neutral",
+  "metadata": {
+    "tags": ["sentiment", "neutral", "judgment-call"],
+    "notes": "Factual/no clear emotional valence - graded neutral rather than positive since nothing expresses satisfaction beyond meeting expectations exactly."
+  }
+}

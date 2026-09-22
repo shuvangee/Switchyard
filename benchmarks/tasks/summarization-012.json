@@ -1,0 +1,14 @@
+{
+  "id": "summarization-012",
+  "title": "Summarize a feature delay with an unaffected parallel workstream (hard)",
+  "category": "summarization",
+  "difficulty": "hard",
+  "prompt": "Summarize the following in two sentences: Engineering originally planned to ship the new search feature by the end of this month, but a critical dependency (the updated indexing service) was delayed by three weeks due to an unrelated infrastructure migration; as a result, the search feature launch has been pushed to next month, though the team has already begun parallel work on a related ranking improvement that is unaffected by the delay and remains on its original schedule.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["summarization", "hard"],
+    "hard_reason": "Requires distinguishing what IS delayed (search feature, due to the indexing dependency) from what is NOT delayed (the ranking improvement) - a real test of whether the model tracks two separate timelines correctly instead of conflating them.",
+    "notes": "Correct: two sentences that keep the delayed search feature and the on-schedule ranking improvement clearly separate. Graded manually - conflating the two timelines is a failure."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "reasoning-006",
+  "title": "Squares and rectangles syllogism",
+  "category": "reasoning",
+  "difficulty": "easy",
+  "prompt": "If all squares are rectangles, and this shape is a square, what can you conclude about this shape? Explain your reasoning.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["logic"],
+    "notes": "Correct answer: the shape is a rectangle (simple syllogism). Left manual on purpose even though the conclusion is a single word - kept alongside the other genuinely open-ended reasoning tasks rather than singled out for auto-grading."
+  }
+}

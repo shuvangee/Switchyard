@@ -1,0 +1,13 @@
+{
+  "id": "classification-011",
+  "title": "Sentiment classification - sarcasm (hard)",
+  "category": "classification",
+  "difficulty": "hard",
+  "prompt": "Classify the sentiment of this review. Respond with exactly one of: positive, negative, neutral.\nReview: Oh great, ANOTHER package that arrived broken. Fantastic service, really.",
+  "evaluation_type": "classification_label",
+  "expected_output": "negative",
+  "metadata": {
+    "tags": ["sentiment", "sarcasm", "hard"],
+    "hard_reason": "Sarcasm - a naive model latches onto 'great'/'fantastic' and misreads this as positive when the actual content (broken package, capitalized ANOTHER) is clearly negative."
+  }
+}

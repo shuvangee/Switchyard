@@ -1,0 +1,20 @@
+{
+  "id": "coding-007",
+  "title": "Write an is_prime function",
+  "category": "coding",
+  "difficulty": "medium",
+  "prompt": "Write a Python function `is_prime(n)` that returns True if n is a prime number, False otherwise.",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python"],
+    "notes": "Correct: handles n < 2 as False, checks divisibility up to sqrt(n) or equivalent. Common bug: treating 1 (or 0) as prime. No sandboxed execution yet; graded manually.",
+    "test_cases": [
+      { "input": [2], "expected": true },
+      { "input": [1], "expected": false },
+      { "input": [0], "expected": false },
+      { "input": [17], "expected": true },
+      { "input": [15], "expected": false }
+    ]
+  }
+}

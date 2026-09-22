@@ -1,0 +1,21 @@
+{
+  "id": "coding-012",
+  "title": "Write an is_balanced function (hard)",
+  "category": "coding",
+  "difficulty": "hard",
+  "prompt": "Write a Python function `is_balanced(s)` that returns True if all parentheses, brackets, and braces in the string s are balanced and correctly nested (e.g. '([]){}' is balanced, '([)]' is not).",
+  "evaluation_type": "manual",
+  "expected_output": null,
+  "metadata": {
+    "tags": ["python", "hard"],
+    "hard_reason": "Classic stack-based problem - a naive approach that just counts opening/closing characters (rather than using a stack) will incorrectly accept '([)]' as balanced, since counts match but nesting order doesn't.",
+    "notes": "Correct: uses a stack, pushing openers and popping/matching on closers, and checking type match, not just count. No sandboxed execution yet; graded manually.",
+    "test_cases": [
+      { "input": ["([]){}"], "expected": true },
+      { "input": ["([)]"], "expected": false },
+      { "input": [""], "expected": true },
+      { "input": ["((("], "expected": false },
+      { "input": ["{[()()]}"], "expected": true }
+    ]
+  }
+}

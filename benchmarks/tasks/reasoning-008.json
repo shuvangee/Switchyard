@@ -1,0 +1,13 @@
+{
+  "id": "reasoning-008",
+  "title": "Age ordering - second youngest",
+  "category": "reasoning",
+  "difficulty": "medium",
+  "prompt": "Sam is older than Riley. Riley is older than Jordan. Jordan is older than Casey. Who is the second youngest? Explain your reasoning.",
+  "evaluation_type": "exact_match",
+  "expected_output": "Jordan",
+  "metadata": {
+    "tags": ["logic"],
+    "notes": "Order from oldest to youngest: Sam, Riley, Jordan, Casey - second-youngest is Jordan."
+  }
+}
