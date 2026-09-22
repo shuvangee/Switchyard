@@ -14,6 +14,14 @@ from app.providers.base import Provider, ProviderError, ProviderResult
 
 _CHAT_COMPLETIONS_URL = "https://api.groq.com/openai/v1/chat/completions"
 
+# Caps a single response so latency/TPM usage stay bounded and estimable
+# ahead of a run — without this, an open-ended prompt (reasoning/coding/
+# debugging/summarization) has no limit on how much a real model can
+# generate, which risks blowing through the free tier's 8K-tokens/minute
+# cap over a multi-task run. Matches the reasoning behind Gemini's
+# _MAX_OUTPUT_TOKENS cap (see gemini_provider.py).
+_MAX_TOKENS = 1024
+
 
 class GroqProvider(Provider):
     name = "groq"
@@ -30,7 +38,11 @@ class GroqProvider(Provider):
             response = httpx.post(
                 _CHAT_COMPLETIONS_URL,
                 headers={"Authorization": f"Bearer {self._api_key}"},
-                json={"model": model_id, "messages": [{"role": "user", "content": prompt}]},
+                json={
+                    "model": model_id,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": _MAX_TOKENS,
+                },
                 timeout=30.0,
             )
             response.raise_for_status()
