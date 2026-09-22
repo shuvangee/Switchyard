@@ -444,3 +444,89 @@ config, not a measurement — and is marked provisional in the model
 registry's `capabilities.notes` until a real experiment run confirms it
 against an actual bill; per CLAUDE.md, no cost/latency number derived
 from it goes in `METRICS.md`/`EXPERIMENTS.md` until that happens.
+
+## 2026-09-22 — V3 training target: cheapest-correct-candidate, per task
+
+**Decision:** The learned router's training label for each benchmark task
+is the cheapest candidate model with a recorded `correct` outcome for
+that task, computed from real `evaluation_status`/`estimated_cost_usd`
+values already in the committed experiment results. Tasks with no
+deterministic evaluator (the 4 manual categories) and tasks where no
+candidate got it right both produce zero rows — never a guessed or
+interpolated label.
+
+**Alternatives considered:** A quality *score* target (e.g., regress
+against some 0-1 "quality" number) instead of a discrete cheapest-correct
+classification; a target that also weighs latency, not just cost and
+correctness.
+
+**Reasoning:** A regression target needs a quality metric more granular
+than the binary `correct`/`incorrect` this project actually has — V0
+never produced partial-credit scores, so building one would mean
+inventing a number, which CLAUDE.md forbids outright. The binary
+cheapest-correct target is the smallest thing directly answerable from
+data that already exists, and it maps 1:1 onto the project's stated
+research question. Latency was left out of the target definition (though
+still reported in comparisons) because V0/V2 already treat cost as the
+primary lever and latency as secondary — adding a second optimization
+axis to a 24-row dataset would only fragment an already-thin target
+distribution further.
+
+**Trade-offs accepted:** A task with no correct candidate is silently
+excluded rather than assigned a "least-bad" label — in this dataset that
+exclusion path exists but was never triggered (every task had at least
+one correct candidate), so it's untested against a real case; worth
+revisiting once more data makes it a live scenario.
+
+## 2026-09-22 — Leave-one-out cross-validation instead of a train/test split
+
+**Decision:** `routing/learned/train.py` evaluates via leave-one-out
+cross-validation (train on all-but-one row, predict the held-out row,
+repeat once per row) rather than a fixed train/validation/test split.
+
+**Alternatives considered:** An 80/20 (or similar) train/test split, as
+is conventional and as the original V3 spec suggested; k-fold
+cross-validation with a small k (e.g. 5).
+
+**Reasoning:** At 24 total rows, an 80/20 split leaves roughly 5 test
+rows — a single such split's accuracy is dominated by which specific rows
+landed in the test set (one row's outcome is a 20-point swing), which
+would make the headline comparison number close to arbitrary. Leave-one-
+out is the standard, textbook-correct choice for a dataset this small; a
+5-fold split would face a milder version of the same problem (test folds
+of ~5 rows) for no benefit over using every row as its own held-out test.
+
+**Trade-offs accepted:** Leave-one-out trains 24 separate models just to
+produce the evaluation numbers (cheap here — a depth-2 tree on 24 rows
+fits in milliseconds — but would not scale to a larger dataset or a
+heavier model without reconsidering). The deployed artifact is a
+*different* model — one final fit on all 24 rows, not any of the 24
+leave-one-out models — a standard and correct practice, but worth being
+explicit that "the model behind `learned-v1`" and "the models evaluated
+in the comparison table" are not literally the same object.
+
+## 2026-09-22 — Router strategy selection: a `router_version` string, not a class hierarchy
+
+**Decision:** `handle_routed_request()` takes an optional
+`router_version: str | None` parameter (`"v2"` default, or
+`"learned-v1"`), validated against a fixed allow-list and raising
+`ValueError` (surfaced as HTTP 400) for anything else. `decide_route()`
+and `decide_route_learned()` are two plain functions sharing the
+`RoutingDecision` return shape — no `RoutingStrategy` abstract base class
+or plugin registry.
+
+**Alternatives considered:** A `RoutingStrategy` protocol/ABC with
+`rule_based` and `learned` implementations registered in a dict, closer
+to a conventional strategy pattern.
+
+**Reasoning:** There are exactly two strategies, and there is no near-term
+plan for a third (V4 is production polish, not more routing algorithms).
+A two-branch `if` in `handle_routed_request` is the entire abstraction a
+2-strategy system needs; a formal strategy-pattern class hierarchy would
+be solving for a variety of implementations that doesn't exist yet — the
+same "no premature abstraction" reasoning already applied to V1's rules
+being a plain list rather than a rule-engine DSL.
+
+**Trade-offs accepted:** Adding a third router version means editing this
+`if` and the allow-list tuple directly, not registering a new class —
+acceptable at this scale; revisit if a third strategy actually appears.

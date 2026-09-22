@@ -411,3 +411,34 @@ data stopped being valid. This is the second time in two days a
 real, silent data loss before it got committed — worth treating as a
 standing habit for any script that writes to a committed results file,
 not a one-off save.
+
+## 2026-09-22 — A verified fix was never actually applied to its own data file
+
+**What was tried:** Building V3's training dataset from
+`experiments/results/gemini-3.6-flash-baseline.json`, which should have
+had the evaluator-fix corrections from 2026-09-20 already applied — that
+fix had been explicitly verified via `scripts/rescore_evaluator_fix.py`,
+which reported the 5 affected rows changing from `incorrect` to
+`correct`.
+
+**Why it didn't work:** `rescore_evaluator_fix.py` computed the corrected
+scores and printed them — it never wrote them back to the JSON file it
+read from. The committed file still had the original, wrong
+`evaluation_status` values for those 5 rows, over a day after the fix was
+"verified." Caught only because building the V3 dataset meant reading
+that file's `evaluation_status` values directly and noticing they didn't
+match what had already been reported as fixed.
+
+**What changed:** Patched the file directly (the 5 specific rows already
+identified by the earlier verification — no new judgment calls, just
+applying a result already computed and reported) before using it for
+anything. Confirmed via `grep -c` that exactly 8 rows now read `correct`,
+matching the earlier 8/8 verification.
+
+**General lesson:** "Verified via a script that printed the right answer"
+and "the committed file actually has the right answer" are two different
+claims, and this project conflated them for a day and a half. A
+verification step that computes a corrected value without writing it
+back doesn't fix anything — it just proves a fix *would* work. Any future
+"we confirmed X is correct now" claim needs to end with a check that the
+file on disk actually reflects X, not just that a script printed X once.

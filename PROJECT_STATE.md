@@ -6,15 +6,23 @@ changes. Full detail belongs in `docs/case-study/`, not here.
 
 ## Current stage
 
-V2 — validation, confidence, and escalation. Complete.
+V3 — learned routing. First model trained and evaluated (2026-09-22).
+**Result: it loses to every baseline, including "always pick the
+cheapest model."** Not recommended for real traffic. See
+`docs/case-study/EXPERIMENTS.md` (2026-09-22) for the full analysis —
+this is an honest negative result, not a bug to be quietly fixed.
 
 ## Current objective
 
-None in progress. Switchyard's first real-provider experiment (Gemini)
-is now done — see Completed below. V3 (learned routing) is still not
-started: the 2026-09-19 data-readiness review found the existing dataset
-insufficient, and this one 12-task real-provider run, while genuine, does
-not change that conclusion by itself (see `docs/case-study/EXPERIMENTS.md`).
+Two things in parallel:
+1. Data collection (Phase 2/3 below) is still the real path to a V3
+   model that might actually beat the rules — the negative result above
+   confirms, rather than contradicts, every prior data-readiness review.
+2. Nothing about V3's pipeline itself needs more work right now — it's
+   built, tested, and wired into the router-selection mechanism
+   (`router_version="learned-v1"` in `POST /route`). It should be
+   re-trained (`python -m app.routing.learned.train`) once meaningfully
+   more real, correctly-labeled data exists, not before.
 
 ## Completed
 
@@ -109,14 +117,47 @@ regressions. Gemini's deterministically-scored tasks now read 8/8 correct.
 140 backend tests pass (up from 136). Full detail in
 `FAILURES_AND_LESSONS.md` (2026-09-20 entry, updated in place).
 
+## V3 — learned routing (2026-09-22)
+
+Built the full pipeline: `backend/app/routing/learned/{dataset,features,train}.py`
+(dataset construction, feature encoding, leave-one-out evaluation +
+baseline comparison + final artifact training) and
+`backend/app/routing/learned_router.py` (inference-time strategy,
+same `RoutingDecision` shape as V1's rule-based router). Wired into
+`routing/service.py`/`api/schemas.py`/`api/routing.py` as a selectable
+`router_version` (`"v2"` default, `"learned-v1"` opt-in). 24 real training
+rows (mock + the one real Gemini experiment — the 4 manual-eval
+categories contribute none, honestly, since there's no ground truth for
+them). New dependency: `scikit-learn`/`joblib`. 21 new tests
+(167 backend tests total, up from 146).
+
+**Result: learned-v1 loses.** 56.5% leave-one-out accuracy vs.
+always-cheapest's 58.3% (at 5.5x lower cost), V1's rules' 75.0%, and
+random's 72.9%. Strictly dominated by always-cheapest on both accuracy
+and cost. Root cause: not enough data (24 rows, 3 severely imbalanced
+classes) — exactly what three prior data-readiness reviews predicted,
+now demonstrated with a real trained model rather than argued in the
+abstract. Verified this is a data problem, not a pipeline bug, via a
+synthetic-data test that recovers ≥90% accuracy on a genuinely learnable
+pattern using the identical code path. Full analysis, including a
+same-day catch that the Gemini evaluator fix from 2026-09-20 had been
+verified but never actually written back to its own results file:
+`docs/case-study/EXPERIMENTS.md` and `FAILURES_AND_LESSONS.md`
+(2026-09-22 entries).
+
+**Not built in this pass:** a dedicated frontend comparison UI (the
+original V3 ask). Substituted with `scripts/report_v3_comparison.py`,
+which renders the same real comparison numbers as a markdown table
+(`experiments/results/learned-v1-comparison.md`) — building a full page
+for a router that isn't recommended for use felt like the wrong
+priority; revisit once there's a result worth putting in front of a
+reviewer as a working feature, not just a documented finding.
+
 ## Not implemented (by design, at this stage)
 
-Learned routing (V3), production analytics/observability polish (V4). One
-real-provider run now exists (12 tasks, Gemini 3.6 Flash) but is a single
-run against one model — not enough by itself to clear the V3
-data-readiness bar. Asked directly whether to proceed to V3 anyway
-(2026-09-20); decided to hold and collect more real data first rather than
-train on a dataset already diagnosed as insufficient three separate times.
+Production analytics/observability polish (V4) — not started, and V3's
+negative result means it shouldn't be, until a learned router actually
+has something to show.
 
 ## Data-collection plan (in progress)
 
