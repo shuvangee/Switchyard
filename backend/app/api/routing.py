@@ -15,9 +15,16 @@ def route_request(payload: RouteRequest, db: Session = Depends(get_db)) -> Reque
     if not payload.prompt.strip():
         raise HTTPException(status_code=400, detail="prompt must not be empty")
     try:
-        log = handle_routed_request(db, prompt=payload.prompt, category_hint=payload.category_hint)
+        log = handle_routed_request(
+            db,
+            prompt=payload.prompt,
+            category_hint=payload.category_hint,
+            router_version=payload.router_version,
+        )
     except RoutingError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return RequestLogOut.from_orm_log(log)
 
 

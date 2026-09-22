@@ -151,6 +151,11 @@ class CreateExperimentRequest(BaseModel):
 class RouteRequest(BaseModel):
     prompt: str
     category_hint: TaskCategory | None = None
+    # "v2" (default, rule-based) or "learned-v1". See
+    # docs/case-study/EXPERIMENTS.md (2026-09-22) before using learned-v1 for
+    # anything real — it is evaluated and NOT recommended, wired up for
+    # comparison purposes, not because it currently outperforms the rules.
+    router_version: str | None = None
 
 
 class TraceEventOut(BaseModel):

@@ -1,3 +1,5 @@
+import pytest
+
 from app.core.config import Settings
 from app.models.enums import ExecutionStatus, TaskCategory, ValidationStatus
 from app.models.request_log import RequestLogORM
@@ -42,6 +44,19 @@ def test_explicit_category_hint_is_recorded(db_session):
     assert log.category_source == "explicit"
     # coding is an unscored category -> conservative default
     assert log.selected_model_config_id == "mock-accurate-v1"
+
+
+def test_learned_router_version_is_used_when_requested(db_session):
+    _seed_models(db_session)
+    log = handle_routed_request(db_session, prompt="What is 17 * 6?", router_version="learned-v1")
+    assert log.router_version == "learned-v1"
+    assert log.selected_model_config_id != ""
+
+
+def test_unknown_router_version_raises(db_session):
+    _seed_models(db_session)
+    with pytest.raises(ValueError, match="unknown router_version"):
+        handle_routed_request(db_session, prompt="What is 17 * 6?", router_version="bogus")
 
 
 def test_request_is_persisted_and_queryable(db_session):

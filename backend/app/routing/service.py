@@ -29,8 +29,11 @@ from app.providers.base import ProviderError, ProviderResult
 from app.providers.pricing import estimate_cost_usd
 from app.providers.registry import ModelConfig, get_model_registry, get_provider
 from app.routing.analyzer import analyze_request
+from app.routing.learned.train import LEARNED_ROUTER_VERSION
+from app.routing.learned_router import decide_route_learned
 from app.routing.router import decide_route
 from app.routing.rules import ESCALATION_TARGETS
+from app.routing.rules import ROUTER_VERSION as DEFAULT_ROUTER_VERSION
 from app.routing.trace import TraceEvent
 
 MAX_ATTEMPTS = 2
@@ -60,11 +63,24 @@ def _next_escalation_model(
 
 
 def handle_routed_request(
-    session: Session, *, prompt: str, category_hint: TaskCategory | None = None
+    session: Session,
+    *,
+    prompt: str,
+    category_hint: TaskCategory | None = None,
+    router_version: str | None = None,
 ) -> RequestLogORM:
+    if router_version not in (None, DEFAULT_ROUTER_VERSION, LEARNED_ROUTER_VERSION):
+        raise ValueError(
+            f"unknown router_version {router_version!r} — expected one of "
+            f"{DEFAULT_ROUTER_VERSION!r}, {LEARNED_ROUTER_VERSION!r}, or None"
+        )
+
     analysis = analyze_request(prompt, category_hint=category_hint)
     model_lookup = {model.id: model for model in get_model_registry()}
-    decision = decide_route(analysis, model_lookup)
+    if router_version == LEARNED_ROUTER_VERSION:
+        decision = decide_route_learned(analysis, model_lookup)
+    else:
+        decision = decide_route(analysis, model_lookup)
 
     trace: list[TraceEvent] = [
         TraceEvent.now("request_received", f"prompt received ({len(prompt)} chars)"),

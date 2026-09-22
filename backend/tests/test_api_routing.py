@@ -27,6 +27,23 @@ def test_route_rejects_empty_prompt(api_client):
     assert response.status_code == 400
 
 
+def test_route_with_learned_router_version(api_client):
+    response = api_client.post(
+        "/route", json={"prompt": "What is 17 * 6?", "router_version": "learned-v1"}
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["router_version"] == "learned-v1"
+    assert body["selected_model_config_id"] != ""
+
+
+def test_route_rejects_unknown_router_version(api_client):
+    response = api_client.post(
+        "/route", json={"prompt": "What is 17 * 6?", "router_version": "not-a-real-version"}
+    )
+    assert response.status_code == 400
+
+
 def test_requests_empty_state(api_client):
     response = api_client.get("/requests")
     assert response.status_code == 200
