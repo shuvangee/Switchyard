@@ -15,6 +15,7 @@ from app.models.model_config import ModelConfigORM
 from app.providers.base import Provider
 from app.providers.gemini_provider import GeminiProvider
 from app.providers.grok_provider import GrokProvider
+from app.providers.groq_provider import GroqProvider
 from app.providers.mock import MockProvider
 from app.providers.openai_provider import OpenAIProvider
 
@@ -132,6 +133,48 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
                 )
             },
         ),
+        ModelConfig(
+            id="groq-gpt-oss-20b",
+            provider="groq",
+            model_id="openai/gpt-oss-20b",
+            display_name="Groq GPT-OSS 20B",
+            enabled=bool(settings.groq_api_key),
+            input_cost_per_1k=0.000075,
+            output_cost_per_1k=0.0003,
+            capabilities={
+                "notes": (
+                    "Real provider; disabled unless GROQ_API_KEY is set. "
+                    "Model id and pricing sourced from Groq's own docs URL "
+                    "structure (console.groq.com/docs/model/openai/gpt-oss-20b, "
+                    "found via search) plus third-party aggregators that agree "
+                    "with each other — direct fetch of console.groq.com is "
+                    "blocked by this environment's network policy, so neither "
+                    "was verified against a live page load. Free tier: 30 RPM, "
+                    "1,000 RPD, 8K TPM, 200K TPD (same caveat)."
+                )
+            },
+        ),
+        ModelConfig(
+            id="groq-gpt-oss-120b",
+            provider="groq",
+            model_id="openai/gpt-oss-120b",
+            display_name="Groq GPT-OSS 120B",
+            enabled=bool(settings.groq_api_key),
+            input_cost_per_1k=0.00015,
+            output_cost_per_1k=0.0006,
+            capabilities={
+                "notes": (
+                    "Real provider; disabled unless GROQ_API_KEY is set. "
+                    "Model id and pricing sourced from Groq's own docs URL "
+                    "structure (console.groq.com/docs/model/openai/gpt-oss-120b, "
+                    "found via search) plus third-party aggregators that agree "
+                    "with each other — direct fetch of console.groq.com is "
+                    "blocked by this environment's network policy, so neither "
+                    "was verified against a live page load. Free tier: 30 RPM, "
+                    "1,000 RPD, 8K TPM, 200K TPD (same caveat)."
+                )
+            },
+        ),
     ]
 
 
@@ -145,6 +188,8 @@ def get_provider(name: str, settings: Settings | None = None) -> Provider:
         return GeminiProvider(settings.google_api_key)
     if name == "grok":
         return GrokProvider(settings.xai_api_key)
+    if name == "groq":
+        return GroqProvider(settings.groq_api_key)
     raise ValueError(f"unknown provider: {name!r}")
 
 

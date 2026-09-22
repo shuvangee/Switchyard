@@ -49,11 +49,26 @@ def test_grok_model_enabled_with_key():
     assert grok_model.enabled is True
 
 
+def test_groq_models_disabled_without_key():
+    registry = get_model_registry(Settings(groq_api_key=None))
+    groq_models = [m for m in registry if m.provider == "groq"]
+    assert len(groq_models) == 2
+    assert all(m.enabled is False for m in groq_models)
+
+
+def test_groq_models_enabled_with_key():
+    registry = get_model_registry(Settings(groq_api_key="gsk-fake"))
+    groq_models = [m for m in registry if m.provider == "groq"]
+    assert len(groq_models) == 2
+    assert all(m.enabled is True for m in groq_models)
+
+
 def test_get_provider_returns_provider_instance():
     assert isinstance(get_provider("mock"), Provider)
     assert isinstance(get_provider("openai", Settings(openai_api_key="sk-fake")), Provider)
     assert isinstance(get_provider("gemini", Settings(google_api_key="fake-key")), Provider)
     assert isinstance(get_provider("grok", Settings(xai_api_key="fake-key")), Provider)
+    assert isinstance(get_provider("groq", Settings(groq_api_key="gsk-fake")), Provider)
 
 
 def test_get_provider_rejects_unknown_name():
