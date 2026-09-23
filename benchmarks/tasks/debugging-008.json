@@ -3,11 +3,16 @@
   "title": "Find the bug in a title_case function",
   "category": "debugging",
   "difficulty": "medium",
-  "prompt": "This function is supposed to capitalize the first letter of every word in a sentence but only capitalizes the very first word.\n\ndef title_case(s):\n    return s[0].upper() + s[1:]\n\nIdentify the bug and explain the fix.",
+  "prompt": "This function is supposed to capitalize the first letter of every word in a sentence but only capitalizes the very first word. Assume the input is lowercase words separated by single spaces (no apostrophes or punctuation).\n\ndef title_case(s):\n    return s[0].upper() + s[1:]\n\nIdentify the bug, explain the fix, and provide the corrected function in a fenced Python code block (starting with ```python), keeping the name and signature `title_case(s)`.",
   "evaluation_type": "manual",
   "expected_output": null,
   "metadata": {
     "tags": ["python", "debugging"],
-    "notes": "Bug: only touches the first character of the whole string, not each word. Fix should split on spaces, capitalize each word, and rejoin (or use str.title(), with a note on its own apostrophe edge cases). Graded manually."
+    "notes": "Bug: only touches the first character of the whole string, not each word. Fix should split on spaces, capitalize each word, and rejoin. Revised (2026-09-23, V2.6 Phase 1): prompt now pins the input shape (lowercase, single-space-separated, no punctuation) to avoid the apostrophe/str.title() edge case the original notes flagged as ambiguous, and requests a fenced code block for the sandboxed grader; bug/difficulty unchanged.",
+    "test_cases": [
+      { "input": ["hello world"], "expected": "Hello World" },
+      { "input": ["a"], "expected": "A" },
+      { "input": ["the quick fox"], "expected": "The Quick Fox" }
+    ]
   }
 }

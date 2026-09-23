@@ -3,11 +3,16 @@
   "title": "Find the bug in an average function",
   "category": "debugging",
   "difficulty": "medium",
-  "prompt": "The following Python function is supposed to return the average of a list of numbers but crashes on an empty list.\n\ndef average(nums):\n    return sum(nums) / len(nums)\n\nIdentify the bug and explain the fix.",
+  "prompt": "The following Python function is supposed to return the average of a list of numbers but crashes on an empty list. For an empty list, the fixed function should return 0.\n\ndef average(nums):\n    return sum(nums) / len(nums)\n\nIdentify the bug, explain the fix, and provide the corrected function in a fenced Python code block (starting with ```python), keeping the name and signature `average(nums)`.",
   "evaluation_type": "manual",
   "expected_output": null,
   "metadata": {
     "tags": ["python", "debugging"],
-    "notes": "Bug: division by zero when nums is empty. Fix should check for the empty case first (e.g. `if not nums: return 0`) before dividing. Graded manually."
+    "notes": "Bug: division by zero when nums is empty. Revised (2026-09-23, V2.6 Phase 1): the prompt now explicitly pins the empty-list return value to 0 (previously just 'e.g. return 0' as one suggested option, an unresolved spec gap) so there is one unambiguous correct answer, same disambiguation precedent as is_anagram. Also requests a fenced code block for the sandboxed grader.",
+    "test_cases": [
+      { "input": [[2, 4, 6]], "expected": 4 },
+      { "input": [[5]], "expected": 5 },
+      { "input": [[]], "expected": 0 }
+    ]
   }
 }

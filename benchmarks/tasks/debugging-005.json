@@ -3,11 +3,16 @@
   "title": "Find the bug in a find_max function",
   "category": "debugging",
   "difficulty": "medium",
-  "prompt": "This function is supposed to find the maximum value in a list but returns the wrong answer for lists containing only negative numbers.\n\ndef find_max(nums):\n    best = 0\n    for n in nums:\n        if n > best:\n            best = n\n    return best\n\nIdentify the bug and explain the fix.",
+  "prompt": "This function is supposed to find the maximum value in a list but returns the wrong answer for lists containing only negative numbers. You may assume the input list is never empty.\n\ndef find_max(nums):\n    best = 0\n    for n in nums:\n        if n > best:\n            best = n\n    return best\n\nIdentify the bug, explain the fix, and provide the corrected function in a fenced Python code block (starting with ```python), keeping the name and signature `find_max(nums)`.",
   "evaluation_type": "manual",
   "expected_output": null,
   "metadata": {
     "tags": ["python", "debugging"],
-    "notes": "Bug: initializing best = 0 means nothing beats it when every number is negative, so 0 is returned instead of the true (negative) maximum. Fix should initialize best = nums[0] (or float('-inf')). Graded manually."
+    "notes": "Bug: initializing best = 0 means nothing beats it when every number is negative, so 0 is returned instead of the true (negative) maximum. Fix should initialize best = nums[0] (or float('-inf')). Revised (2026-09-23, V2.6 Phase 1): prompt now explicitly states the input is never empty (the fix's natural nums[0] initialization doesn't define empty-list behavior, so this closes a gap rather than opening one) and requests a fenced code block for the sandboxed grader; bug/difficulty unchanged.",
+    "test_cases": [
+      { "input": [[-5, -2, -9]], "expected": -2 },
+      { "input": [[3, 1, 4, 1, 5]], "expected": 5 },
+      { "input": [[-1]], "expected": -1 }
+    ]
   }
 }
