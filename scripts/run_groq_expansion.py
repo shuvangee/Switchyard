@@ -57,6 +57,7 @@ def _to_record(execution, task) -> dict:
         "evaluation_type": task.evaluation_type,
         "model_config_id": execution.model_config_id,
         "status": execution.status,
+        "response_text": execution.response_text,
         "latency_ms": execution.latency_ms,
         "input_tokens": execution.input_tokens,
         "output_tokens": execution.output_tokens,
