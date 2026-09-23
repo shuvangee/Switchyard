@@ -112,6 +112,38 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
             },
         ),
         ModelConfig(
+            id="gemini-3.1-pro-preview",
+            provider="gemini",
+            model_id="gemini-3.1-pro-preview",
+            display_name="Gemini 3.1 Pro (preview)",
+            enabled=bool(settings.google_api_key),
+            input_cost_per_1k=0.002,
+            output_cost_per_1k=0.012,
+            capabilities={
+                "notes": (
+                    "Real provider; disabled unless GOOGLE_API_KEY is set (the "
+                    "same key already used for gemini-3.6-flash). Added "
+                    "2026-09-23 as the V2.6 routing-opportunity experiment's "
+                    "proposed 'stronger model' - a genuinely different capability "
+                    "tier from both gemini-3.6-flash and the Groq gpt-oss models "
+                    "(Pro vs Flash/open-weight), reusing GeminiProvider as-is: no "
+                    "new provider code, no new key. Model id and pricing sourced "
+                    "from third-party aggregators and Google's own docs pages "
+                    "found via search (ai.google.dev is blocked by this "
+                    "environment's network policy, so the id was not directly "
+                    "verified against a live call) — UNVERIFIED until a real "
+                    "call confirms it, same caution as grok-4.1-fast before its "
+                    "first real run. Under 200K context: $2.00/$12.00 per 1M "
+                    "input/output tokens (rising above that threshold). "
+                    "Reasoning-capable like gemini-3.6-flash - the same "
+                    "thinking-token-inflates-cost risk documented for that model "
+                    "applies here too; the adapter's 2048-token output cap bounds "
+                    "the worst case. NO LIVE CALL MADE YET - registered only, "
+                    "pending explicit cost approval for the actual experiment."
+                )
+            },
+        ),
+        ModelConfig(
             id="grok-4.1-fast",
             provider="grok",
             model_id="grok-4.1-fast",
