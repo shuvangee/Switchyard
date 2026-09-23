@@ -56,7 +56,22 @@ def main() -> None:
         if key not in batch:
             continue
         record = batch[key]
+
+        # Revision-batch metrics (latency/tokens/cost/status/error) always
+        # replace the stale pre-revision values, even on failure - the old
+        # numbers describe a call against a prompt that no longer exists.
+        execution["status"] = record["status"]
+        execution["latency_ms"] = record["latency_ms"]
+        execution["input_tokens"] = record["input_tokens"]
+        execution["output_tokens"] = record["output_tokens"]
+        execution["estimated_cost_usd"] = record["estimated_cost_usd"]
+        execution["error_message"] = record["error_message"]
+
         if record["status"] != "success" or not record.get("response_text"):
+            execution["evaluation_status"] = "not_evaluated"
+            execution.pop("evaluation_detail", None)
+            updated += 1
+            print(f"{task_id} / {execution['model_config_id']}: call failed ({record['status']}), left ungraded")
             continue
         task = tasks[task_id]
 
@@ -81,8 +96,13 @@ def main() -> None:
                 execution["evaluation_detail"] = outcome.detail
             updated += 1
             print(f"{task_id} / {execution['model_config_id']}: {outcome.status.value}")
-        # debugging-007 is intentionally excluded - stays manual, see its
-        # own metadata.deterministic_grading_attempted_and_rejected.
+        else:
+            # debugging-007 is intentionally excluded from grading - stays
+            # manual, see its own metadata.deterministic_grading_attempted_
+            # and_rejected. Its new latency/tokens/cost were still updated
+            # above; evaluation_status is left as-is (not_evaluated).
+            updated += 1
+            print(f"{task_id} / {execution['model_config_id']}: metrics updated, left manual (ungradeable)")
 
     TARGET_PATH.write_text(json.dumps(target, indent=2) + "\n")
     print(f"\nupdated {updated} execution(s) in {TARGET_PATH.relative_to(REPO_ROOT)}")
