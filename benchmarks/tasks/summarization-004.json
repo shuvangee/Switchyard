@@ -8,6 +8,7 @@
   "expected_output": null,
   "metadata": {
     "tags": ["summarization"],
-    "notes": "Correct: two sentences covering (1) the migration succeeded with zero downtime, and (2) a ~4-hour analytics data gap was found with a backfill scheduled. Mark incomplete if it drops the backfill plan or the downtime detail. Graded manually."
+    "notes": "Correct: two sentences covering (1) the migration succeeded with zero downtime, and (2) a ~4-hour analytics data gap was found with a backfill scheduled. Mark incomplete if it drops the backfill plan or the downtime detail.",
+    "grading_method": "manual (reviewed 2026-09-23, V2.6 Phase 1) - 'backfill' and '~4-hour' are decent anchors, but 'zero downtime' is a concept with many valid phrasings ('no downtime', 'without interruption'), and the rubric marks the downtime detail as equally required to backfill - not auto-graded rather than silently under-check that requirement."
   }
 }

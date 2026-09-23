@@ -9,6 +9,7 @@
   "metadata": {
     "tags": ["summarization", "hard"],
     "hard_reason": "Requires distinguishing what IS delayed (search feature, due to the indexing dependency) from what is NOT delayed (the ranking improvement) - a real test of whether the model tracks two separate timelines correctly instead of conflating them.",
-    "notes": "Correct: two sentences that keep the delayed search feature and the on-schedule ranking improvement clearly separate. Graded manually - conflating the two timelines is a failure."
+    "notes": "Correct: two sentences that keep the delayed search feature and the on-schedule ranking improvement clearly separate - conflating the two timelines is a failure.",
+    "grading_method": "manual (reviewed 2026-09-23, V2.6 Phase 1) - same reason as summarization-009: this hard-flagged task is specifically testing whether the model correctly attributes 'delayed' to search and 'on-schedule' to ranking, not just whether both terms appear. A presence check cannot verify correct attribution and would defeat the point of the test."
   }
 }

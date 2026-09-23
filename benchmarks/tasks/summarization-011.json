@@ -8,6 +8,7 @@
   "expected_output": null,
   "metadata": {
     "tags": ["summarization"],
-    "notes": "Correct: mentions the migration event and the expected improvement, ideally with both the before (6h) and after (2h) numbers. Graded manually."
+    "notes": "Correct: mentions the migration event and the expected improvement, ideally with both the before (6h) and after (2h) numbers.",
+    "grading_method": "manual (reviewed 2026-09-23, V2.6 Phase 1) - the rubric's own wording ('ideally with both... numbers') is a soft bar, not a strict requirement; a strict AND-of-facts presence check would be stricter than the rubric itself intends, incorrectly failing a summary that's fine without the exact numbers."
   }
 }

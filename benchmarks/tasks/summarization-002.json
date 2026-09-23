@@ -8,6 +8,7 @@
   "expected_output": null,
   "metadata": {
     "tags": ["summarization"],
-    "notes": "Correct: a one-sentence summary capturing both that tickets were resolved and the sprint finished early, with no fabricated details. Graded manually."
+    "notes": "Correct: a one-sentence summary capturing both that tickets were resolved and the sprint finished early, with no fabricated details.",
+    "grading_method": "manual (reviewed 2026-09-23, V2.6 Phase 1) - both required facts are pure concepts with no numeric or named-entity anchor ('resolved', 'finished early'); a correct paraphrase ('all tickets closed', 'wrapped up ahead of schedule') would false-fail a substring check. Not auto-graded rather than accept an unreliable check."
   }
 }

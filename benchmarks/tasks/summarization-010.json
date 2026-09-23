@@ -9,6 +9,8 @@
   "metadata": {
     "tags": ["summarization", "hard"],
     "hard_reason": "Contains two opposing trends in one update - a lazy summary reports only the positive or only the negative; a correct one needs both, plus the causal note.",
-    "notes": "Correct: mentions BOTH the record-high product satisfaction (88%) AND the 2-year-low shipping satisfaction (61%, tied to the carrier change). Graded manually - dropping either direction is a failure."
+    "notes": "Correct: mentions BOTH the record-high product satisfaction (88%) AND the 2-year-low shipping satisfaction (61%, tied to the carrier change) - dropping either direction is a failure.",
+    "grading_method": "required_facts (2026-09-23, V2.6 Phase 1) - zero-cost deterministic presence check, see backend/app/evaluation/required_facts.py. Not an LLM judge. Chosen despite being hard-flagged because the hard part here (don't drop either number) is exactly what presence-checking verifies well - unlike summarization-009/012, which are about correct ATTRIBUTION between two things, not just presence of both.",
+    "required_facts": ["88%", "61%"]
   }
 }

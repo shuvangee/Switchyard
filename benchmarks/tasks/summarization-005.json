@@ -8,6 +8,8 @@
   "expected_output": null,
   "metadata": {
     "tags": ["summarization"],
-    "notes": "Correct: mentions the biometric redesign and the login-time improvement (8s to 2s). Omitting the change entirely is incorrect; omitting only the specific numbers is a minor deduction, not a failure. Graded manually."
+    "notes": "Correct: mentions the biometric redesign and the login-time improvement (8s to 2s). Omitting the change entirely is incorrect; omitting only the specific numbers is a minor deduction, not a failure.",
+    "grading_method": "required_facts (2026-09-23, V2.6 Phase 1) - zero-cost deterministic presence check, see backend/app/evaluation/required_facts.py. Not an LLM judge.",
+    "required_facts": ["biometric", ["8s", "8 seconds"], ["2s", "2 seconds"]]
   }
 }
