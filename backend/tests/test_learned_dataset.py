@@ -158,9 +158,22 @@ def test_real_project_data_produces_the_expected_row_count():
     neither Groq model got right — classification-010 or math-013, now
     answered correctly by a mock candidate). no_executions is 0 since
     every task now has at least one real or mock execution recorded.
+
+    2026-09-23 (V2.6 evaluation-coverage pass): reasoning-001/002/003
+    converted from manual to exact_match (see benchmarks/tasks/). This
+    is a TRANSIENT state: their existing Groq executions were recorded
+    under the old evaluation_type (manual), so evaluation_status still
+    reads "not_evaluated" until scripts/export_reasoning_responses.py +
+    apply_reasoning_grading_results.py are run — until then they fall
+    into no_correct_candidate (correct=False for both models), NOT
+    because anyone verified both models got them wrong, just because
+    real scoring hasn't happened yet. manual_eval_type: 47 -> 44 (-3);
+    no_correct_candidate: 1 -> 4 (+3, exactly these 3 tasks); rows stay
+    at 56 since neither model is currently marked correct for them.
+    Expect these numbers to change again once the rescore runs.
     """
     rows, excluded = build_training_rows()
     assert len(rows) == 56
-    assert excluded["manual_eval_type"] == 47
+    assert excluded["manual_eval_type"] == 44
     assert excluded["no_executions"] == 0
-    assert excluded["no_correct_candidate"] == 1
+    assert excluded["no_correct_candidate"] == 4

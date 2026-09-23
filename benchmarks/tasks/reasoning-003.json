@@ -4,10 +4,11 @@
   "category": "reasoning",
   "difficulty": "medium",
   "prompt": "A train leaves the station at 2:00pm traveling at 60 mph. Another train leaves the same station at 3:00pm traveling at 90 mph in the same direction. At what time does the second train catch up to the first? Explain your reasoning.",
-  "evaluation_type": "manual",
-  "expected_output": null,
+  "evaluation_type": "exact_match",
+  "expected_output": "5:00pm",
   "metadata": {
     "tags": ["logic", "math-reasoning"],
-    "notes": "Correct answer: 5:00pm. At 3:00pm the first train has a 60-mile head start; the second train closes the gap at 30 mph (90-60), taking 2 hours (60/30) to catch up: 3:00pm + 2h = 5:00pm. Graded manually."
+    "notes": "Correct answer: 5:00pm. At 3:00pm the first train has a 60-mile head start; the second train closes the gap at 30 mph (90-60), taking 2 hours (60/30) to catch up: 3:00pm + 2h = 5:00pm. Converted from manual to exact_match (2026-09-23, V2.6 evaluation-coverage pass).",
+    "evaluator_risk": "A real model may write '5:00 PM', '5 PM', or '5:00 p.m.' instead of '5:00pm' - the normalizer lowercases and collapses whitespace but doesn't strip punctuation or insert/remove the space before 'pm', so some correct-but-differently-formatted answers could be marked incorrect. Not fixed here; flagged for awareness when reading results."
   }
 }

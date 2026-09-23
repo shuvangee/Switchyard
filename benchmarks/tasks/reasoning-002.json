@@ -4,10 +4,11 @@
   "category": "reasoning",
   "difficulty": "easy",
   "prompt": "If it is raining, Sam brings an umbrella. Sam did not bring an umbrella today. Is it raining? Explain your reasoning.",
-  "evaluation_type": "manual",
-  "expected_output": null,
+  "evaluation_type": "exact_match",
+  "expected_output": "No",
   "metadata": {
     "tags": ["logic"],
-    "notes": "Correct answer: No. By modus tollens, since bringing an umbrella is required if it's raining, and Sam did not bring one, it cannot be raining. Graded manually."
+    "notes": "Correct answer: No. By modus tollens, since bringing an umbrella is required if it's raining, and Sam did not bring one, it cannot be raining. Converted from manual to exact_match (2026-09-23, V2.6 evaluation-coverage pass).",
+    "evaluator_risk": "'No' is a very common word - the word-boundary token matcher could false-positive on an unrelated 'no' elsewhere in a longer explanation (e.g. 'there is no ambiguity here') even if the model's actual conclusion was wrong. Not fixed here; flagged for awareness when reading results."
   }
 }
