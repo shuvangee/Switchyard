@@ -461,3 +461,46 @@ capability contrast against groq-gpt-oss-20b. Estimated cost from real
 Groq-run token counts as a proxy (~$0.40 for all 104 tasks, ~$2.60
 worst case) - registration only, no live call, waiting on explicit cost
 approval before Phase 3 can run.
+
+## 2026-09-23 — Pivoted to Groq-only; finished V2.6 Phase 1's evaluation coverage
+
+Explicit instruction: keep Switchyard zero-cost, Groq-only, no Gemini/
+OpenAI/Anthropic calls. `gemini-3.1-pro-preview` stays registered
+(unused) but is no longer part of the plan.
+
+Finished the bulk of Phase 1 that a prior pass had only proposed:
+
+- Revised 7 of the 8 legacy debugging tasks (001-006, 008) with test
+  cases, each verified via the sandbox grader against BOTH the seeded
+  buggy code AND a correct fix before being committed - caught one real
+  bug in my own test case (`second_largest([5,3,8,1])` is 5, not 8) this
+  way. debugging-007 was verified NOT convertible: with its known spec
+  ambiguity excluded from testing (as required), every remaining input
+  passes against the unmodified buggy code unchanged, so there's no
+  test that actually distinguishes buggy from fixed without either
+  resolving the ambiguity or building an unbuilt "doesn't crash" test
+  type. Documented in its own metadata; stays manual.
+- reasoning-005 narrowed and converted to `exact_match` (verified this
+  doesn't reduce the actual reasoning challenge); reasoning-004
+  documented as staying manual (needs new eval infrastructure a
+  metadata change can't provide).
+- Built `backend/app/evaluation/required_facts.py` - zero-cost
+  deterministic presence checking, not an LLM judge - and classified
+  all 13 summarization tasks explicitly: 6 auto-gradeable, 7 manual
+  with a documented reason each, including two hard-flagged tasks
+  (009/012) excluded specifically because presence-checking can't
+  verify correct attribution, which is the whole point of those tests.
+- Consolidated export/rescore tooling into one pass
+  (`export_original_run_extras.py` + `apply_remaining_grading_results.py`
+  for the no-new-call tasks; `run_groq_revision_batch.py` +
+  `apply_revision_batch_results.py` for the 9 tasks needing an actual
+  new call) instead of scattering it across separate one-off scripts.
+- Registered `groq-qwen3.8-27b` as the proposed third Groq model
+  (Phase 4) - different vendor/lineage from gpt-oss, reuses
+  GroqProvider, zero new code. No call made, per Phase 4's explicit
+  stop condition.
+
+Phase 3 (recompute the analysis) and Phase 5 (V3 readiness with 3
+models) are both still blocked on running the above on the user's
+machine - nothing in this pass could reach Groq's API from this
+sandbox.

@@ -28,53 +28,72 @@ not to manufacture a win for Switchyard. See
 `docs/case-study/EXPERIMENTS.md` and
 `experiments/results/routing-opportunity-analysis.md`.
 
-**V2.6 Phase 1 (evaluation coverage) status:**
+**2026-09-23, revised: Switchyard is staying Groq-only.** `gemini-3.1-
+pro-preview` was registered as a candidate stronger model, then
+explicitly ruled out once Google's free tier turned out to be Flash/
+Flash-Lite only (confirmed via search) — running it would cost real
+money, which the project isn't doing right now. It stays registered
+(code-only, unused) for possible future work, but nothing further is
+planned against it. No Gemini/OpenAI/Anthropic call has ever been made
+this pass. All V2.6 work since is scoped to the two existing Groq
+models plus one proposed third Groq model (below).
+
+**V2.6 Phase 1 (evaluation coverage) — this pass's actual work:**
 - Coding (13) + debugging-009/010/011/012/013 (5): **done** —
   `backend/app/evaluation/sandbox.py`, real kernel-enforced isolation,
-  36/36 correct on the real Groq responses. Applied to
-  `evaluation_status` only, not `evaluation_type`/`dataset.py` — a
-  deliberate, separate wiring decision still pending.
-- Reasoning-001/002/003 (3 of the 8 ungraded): **converted to
-  `exact_match`**, but transient — their existing responses were never
-  saved to the results file, so `scripts/export_reasoning_responses.py`
-  + `apply_reasoning_grading_results.py` need to run against the user's
-  local db before real numbers exist for them.
-- Reasoning-005: needs the same prompt-narrowing reasoning-010 got (asks
-  for 2 numbers, `exact_match` can only check one) — **proposed, not
-  written**, pending approval.
-- Reasoning-004/006/009/012 (4): recommended to **stay manual** —
-  multi-fact or partial-answer-misleading, consistent with prior
-  decisions already made for 006/009/012 in this project.
-- Debugging-001 through 008 (8): **proposed revised prompts + test_cases
-  for all 8**, mirroring the 009-013 precedent exactly (fenced-code-
-  block instruction; debugging-002 also disambiguates empty-list
-  behavior; debugging-007 deliberately excludes the still-unresolved
-  all-duplicate edge case). Not written — needs a new (free-tier) Groq
-  run once approved.
-- Summarization (13): **method recommended, not implemented** — a
-  hybrid required-fact presence check derived from each task's existing
-  rubric notes, over human-only grading, LLM-as-a-judge, or reference-
-  based metrics (ROUGE/BLEU). Full comparison:
+  36/36 correct on the real Groq responses, applied to
+  `evaluation_status`.
+- Debugging-001 through 006, 008 (7 of 8): **revised prompts +
+  test_cases written**, each verified via the sandbox against BOTH the
+  original buggy code AND a correct fix before being committed (caught
+  and fixed one real bug in the test cases themselves this way).
+  debugging-002/005/008 close small spec gaps the same way is_anagram
+  was disambiguated. Needs a new (free-tier) Groq call before real
+  scores exist — `scripts/run_groq_revision_batch.py` is ready, not run.
+- Debugging-007: **verified NOT convertible** without either resolving
+  its already-flagged spec ambiguity (forbidden) or building an
+  unbuilt "doesn't crash" test type — documented in its own metadata,
+  stays manual.
+- Reasoning-001/002/003: converted to `exact_match` (metadata-only, no
+  prompt change). Reasoning-005: prompt narrowed (same treatment as
+  reasoning-010), converted to `exact_match` — verified this doesn't
+  reduce the actual reasoning challenge. All 4 are transient pending
+  real response data (3 via a plain export, 1 via a new call — the
+  export script covers the first 3, `run_groq_revision_batch.py` the
+  4th alongside the debugging batch).
+- Reasoning-004: **stays manual, documented** — 3-fact answer, same
+  shape problem as reasoning-009; a structured-answer approach is
+  possible in principle but needs new evaluation infrastructure
+  (per-key value checking) that doesn't exist yet.
+- Summarization: built `backend/app/evaluation/required_facts.py` (zero-
+  cost deterministic presence check, not an LLM judge) and classified
+  all 13 explicitly — 6 auto-gradeable (005/006/007/008/010/013), 7 stay
+  manual with a documented reason each (no crisp rubric, a required fact
+  too paraphrase-prone to check reliably, or — for the 2 hard-flagged
+  attribution tasks, 009/012 — presence-checking would defeat the actual
+  point of the test). Full comparison of 4 approaches considered:
   `docs/case-study/DECISIONS.md` (2026-09-23).
+- `scripts/export_original_run_extras.py` (reasoning-001/002/003 +
+  all 13 summarization tasks, no new call) and
+  `scripts/apply_remaining_grading_results.py` (rescores them) are
+  ready; need to run against the user's local db.
 
-**V2.6 Phase 2 (stronger model):** `gemini-3.1-pro-preview` registered
-(`backend/app/providers/registry.py`) — reuses the existing
-`GeminiProvider`, no new key needed (`GOOGLE_API_KEY` already
-configured). Estimated cost for all 104 tasks: ~$0.40 (real token
-counts from the Groq run as a proxy), worst case ~$2.60 if every
-response maxes the 2048-token output cap. **No live call made — waiting
-on explicit cost approval.** Model id is UNVERIFIED against a real call
-(same caution as `grok-4.1-fast` before its first run; `ai.google.dev`
-is blocked from this sandbox).
+**V2.6 Phase 4 (third Groq model):** `groq-qwen3.8-27b` registered
+(different vendor/lineage from gpt-oss, reuses `GroqProvider`, zero new
+code, same `GROQ_API_KEY`) — model id UNVERIFIED against a live call.
+**No call made — waiting on approval**, per Phase 4's explicit stop
+condition.
 
-Phases 3 (stronger-model routing experiment) and 4 (V3 readiness
-decision) are blocked on that approval and haven't started.
+Phase 3 (recompute the two-model analysis with full evaluation
+coverage) and Phase 5 (V3 readiness with a third model) are both
+blocked on the above data collection and haven't started.
 
 ## Current objective
 
-1. Get sign-off on the 3 pending-approval items above (debugging prompt
-   revisions + new run, reasoning-005 narrowing, gemini-3.1-pro-preview
-   cost), then run Phase 1's remaining pieces and Phase 3.
+1. Get sign-off on the pending-approval items above (the 18-request
+   revision batch for debugging/reasoning-005, and the
+   `groq-qwen3.8-27b` third-model run), then run the exports/batches and
+   recompute Phase 3's analysis.
 2. Nothing about V3's pipeline itself needs more work right now — it's
    built, tested, and wired into the router-selection mechanism
    (`router_version="learned-v1"` in `POST /route`). The evaluation

@@ -571,3 +571,37 @@ output is trusted, the same way an evaluator regression needs to be
 proven against the pre-fix code before it's trusted (see the 2026-09-23
 baseline-selection entry above for the same discipline applied to a
 different kind of bug).
+
+## 2026-09-23 — One debugging task genuinely can't be test-based graded, and that's fine
+
+**What was tried:** Converting debugging-007 (`second_largest`, which
+crashes on an all-duplicate input like `[5,5,5]`) to sandboxed test-
+based grading, same as its 7 sibling tasks. The task's own metadata
+already flagged an unresolved spec ambiguity: what should the fixed
+function return for `[5,5,5]`? Per instruction, that ambiguity was not
+to be resolved just to make grading easier, so the obvious all-
+duplicate test case was left out.
+
+**What the verification step found:** with that one case excluded,
+every other test case (`[5,3,8,1]`, `[10,10,20]`) passed against the
+ORIGINAL, UNMODIFIED buggy code - verified directly by running the
+buggy implementation through the sandbox. The bug only manifests on
+exactly the input being excluded, so a test suite without it can't
+tell a "fixed" implementation from the untouched buggy one. There is no
+test case that both (a) respects the instruction not to force an answer
+to the ambiguity and (b) actually distinguishes correct from buggy.
+
+**What changed:** Nothing about the task itself. debugging-007 stays
+`manual`, with this finding written into its own metadata
+(`deterministic_grading_attempted_and_rejected`) so a future attempt
+doesn't have to rediscover it. The other 7 debugging tasks converted
+cleanly.
+
+**General lesson:** "can this be converted to deterministic grading?"
+sometimes has a real "no" answer, and that's a legitimate outcome, not
+a failure to fix later. The tell here was structural, not a matter of
+trying harder: the task's only discriminating input is the same input
+whose correct output is undefined. Verifying test cases against BOTH
+the buggy code and a correct fix (not just the fix) is what surfaced
+this - checking only the fix would have shown all-tests-pass and missed
+that the buggy code passes those same tests too.
