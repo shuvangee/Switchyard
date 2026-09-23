@@ -17,16 +17,35 @@ fixed while re-checking the second retrain's initial (misleadingly
 positive) numbers — this remains an honest negative result, not a bug in
 the router itself to be quietly fixed.
 
+**Routing opportunity analysis (2026-09-23, before any further
+training):** asked a prior question V3's own accuracy can't answer —
+does this model pair (`groq-gpt-oss-20b`/`120b`) even have a real
+quality gap for a router to exploit? On the 75 of 104 tasks with real
+ground truth, **always-20b and always-120b tie exactly** (68/75, 90.7%
+each) — a perfect oracle router tops out just 4.0 points above either,
+on only 6 disagreeing tasks. 120b costs 1.87x the nominal tokens and
+1.51x the latency for that. Full analysis:
+`docs/case-study/EXPERIMENTS.md` and
+`experiments/results/routing-opportunity-analysis.md`.
+
 ## Current objective
 
-1. Data collection more than doubled the training set (24 → 56 rows) and
-   changed which model dominates (`mock-fast-v1` → `groq-gpt-oss-20b`),
-   but did not change the underlying finding: a trivial "always pick one
-   model" policy still beats the learned router. The 4 manual-eval
-   categories (coding, debugging, reasoning-manual, summarization) still
-   contribute zero training rows — that's the next real lever, not
-   another retrain on the same auto-graded categories.
-2. Nothing about V3's pipeline itself needs more work right now — it's
+1. **The routing-opportunity analysis is the more fundamental finding
+   than any single V3 retrain result.** V3 losing to a trivial baseline
+   and "this model pair barely differs in quality" are consistent, not
+   coincidental — there may be very little for *any* learned router to
+   find with this specific pair on this task distribution. Before
+   retraining V3 again, the more informative next step is probably a
+   model pair with a starker capability gap, not more data on this one.
+2. Sandboxed code-execution grading now exists
+   (`backend/app/evaluation/sandbox.py`) and gave real ground truth to
+   all 13 coding tasks and the 5 revised debugging tasks (36/36 correct
+   on the real Groq responses) — applied to `evaluation_status` in
+   `experiments/results/groq-gpt-oss-expansion.json`, but deliberately
+   NOT wired into `evaluation_type`/`dataset.py`'s row generation yet;
+   that remains a separate decision. 8 debugging tasks, 8 reasoning
+   tasks, and all 13 summarization tasks still have no grader at all.
+3. Nothing about V3's pipeline itself needs more work right now — it's
    built, tested, and wired into the router-selection mechanism
    (`router_version="learned-v1"` in `POST /route`). The evaluation
    methodology in `train.py` was hardened this pass (dynamic baseline
@@ -34,7 +53,7 @@ the router itself to be quietly fixed.
    baseline, explicit `learned_v1_beats_every_single_model_baseline`
    flag) specifically so a future retrain's result can't look like a win
    without actually being one.
-3. This sandbox's network policy blocks `groq.com` outright — any future
+4. This sandbox's network policy blocks `groq.com` outright — any future
    real-provider run against Groq needs to happen from outside this
    environment (see `FAILURES_AND_LESSONS.md`, 2026-09-23).
 

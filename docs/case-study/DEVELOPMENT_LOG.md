@@ -410,3 +410,26 @@ rows) was caught and fixed before being reported. **V3 still loses** —
 the specific baseline that dominates changed with more data, whether one
 does did not. Full writeup: `EXPERIMENTS.md` and
 `FAILURES_AND_LESSONS.md` (2026-09-23 entries).
+
+## 2026-09-23 — Sandboxed code grading, then a routing-opportunity analysis before more training
+
+Built `backend/app/evaluation/sandbox.py`, a real (kernel-enforced, not
+assumed) sandboxed code-execution grader, and graded the 13 coding + 5
+revised debugging tasks' real Groq responses. First run: 33/36 - turned
+out to be a bug in the grader itself (extracting the pre-fix code block
+shown before a debugging response's actual fix), not the model. Fixed,
+re-ran: 36/36. Applied to `evaluation_status` in the results file as an
+evaluation-quality fix, explicitly not wired into V3's training pipeline
+(`evaluation_type` unchanged, row count confirmed unchanged at 56).
+
+Then, before any further V3 training, ran a routing-opportunity analysis
+asking a prior question: does `groq-gpt-oss-20b` vs `120b` even have a
+real quality gap for a router to exploit? On the 75 of 104 tasks with
+real ground truth, always-20b and always-120b tie exactly (68/75 each) -
+a perfect oracle router tops out only 4.0 points above either, on just 6
+disagreeing tasks, while 120b costs 1.87x the tokens and 1.51x the
+latency. This reframes V3's repeated losses: they may not (only) be a
+data-volume problem - this specific model pair may simply be too similar
+in capability, on this task distribution, for routing to have much room
+to help. Full analysis: `EXPERIMENTS.md` (2026-09-23) and
+`experiments/results/routing-opportunity-analysis.md`.
