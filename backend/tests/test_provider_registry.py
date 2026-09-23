@@ -52,14 +52,14 @@ def test_grok_model_enabled_with_key():
 def test_groq_models_disabled_without_key():
     registry = get_model_registry(Settings(groq_api_key=None))
     groq_models = [m for m in registry if m.provider == "groq"]
-    assert len(groq_models) == 2
+    assert len(groq_models) == 3
     assert all(m.enabled is False for m in groq_models)
 
 
 def test_groq_models_enabled_with_key():
     registry = get_model_registry(Settings(groq_api_key="gsk-fake"))
     groq_models = [m for m in registry if m.provider == "groq"]
-    assert len(groq_models) == 2
+    assert len(groq_models) == 3
     assert all(m.enabled is True for m in groq_models)
 
 

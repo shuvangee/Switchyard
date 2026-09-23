@@ -187,6 +187,33 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
             },
         ),
         ModelConfig(
+            id="groq-qwen3.8-27b",
+            provider="groq",
+            model_id="qwen/qwen3.8-27b",
+            display_name="Groq Qwen3.8 27B",
+            enabled=bool(settings.groq_api_key),
+            input_cost_per_1k=0.0008,
+            output_cost_per_1k=0.004,
+            capabilities={
+                "notes": (
+                    "Real provider; disabled unless GROQ_API_KEY is set (same "
+                    "key already used for the gpt-oss models). Registered "
+                    "2026-09-23 as V2.6 Phase 4's proposed third Groq model - "
+                    "reuses GroqProvider as-is, zero new code. A different "
+                    "vendor/training lineage (Alibaba Qwen) from the OpenAI "
+                    "open-weight gpt-oss family already in the registry. Model "
+                    "id and pricing sourced from third-party aggregators found "
+                    "via search (console.groq.com is blocked from this "
+                    "sandbox, so not directly verified) - UNVERIFIED until a "
+                    "real call confirms it, same caution as grok-4.1-fast "
+                    "before its first run. Free-tier rate limits reported as "
+                    "the same class as gpt-oss: 30 RPM, 1,000 RPD, 8K TPM, "
+                    "200K TPD. NO LIVE CALL MADE - registered only, pending "
+                    "explicit approval per V2.6 Phase 4's stop condition."
+                )
+            },
+        ),
+        ModelConfig(
             id="groq-gpt-oss-120b",
             provider="groq",
             model_id="openai/gpt-oss-120b",
