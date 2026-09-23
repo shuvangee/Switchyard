@@ -331,3 +331,82 @@ cost, 140 tests still passing.
 Next: Phase 2 (manual grading of the 4 previously-unscored categories)
 and Phase 3 (real-provider experiments on the expanded set, cost estimate
 first) are both unstarted.
+
+## 2026-09-22 — V3 built, trained, and evaluated: an honest negative result
+
+Built the full learned-routing pipeline end to end: dataset construction
+(`backend/app/routing/learned/dataset.py`), feature encoding, leave-one-
+out cross-validation, baseline comparison, and a saved router artifact
+(`learned-v1.joblib` + manifest), wired into `POST /route` as a
+selectable `router_version` alongside `v2` (which stays the default).
+21 new tests (167 total, up from 146).
+
+Trained on the 24 real rows available at the time (mock + the one real
+Gemini experiment). Result: 56.5% leave-one-out accuracy, strictly
+dominated by "always pick the cheapest model" (58.3%, at 5.5x lower
+cost), and behind both random (72.9%) and V1's rules (75.0%). Verified
+this is a data problem, not a pipeline bug, via a synthetic-data control
+test that recovers ≥90% accuracy on the identical code path when the
+underlying pattern is genuinely learnable. Full analysis in
+`docs/case-study/EXPERIMENTS.md` (2026-09-22 entry).
+
+## 2026-09-22/23 — Second benchmark expansion (44→104 tasks), GroqProvider, 4 real bugs fixed, GitHub reconciled
+
+Expanded `benchmarks/tasks/` again, 44 → 104 (13 per category), this
+round deliberately including harder cases per category and going
+through a full review-and-revise cycle with the user before writing
+anything: test cases added to every coding task for a future test-
+execution grader, 5 reasoning tasks converted to `exact_match` with
+verified answers, `is_anagram`'s prompt disambiguated, and 5 debugging
+prompts revised to request a parseable fenced code block.
+
+Built `GroqProvider` (`openai/gpt-oss-20b`/`120b`, OpenAI-compatible,
+mirrors the Grok/OpenAI adapter pattern) and, separately, fixed 4 real
+bugs an automated Codex review found on the resulting PR: a provider
+error on an escalation attempt could overwrite an already-completed
+response with `None` (losing the "return the best attempt" contract);
+only the final attempt's cost/latency was recorded across a validation-
+triggered escalation, dropping an earlier billed call's cost from
+analytics; all four provider adapters called `response.json()`
+unguarded, risking an unhandled exception on a malformed 2xx body;
+Gemini's thinking tokens weren't counted toward billed output. All four
+fixed with regression tests that were confirmed to actually fail against
+the pre-fix code before trusting them.
+
+Also discovered and reconciled a real git-history split: `main` and this
+session's branch had independently scaffolded the project from the same
+initial commit (an earlier, separately-merged PR had put a minimal
+bootstrap on `main`), so a second PR from this branch showed as
+unmergeable. Verified this branch's content was a strict superset of
+`main`'s in every overlapping file, merged non-destructively, and pushed
+`main` up to date with the full V0–V3 build.
+
+## 2026-09-23 — Groq data collection, V3 retrained, and two evaluation-methodology bugs caught
+
+Attempted the 104-task x 2-Groq-model benchmark run from inside this
+project's Claude Code sandbox — every call failed identically with a
+network-level `403` before reaching Groq at all (this environment's
+egress policy blocks `groq.com` outright, confirmed via the proxy status
+endpoint). Walked the user through running the same, unmodified script
+from their own machine instead: 208/208 calls succeeded, $0 real cost.
+Full incident write-up in `FAILURES_AND_LESSONS.md`.
+
+Wired the new data into V3's dataset (`DEFAULT_RESULT_FILES`) and
+regenerated the mock baseline (free, mock-only) against all 104 current
+tasks — it had gone stale at 44. Training rows: 24 → 56.
+
+Retrained V3. The first result looked like a clean win (88.2% vs. 58.3%)
+and wasn't: the two numbers were computed over different, non-
+overlapping-in-size subsets of rows, because the `always-cheapest`/
+`always-strongest` baselines were hardcoded to specific mock model ids
+that had gone stale. Fixed (dynamic baseline selection by registry
+price, common evaluable-row count for every strategy) and re-ran: 75.0%
+vs. a fairly-computed 44.6%/64.3%/53.6%/67.8% — still not the full
+picture. Checking every individual candidate model as its own trivial
+baseline (not just the two named ones) found `always-groq-gpt-oss-20b`
+at 89.3%, beating the learned model. A second small bug (the "best
+baseline" picker briefly favored a baseline evaluated on only 8 of 56
+rows) was caught and fixed before being reported. **V3 still loses** —
+the specific baseline that dominates changed with more data, whether one
+does did not. Full writeup: `EXPERIMENTS.md` and
+`FAILURES_AND_LESSONS.md` (2026-09-23 entries).

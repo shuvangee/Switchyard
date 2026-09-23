@@ -395,3 +395,72 @@ it is the actual blocker, now demonstrated rather than argued. The honest
 recommendation is the same one the 2026-09-19 review gave: get more real
 data, across more of the categories, before expecting a learned router to
 outperform three lines of if/else.
+
+## 2026-09-23 — V3 retrained on real Groq data: still loses, to a different baseline this time
+
+**Data added:** `experiments/results/groq-gpt-oss-expansion.json` — 104
+benchmark tasks x 2 real Groq models (`openai/gpt-oss-20b`,
+`openai/gpt-oss-120b`), run from outside this project's sandbox
+environment since its network policy blocks `groq.com` entirely (see
+`FAILURES_AND_LESSONS.md`, 2026-09-23). 208/208 calls succeeded, $0
+actual cost (free tier, no payment method on the account). Both models
+scored identically on the 57 auto-gradeable tasks: 50/57 (87.7%)
+correct. `experiments/results/v0-mock-baseline.json` was also
+regenerated (free, mock-only, via `scripts/run_v0_baseline.py`) against
+all 104 current tasks — it previously only covered the original 44,
+which turned out to matter a great deal (see below).
+
+**Training rows: 24 → 56.** Every auto-gradeable task now has at least
+one real, non-mock candidate; only one task
+(`classification-010`/`math-013`, see `dataset.py`) still has no
+recorded-correct candidate at all.
+
+**First retrain result looked like a clean win — it wasn't.** The raw
+manifest reported `learned-v1` at 88.2% vs. `always-cheapest` at 58.3%.
+Before trusting that, checked whether the two numbers were even computed
+on the same rows: they weren't. `always-cheapest`/`always-strongest`
+were hardcoded to `mock-fast-v1`/`mock-accurate-v1`, which (before the
+mock baseline was regenerated) only had recorded data for the original
+24 rows — the other 31 rows silently reported "unknown outcome" and got
+excluded from that baseline's accuracy denominator, while `learned-v1`'s
+predictions (mostly the Groq models, which had data for all 56 rows)
+faced no such exclusion. 88.2%-of-51 vs. 58.3%-of-24 is not a
+comparison.
+
+**Fixed and re-ran, twice.** First fix: `_cheapest_and_strongest_model_ids`
+picks the baseline models dynamically (by registry price) instead of
+hardcoded literals, and the mock baseline regeneration closed the
+coverage gap so every strategy is now evaluated on the same 56 rows.
+Result: `learned-v1` 75.0% vs. `always-cheapest` 44.6%, `always-strongest`
+64.3%, `v2` rules 53.6%, random 67.8% — a real, fair win against all four
+named baselines.
+
+That still wasn't the full check. Exporting the tree showed it mostly
+predicts `groq-gpt-oss-20b`, so a trivial "always pick this one model"
+baseline was tested directly for every model that appears in the data —
+not just the two hardcoded ones. `always-groq-gpt-oss-20b` (zero
+learning) scores **89.3%**, beating `learned-v1`'s 75.0%. The registry's
+literal cheapest model (`mock-fast-v1`) and its literal priciest
+(`mock-accurate-v1`) were never the right pair to check against here —
+the empirically strongest do-nothing policy was a mid-priced model
+neither label pointed at. `train.py` now computes every single-model
+baseline and an explicit `learned_v1_beats_every_single_model_baseline`
+flag (currently `False`) so this can't be missed silently again — see
+`_all_single_model_baselines` in `backend/app/routing/learned/train.py`.
+
+One more near-miss caught before it shipped: the first version of the
+"best single-model baseline" picker used plain `max()` over accuracy,
+which selected `always-gemini-3.6-flash` at 100% — on `n_evaluable=8`
+(gemini only has data for the original 12-task overlap). A 100%-on-8
+figure is a small-sample artifact, not a meaningful bar. Fixed to only
+consider baselines with the same evaluable count as `learned-v1` itself
+before picking "the" baseline to beat.
+
+**Bottom line: V3 still loses**, honestly re-confirmed after fixing two
+real bugs in the evaluation methodology along the way (an apples-to-
+oranges baseline comparison, and a small-sample baseline-selection bug).
+More real data changed *which* trivial baseline dominates — first
+`mock-fast-v1` via `always-cheapest`, now `groq-gpt-oss-20b` — not
+whether one does. `learned-v1` is not recommended for real traffic; `v2`
+remains the default. Full numbers, including every single-model
+baseline, are in `backend/app/routing/learned/artifacts/learned-v1.manifest.json`.

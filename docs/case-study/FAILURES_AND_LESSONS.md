@@ -442,3 +442,94 @@ verification step that computes a corrected value without writing it
 back doesn't fix anything — it just proves a fix *would* work. Any future
 "we confirmed X is correct now" claim needs to end with a check that the
 file on disk actually reflects X, not just that a script printed X once.
+
+## 2026-09-23 — This sandbox's network policy blocks groq.com entirely
+
+**What was tried:** Running the 104-task benchmark set against
+`openai/gpt-oss-20b`/`openai/gpt-oss-120b` via the newly-built
+`GroqProvider`, from inside this Claude Code web/cloud session.
+
+**What happened:** Every one of the first ~99 (task, model) calls failed
+identically with `403 Forbidden`. Before assuming a bad key or wrong
+model id (the actual cause the last two times a provider call failed
+this way — see the Gemini model-id entries above), checked the proxy
+layer directly: `curl` to `api.groq.com` returned `CONNECT tunnel
+failed, response 403`, and this session's agent-proxy status endpoint
+confirmed it — `connect_rejected`, "gateway answered 403 to CONNECT
+(policy denial)." The request never reached Groq at all. This is the
+same block that had already stopped a `console.groq.com` docs fetch
+earlier in the session; it turned out to cover the whole `groq.com`
+domain family, including the actual API host, not just the docs
+subdomain.
+
+**What changed:** Stopped the run immediately (99/208 calls made, 0
+successes, genuinely $0 cost since nothing left the sandbox) and deleted
+the resulting all-error results file rather than keep an artifact with
+zero real data in it. `scripts/run_groq_expansion.py` itself needed no
+changes — it was run successfully, unmodified, from the user's own
+machine instead, producing the real 208/208-success dataset now in
+`experiments/results/groq-gpt-oss-expansion.json`.
+
+**General lesson:** in a network-restricted execution environment, a
+provider failure that reproduces identically and immediately across
+every single call (no variation in error type, no partial successes) is
+a signal to check the transport layer before the application layer —
+retrying, changing the key, or re-verifying the model id would not have
+fixed this, and burning through a rate-limited free tier's worth of
+attempts on a network policy block would have been pure waste. The
+proxy's own status endpoint (`$HTTPS_PROXY/__agentproxy/status` →
+`recentRelayFailures`) is the fast way to tell a policy block from a
+real provider-side rejection.
+
+## 2026-09-23 — A "win" against two named baselines wasn't a win against every baseline
+
+**What was tried:** Retraining V3 on the newly expanded real dataset (56
+rows, up from 24) after the Groq run above landed. The first result
+looked like a genuine turnaround: `learned-v1` 88.2% vs. `always-
+cheapest` 58.3%.
+
+**Why it wasn't real:** `always-cheapest`/`always-strongest` were
+hardcoded to specific model ids (`mock-fast-v1`/`mock-accurate-v1`) from
+before real providers existed in the data. Those two models only had
+recorded outcomes for the original 24 rows (mock was never re-run
+against the 60 newer tasks), so their accuracy was computed over a
+smaller, different subset than `learned-v1`'s — an apples-to-oranges
+comparison that happened to flatter the learned model. Fixing the
+evaluable-row gap (regenerating the mock baseline against all 104 tasks,
+free) and making the baseline model ids dynamic (picked by registry
+price, not hardcoded) still wasn't the whole story: the tree's exported
+text showed it mostly predicting one specific model
+(`groq-gpt-oss-20b`), so that model was tested directly as its own
+trivial "always pick this one" baseline — it scored 89.3%, beating
+`learned-v1`'s (now fairly-computed) 75.0%. The registry's literal
+cheapest/priciest models were simply never the right pair to check
+against once a different, mid-priced model became the data's actual
+dominant performer.
+
+A second, smaller version of the same mistake showed up while building
+the fix: the first "pick the best single-model baseline" logic used
+plain `max()` over accuracy, which selected a baseline evaluated on only
+8 of 56 rows (100% on a tiny, non-representative slice) over one
+evaluated on all 56. Caught before it was reported, by checking
+`n_evaluable` alongside accuracy rather than trusting the top number
+alone.
+
+**What changed:** `backend/app/routing/learned/train.py` now computes
+`always-cheapest`/`always-strongest` dynamically from the model registry
+instead of hardcoded literals, checks *every* candidate model as its own
+trivial baseline (`_all_single_model_baselines`), and restricts "the
+best baseline to beat" to candidates with the same evaluable-row count
+as the learned model itself — with an explicit
+`learned_v1_beats_every_single_model_baseline` boolean in the manifest
+so this can't be silently missed again.
+
+**General lesson:** a router's real job is "beat every trivial constant
+policy," not "beat the two policies someone happened to name
+`always-cheapest` and `always-strongest`." Those names describe a
+ranking by *listed price*, which is a different question from "which
+single model, chosen with zero learning, performs best on this data" —
+and the second question is the one that actually matters for deciding
+whether a learned router earns its complexity. Any future baseline
+comparison should default to checking every available candidate, not
+just the two with the most legible names, and should always report the
+evaluable-row count next to the accuracy number, never the number alone.

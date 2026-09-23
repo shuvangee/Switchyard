@@ -6,23 +6,37 @@ changes. Full detail belongs in `docs/case-study/`, not here.
 
 ## Current stage
 
-V3 — learned routing. First model trained and evaluated (2026-09-22).
-**Result: it loses to every baseline, including "always pick the
-cheapest model."** Not recommended for real traffic. See
-`docs/case-study/EXPERIMENTS.md` (2026-09-22) for the full analysis —
-this is an honest negative result, not a bug to be quietly fixed.
+V3 — learned routing. Retrained on real data twice: first on 24 rows
+(2026-09-22), then on 56 rows after the Groq gpt-oss-20b/120b run
+(2026-09-23). **Result both times: it loses to a trivial single-model
+baseline.** Not recommended for real traffic — `v2` remains the default
+router. See `docs/case-study/EXPERIMENTS.md` (2026-09-22 and 2026-09-23
+entries) for the full analysis, and `FAILURES_AND_LESSONS.md`
+(2026-09-23) for two real bugs in the *evaluation methodology* found and
+fixed while re-checking the second retrain's initial (misleadingly
+positive) numbers — this remains an honest negative result, not a bug in
+the router itself to be quietly fixed.
 
 ## Current objective
 
-Two things in parallel:
-1. Data collection (Phase 2/3 below) is still the real path to a V3
-   model that might actually beat the rules — the negative result above
-   confirms, rather than contradicts, every prior data-readiness review.
+1. Data collection more than doubled the training set (24 → 56 rows) and
+   changed which model dominates (`mock-fast-v1` → `groq-gpt-oss-20b`),
+   but did not change the underlying finding: a trivial "always pick one
+   model" policy still beats the learned router. The 4 manual-eval
+   categories (coding, debugging, reasoning-manual, summarization) still
+   contribute zero training rows — that's the next real lever, not
+   another retrain on the same auto-graded categories.
 2. Nothing about V3's pipeline itself needs more work right now — it's
    built, tested, and wired into the router-selection mechanism
-   (`router_version="learned-v1"` in `POST /route`). It should be
-   re-trained (`python -m app.routing.learned.train`) once meaningfully
-   more real, correctly-labeled data exists, not before.
+   (`router_version="learned-v1"` in `POST /route`). The evaluation
+   methodology in `train.py` was hardened this pass (dynamic baseline
+   model selection, every candidate model checked as its own trivial
+   baseline, explicit `learned_v1_beats_every_single_model_baseline`
+   flag) specifically so a future retrain's result can't look like a win
+   without actually being one.
+3. This sandbox's network policy blocks `groq.com` outright — any future
+   real-provider run against Groq needs to happen from outside this
+   environment (see `FAILURES_AND_LESSONS.md`, 2026-09-23).
 
 ## Completed
 
