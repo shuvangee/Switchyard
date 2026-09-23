@@ -250,6 +250,12 @@
 - groq-gpt-oss-120b: avg 1029ms across all 104 tasks
 - 120b is 1.51x the latency of 20b on average
 
+## Token usage
+
+- groq-gpt-oss-20b: 11059 input + 31899 output = 42958 total tokens across all 104 tasks (avg 307 output tokens/task)
+- groq-gpt-oss-120b: 11059 input + 29565 output = 40624 total tokens across all 104 tasks (avg 284 output tokens/task)
+- 120b uses 0.93x the output tokens of 20b on average
+
 ## Cost
 
 - groq-gpt-oss-20b: nominal total $0.010399 across all 104 tasks

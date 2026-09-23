@@ -163,6 +163,20 @@ def main() -> None:
     emit(f"- 120b is {b_avg/a_avg:.2f}x the latency of 20b on average")
     emit()
 
+    # --- token usage ---
+    a_in = sum(by_task_model[(tid, MODEL_A)]["input_tokens"] for tid in task_ids)
+    a_out = sum(by_task_model[(tid, MODEL_A)]["output_tokens"] for tid in task_ids)
+    b_in = sum(by_task_model[(tid, MODEL_B)]["input_tokens"] for tid in task_ids)
+    b_out = sum(by_task_model[(tid, MODEL_B)]["output_tokens"] for tid in task_ids)
+    emit("## Token usage")
+    emit()
+    emit(f"- {MODEL_A}: {a_in} input + {a_out} output = {a_in+a_out} total tokens across all "
+         f"{len(task_ids)} tasks (avg {a_out/len(task_ids):.0f} output tokens/task)")
+    emit(f"- {MODEL_B}: {b_in} input + {b_out} output = {b_in+b_out} total tokens across all "
+         f"{len(task_ids)} tasks (avg {b_out/len(task_ids):.0f} output tokens/task)")
+    emit(f"- 120b uses {b_out/a_out:.2f}x the output tokens of 20b on average")
+    emit()
+
     # --- cost ---
     a_cost = sum(by_task_model[(tid, MODEL_A)]["estimated_cost_usd"] for tid in task_ids)
     b_cost = sum(by_task_model[(tid, MODEL_B)]["estimated_cost_usd"] for tid in task_ids)
