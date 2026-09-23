@@ -433,3 +433,31 @@ data-volume problem - this specific model pair may simply be too similar
 in capability, on this task distribution, for routing to have much room
 to help. Full analysis: `EXPERIMENTS.md` (2026-09-23) and
 `experiments/results/routing-opportunity-analysis.md`.
+
+## 2026-09-23 — V2.6 Phase 1/2 kickoff: evaluation coverage and a stronger-model proposal
+
+Reframed the next stage explicitly as V2.6 - Evaluation Coverage &
+Routing Opportunity Expansion, not another V3 retrain. Goal: find out
+whether the 4-point routing ceiling is a property of the gpt-oss-20b/
+120b pair specifically, or of the routing problem generally, without
+changing the benchmark to manufacture a bigger gap.
+
+Phase 1 progress on the 29 ungraded tasks: converted 3 reasoning tasks
+(001/002/003) to `exact_match` where the answer was already single and
+unambiguous, no prompt change needed - though scoring them is still
+pending a response-text export from the user's local db, same gap as
+before. Proposed (not written) revised prompts + test_cases for the
+remaining 8 debugging tasks, mirroring the 009-013 precedent exactly,
+including deliberately NOT resolving debugging-007's known spec
+ambiguity just to make it easier to grade. Compared 4 evaluation
+approaches for summarization (human rubric, LLM-judge, reference-based
+metrics, hybrid) and recommended a deterministic required-fact presence
+check derived from the existing rubrics, over LLM-as-a-judge, as the
+primary signal - full comparison in `DECISIONS.md`.
+
+Phase 2: registered `gemini-3.1-pro-preview` (reuses GeminiProvider,
+already-configured key, no new provider code) as the proposed stronger-
+capability contrast against groq-gpt-oss-20b. Estimated cost from real
+Groq-run token counts as a proxy (~$0.40 for all 104 tasks, ~$2.60
+worst case) - registration only, no live call, waiting on explicit cost
+approval before Phase 3 can run.

@@ -6,46 +6,76 @@ changes. Full detail belongs in `docs/case-study/`, not here.
 
 ## Current stage
 
-V3 — learned routing. Retrained on real data twice: first on 24 rows
-(2026-09-22), then on 56 rows after the Groq gpt-oss-20b/120b run
-(2026-09-23). **Result both times: it loses to a trivial single-model
-baseline.** Not recommended for real traffic — `v2` remains the default
-router. See `docs/case-study/EXPERIMENTS.md` (2026-09-22 and 2026-09-23
-entries) for the full analysis, and `FAILURES_AND_LESSONS.md`
-(2026-09-23) for two real bugs in the *evaluation methodology* found and
-fixed while re-checking the second retrain's initial (misleadingly
-positive) numbers — this remains an honest negative result, not a bug in
-the router itself to be quietly fixed.
+**V2.6 — Evaluation Coverage & Routing Opportunity Expansion**, started
+2026-09-23. Not another V3 training round: V3 (learned routing) was
+retrained twice already (24 rows on 2026-09-22, 56 rows on 2026-09-23
+after the Groq run) and **lost to a trivial single-model baseline both
+times** — see `docs/case-study/EXPERIMENTS.md` for both entries and
+`FAILURES_AND_LESSONS.md` (2026-09-23) for two real evaluation-
+methodology bugs found and fixed while re-checking the second result.
+This remains an honest negative result, not a bug to quietly fix.
 
-**Routing opportunity analysis (2026-09-23, before any further
-training):** asked a prior question V3's own accuracy can't answer —
-does this model pair (`groq-gpt-oss-20b`/`120b`) even have a real
-quality gap for a router to exploit? On the 75 of 104 tasks with real
-ground truth, **always-20b and always-120b tie exactly** (68/75, 90.7%
-each) — a perfect oracle router tops out just 4.0 points above either,
-on only 6 disagreeing tasks. 120b costs 1.87x the nominal tokens and
-1.51x the latency for that. Full analysis:
+**The reframing finding (2026-09-23):** a routing-opportunity analysis
+asked a prior question V3's own accuracy can't answer — does the
+`groq-gpt-oss-20b`/`120b` pair even have a real quality gap to route
+around? On the 75/104 tasks with real ground truth, **always-20b and
+always-120b tie exactly** (68/75, 90.7% each); a perfect oracle router
+tops out just 4.0 points above either, on only 6 disagreeing tasks,
+while 120b costs 1.87x the nominal tokens and 1.51x the latency for
+that. V2.6 exists to find out whether that ceiling is a property of
+*this model pair* or of the *routing problem generally* — explicitly
+not to manufacture a win for Switchyard. See
 `docs/case-study/EXPERIMENTS.md` and
 `experiments/results/routing-opportunity-analysis.md`.
 
+**V2.6 Phase 1 (evaluation coverage) status:**
+- Coding (13) + debugging-009/010/011/012/013 (5): **done** —
+  `backend/app/evaluation/sandbox.py`, real kernel-enforced isolation,
+  36/36 correct on the real Groq responses. Applied to
+  `evaluation_status` only, not `evaluation_type`/`dataset.py` — a
+  deliberate, separate wiring decision still pending.
+- Reasoning-001/002/003 (3 of the 8 ungraded): **converted to
+  `exact_match`**, but transient — their existing responses were never
+  saved to the results file, so `scripts/export_reasoning_responses.py`
+  + `apply_reasoning_grading_results.py` need to run against the user's
+  local db before real numbers exist for them.
+- Reasoning-005: needs the same prompt-narrowing reasoning-010 got (asks
+  for 2 numbers, `exact_match` can only check one) — **proposed, not
+  written**, pending approval.
+- Reasoning-004/006/009/012 (4): recommended to **stay manual** —
+  multi-fact or partial-answer-misleading, consistent with prior
+  decisions already made for 006/009/012 in this project.
+- Debugging-001 through 008 (8): **proposed revised prompts + test_cases
+  for all 8**, mirroring the 009-013 precedent exactly (fenced-code-
+  block instruction; debugging-002 also disambiguates empty-list
+  behavior; debugging-007 deliberately excludes the still-unresolved
+  all-duplicate edge case). Not written — needs a new (free-tier) Groq
+  run once approved.
+- Summarization (13): **method recommended, not implemented** — a
+  hybrid required-fact presence check derived from each task's existing
+  rubric notes, over human-only grading, LLM-as-a-judge, or reference-
+  based metrics (ROUGE/BLEU). Full comparison:
+  `docs/case-study/DECISIONS.md` (2026-09-23).
+
+**V2.6 Phase 2 (stronger model):** `gemini-3.1-pro-preview` registered
+(`backend/app/providers/registry.py`) — reuses the existing
+`GeminiProvider`, no new key needed (`GOOGLE_API_KEY` already
+configured). Estimated cost for all 104 tasks: ~$0.40 (real token
+counts from the Groq run as a proxy), worst case ~$2.60 if every
+response maxes the 2048-token output cap. **No live call made — waiting
+on explicit cost approval.** Model id is UNVERIFIED against a real call
+(same caution as `grok-4.1-fast` before its first run; `ai.google.dev`
+is blocked from this sandbox).
+
+Phases 3 (stronger-model routing experiment) and 4 (V3 readiness
+decision) are blocked on that approval and haven't started.
+
 ## Current objective
 
-1. **The routing-opportunity analysis is the more fundamental finding
-   than any single V3 retrain result.** V3 losing to a trivial baseline
-   and "this model pair barely differs in quality" are consistent, not
-   coincidental — there may be very little for *any* learned router to
-   find with this specific pair on this task distribution. Before
-   retraining V3 again, the more informative next step is probably a
-   model pair with a starker capability gap, not more data on this one.
-2. Sandboxed code-execution grading now exists
-   (`backend/app/evaluation/sandbox.py`) and gave real ground truth to
-   all 13 coding tasks and the 5 revised debugging tasks (36/36 correct
-   on the real Groq responses) — applied to `evaluation_status` in
-   `experiments/results/groq-gpt-oss-expansion.json`, but deliberately
-   NOT wired into `evaluation_type`/`dataset.py`'s row generation yet;
-   that remains a separate decision. 8 debugging tasks, 8 reasoning
-   tasks, and all 13 summarization tasks still have no grader at all.
-3. Nothing about V3's pipeline itself needs more work right now — it's
+1. Get sign-off on the 3 pending-approval items above (debugging prompt
+   revisions + new run, reasoning-005 narrowing, gemini-3.1-pro-preview
+   cost), then run Phase 1's remaining pieces and Phase 3.
+2. Nothing about V3's pipeline itself needs more work right now — it's
    built, tested, and wired into the router-selection mechanism
    (`router_version="learned-v1"` in `POST /route`). The evaluation
    methodology in `train.py` was hardened this pass (dynamic baseline
@@ -53,9 +83,11 @@ on only 6 disagreeing tasks. 120b costs 1.87x the nominal tokens and
    baseline, explicit `learned_v1_beats_every_single_model_baseline`
    flag) specifically so a future retrain's result can't look like a win
    without actually being one.
-4. This sandbox's network policy blocks `groq.com` outright — any future
-   real-provider run against Groq needs to happen from outside this
-   environment (see `FAILURES_AND_LESSONS.md`, 2026-09-23).
+3. This sandbox's network policy blocks `groq.com` outright, and cannot
+   make paid calls without cost approval regardless of provider — any
+   future real-provider run needs to happen from outside this
+   environment or wait on explicit approval (see
+   `FAILURES_AND_LESSONS.md`, 2026-09-23).
 
 ## Completed
 

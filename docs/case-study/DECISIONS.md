@@ -530,3 +530,63 @@ being a plain list rather than a rule-engine DSL.
 **Trade-offs accepted:** Adding a third router version means editing this
 `if` and the allow-list tuple directly, not registering a new class —
 acceptable at this scale; revisit if a third strategy actually appears.
+
+## 2026-09-23 — Summarization grading: recommended, not yet implemented
+
+**Decision (proposed, not built):** for the 13 summarization tasks
+(currently 100% ungraded), the most defensible next evaluation method is
+a **hybrid required-fact presence check**: for each task, extract the
+2-3 specific facts its existing `metadata.notes` rubric already names
+(e.g. summarization-010 requires mentioning both "88% product
+satisfaction, a record high" AND "61% shipping satisfaction, a 2-year
+low, tied to a carrier change") into a structured list, then check
+deterministically whether the response mentions each required fact -
+similar in spirit to `exact_match`'s word-boundary check, applied once
+per required fact rather than once per whole answer.
+
+**Alternatives considered:**
+1. **Human rubric scoring (status quo).** Accurate, no circularity risk,
+   but doesn't scale - someone has to read and score every response by
+   hand, for every future rerun, forever. Doesn't solve the actual
+   problem (13 tasks with zero automated signal).
+2. **LLM-as-a-judge.** A separate model scores each response against the
+   rubric. Automatable and can capture nuance a keyword check can't, but:
+   imperfect by construction (a model's opinion, not ground truth - must
+   never be presented as such), risks self-judging bias if the judge
+   model overlaps with an evaluated model, needs the judge model/version
+   and exact prompt stored for reproducibility, and - concretely, right
+   now - is itself a live API call blocked by this sandbox's network
+   policy, adding another local-run dependency on top of the ones
+   already in flight for Phase 1/2 of V2.6.
+3. **Reference-based metrics (ROUGE/BLEU/BERTScore).** Fully
+   deterministic and free once a reference summary exists per task, but
+   n-gram-overlap metrics are well-documented to correlate poorly with
+   real summary quality - a correct paraphrase scores low, a fluent but
+   wrong summary reusing the right keywords scores high. A bad fit for a
+   project committed to never fabricating a quality signal that looks
+   more precise than it is.
+4. **Hybrid required-fact presence check (recommended).** Deterministic,
+   free, reproducible, directly traceable to rubrics a human already
+   wrote (not a black-box model opinion), and consistent with this
+   project's stated preference for deterministic evaluation wherever
+   possible - the same principle already applied to math/extraction/
+   classification/structured_output and now coding/debugging.
+
+**Reasoning:** the primary signal should be deterministic wherever a
+task's rubric already specifies checkable facts, which every
+summarization task here does (the rubrics were written specifically as
+"must mention X and Y" during the original manual-grading-rubric pass).
+LLM-as-a-judge is not rejected outright - it's a legitimate secondary,
+richer signal to add *later* if fact-presence proves too coarse - but
+it shouldn't be the *first* thing built when a deterministic option
+already covers the rubric's actual content.
+
+**Trade-offs accepted:** presence of the required facts doesn't
+guarantee good prose, conciseness, or that the response doesn't *also*
+include a fabricated or contradictory third claim alongside the correct
+ones - a real gap this method doesn't close. If that gap turns out to
+matter in practice, LLM-as-a-judge becomes the next thing to add, with
+its judge model/version, exact prompt, and reproducibility caveats
+documented up front, and explicitly never presented as ground truth.
+**Not implemented yet** - this is a recommendation pending approval, per
+the explicit instruction not to implement before comparing approaches.
