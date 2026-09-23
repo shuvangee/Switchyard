@@ -383,8 +383,9 @@
       "input_tokens": 91,
       "output_tokens": 544,
       "estimated_cost_usd": 0.00034005,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-001",
@@ -397,8 +398,9 @@
       "input_tokens": 91,
       "output_tokens": 459,
       "estimated_cost_usd": 0.00014452499999999998,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-002",
@@ -411,8 +413,9 @@
       "input_tokens": 91,
       "output_tokens": 339,
       "estimated_cost_usd": 0.00021705,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-002",
@@ -425,8 +428,9 @@
       "input_tokens": 91,
       "output_tokens": 297,
       "estimated_cost_usd": 9.592499999999999e-05,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-003",
@@ -439,8 +443,9 @@
       "input_tokens": 92,
       "output_tokens": 488,
       "estimated_cost_usd": 0.00030659999999999997,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-003",
@@ -453,8 +458,9 @@
       "input_tokens": 92,
       "output_tokens": 523,
       "estimated_cost_usd": 0.0001638,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-004",
@@ -467,8 +473,9 @@
       "input_tokens": 98,
       "output_tokens": 520,
       "estimated_cost_usd": 0.00032669999999999997,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 5/5 test cases passed"
     },
     {
       "task_id": "coding-004",
@@ -481,8 +488,9 @@
       "input_tokens": 98,
       "output_tokens": 500,
       "estimated_cost_usd": 0.00015734999999999998,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 5/5 test cases passed"
     },
     {
       "task_id": "coding-005",
@@ -495,8 +503,9 @@
       "input_tokens": 96,
       "output_tokens": 623,
       "estimated_cost_usd": 0.0003882,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-005",
@@ -509,8 +518,9 @@
       "input_tokens": 96,
       "output_tokens": 566,
       "estimated_cost_usd": 0.000177,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-006",
@@ -523,8 +533,9 @@
       "input_tokens": 95,
       "output_tokens": 582,
       "estimated_cost_usd": 0.0003634499999999999,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-006",
@@ -537,8 +548,9 @@
       "input_tokens": 95,
       "output_tokens": 368,
       "estimated_cost_usd": 0.00011752499999999998,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-007",
@@ -551,8 +563,9 @@
       "input_tokens": 93,
       "output_tokens": 509,
       "estimated_cost_usd": 0.00031935,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 5/5 test cases passed"
     },
     {
       "task_id": "coding-007",
@@ -565,8 +578,9 @@
       "input_tokens": 93,
       "output_tokens": 838,
       "estimated_cost_usd": 0.000258375,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 5/5 test cases passed"
     },
     {
       "task_id": "coding-008",
@@ -579,8 +593,9 @@
       "input_tokens": 102,
       "output_tokens": 545,
       "estimated_cost_usd": 0.00034229999999999997,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-008",
@@ -593,8 +608,9 @@
       "input_tokens": 102,
       "output_tokens": 836,
       "estimated_cost_usd": 0.00025844999999999997,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-009",
@@ -607,8 +623,9 @@
       "input_tokens": 108,
       "output_tokens": 749,
       "estimated_cost_usd": 0.0004656,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-009",
@@ -621,8 +638,9 @@
       "input_tokens": 108,
       "output_tokens": 647,
       "estimated_cost_usd": 0.0002022,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-010",
@@ -635,8 +653,9 @@
       "input_tokens": 100,
       "output_tokens": 1024,
       "estimated_cost_usd": 0.0006294,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 5/5 test cases passed"
     },
     {
       "task_id": "coding-010",
@@ -649,8 +668,9 @@
       "input_tokens": 100,
       "output_tokens": 696,
       "estimated_cost_usd": 0.00021629999999999997,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 5/5 test cases passed"
     },
     {
       "task_id": "coding-011",
@@ -663,8 +683,9 @@
       "input_tokens": 105,
       "output_tokens": 1024,
       "estimated_cost_usd": 0.00063015,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-011",
@@ -677,8 +698,9 @@
       "input_tokens": 105,
       "output_tokens": 372,
       "estimated_cost_usd": 0.00011947499999999999,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-012",
@@ -691,8 +713,9 @@
       "input_tokens": 120,
       "output_tokens": 711,
       "estimated_cost_usd": 0.00044459999999999996,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 5/5 test cases passed"
     },
     {
       "task_id": "coding-012",
@@ -705,8 +728,9 @@
       "input_tokens": 120,
       "output_tokens": 581,
       "estimated_cost_usd": 0.00018329999999999998,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 5/5 test cases passed"
     },
     {
       "task_id": "coding-013",
@@ -719,8 +743,9 @@
       "input_tokens": 107,
       "output_tokens": 365,
       "estimated_cost_usd": 0.00023505,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "coding-013",
@@ -733,8 +758,9 @@
       "input_tokens": 107,
       "output_tokens": 514,
       "estimated_cost_usd": 0.00016222499999999997,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "debugging-001",
@@ -971,8 +997,9 @@
       "input_tokens": 155,
       "output_tokens": 869,
       "estimated_cost_usd": 0.00054465,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "debugging-009",
@@ -985,8 +1012,9 @@
       "input_tokens": 155,
       "output_tokens": 903,
       "estimated_cost_usd": 0.000282525,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 4/4 test cases passed"
     },
     {
       "task_id": "debugging-010",
@@ -999,8 +1027,9 @@
       "input_tokens": 142,
       "output_tokens": 485,
       "estimated_cost_usd": 0.00031229999999999995,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 3/3 test cases passed"
     },
     {
       "task_id": "debugging-010",
@@ -1013,8 +1042,9 @@
       "input_tokens": 142,
       "output_tokens": 449,
       "estimated_cost_usd": 0.00014534999999999998,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 3/3 test cases passed"
     },
     {
       "task_id": "debugging-011",
@@ -1027,8 +1057,9 @@
       "input_tokens": 124,
       "output_tokens": 666,
       "estimated_cost_usd": 0.00041820000000000003,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 3/3 test cases passed"
     },
     {
       "task_id": "debugging-011",
@@ -1041,8 +1072,9 @@
       "input_tokens": 124,
       "output_tokens": 910,
       "estimated_cost_usd": 0.0002823,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 3/3 test cases passed"
     },
     {
       "task_id": "debugging-012",
@@ -1055,8 +1087,9 @@
       "input_tokens": 128,
       "output_tokens": 711,
       "estimated_cost_usd": 0.00044579999999999994,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 5/5 test cases passed"
     },
     {
       "task_id": "debugging-012",
@@ -1069,8 +1102,9 @@
       "input_tokens": 128,
       "output_tokens": 1024,
       "estimated_cost_usd": 0.0003168,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 5/5 test cases passed"
     },
     {
       "task_id": "debugging-013",
@@ -1083,8 +1117,9 @@
       "input_tokens": 151,
       "output_tokens": 350,
       "estimated_cost_usd": 0.00023265,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 3/3 test cases passed"
     },
     {
       "task_id": "debugging-013",
@@ -1097,8 +1132,9 @@
       "input_tokens": 151,
       "output_tokens": 435,
       "estimated_cost_usd": 0.000141825,
-      "evaluation_status": "not_evaluated",
-      "error_message": null
+      "evaluation_status": "correct",
+      "error_message": null,
+      "evaluation_detail": "code_execution: 3/3 test cases passed"
     },
     {
       "task_id": "extraction-001",
