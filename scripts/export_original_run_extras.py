@@ -1,17 +1,26 @@
-"""Exports response_text for reasoning-001/002/003 (converted to
-exact_match, 2026-09-23) from a local switchyard.db - no new API calls.
+"""Exports response_text for every remaining task whose ORIGINAL Groq
+run response is still gradeable as-is - no prompt changed, so no new
+API call is needed, just reading it back out of the local database.
 
-Same rationale as export_groq_code_responses.py: response_text was never
-saved to experiments/results/groq-gpt-oss-expansion.json, so it has to
-be read back out of the local database from the original Groq run.
+Covers: reasoning-001/002/003 (converted to exact_match) and all 13
+summarization tasks (6 now auto-gradeable via required_facts, 7 stay
+manual but still worth having the real response text for human review).
+Does NOT cover reasoning-005 or debugging-001-008 - those had their
+PROMPTS revised, so their original responses don't match the new
+format and need an actual new Groq call instead (see
+scripts/run_groq_revision_batch.py).
+
+Same rationale as export_groq_code_responses.py: response_text was
+never saved to experiments/results/groq-gpt-oss-expansion.json, so it
+has to be read back out of the local database from the original run.
 
 Run this on the SAME machine (and same backend/switchyard.db) the
 original Groq run happened on:
 
     cd backend && source .venv/bin/activate
-    python ../scripts/export_reasoning_responses.py
+    python ../scripts/export_original_run_extras.py
 
-Then commit and push the resulting experiments/results/groq-reasoning-
+Then commit and push the resulting experiments/results/groq-remaining-
 responses.json.
 """
 
@@ -19,7 +28,10 @@ import json
 import sqlite3
 from pathlib import Path
 
-TASK_IDS = ["reasoning-001", "reasoning-002", "reasoning-003"]
+TASK_IDS = (
+    ["reasoning-001", "reasoning-002", "reasoning-003"]
+    + [f"summarization-{i:03d}" for i in range(1, 14)]
+)
 MODEL_IDS = ["groq-gpt-oss-20b", "groq-gpt-oss-120b"]
 
 
@@ -60,7 +72,7 @@ def main() -> None:
         "model_ids": MODEL_IDS,
         "executions": records,
     }
-    results_path = Path(__file__).resolve().parents[1] / "experiments" / "results" / "groq-reasoning-responses.json"
+    results_path = Path(__file__).resolve().parents[1] / "experiments" / "results" / "groq-remaining-responses.json"
     results_path.parent.mkdir(parents=True, exist_ok=True)
     results_path.write_text(json.dumps(output, indent=2) + "\n")
 
