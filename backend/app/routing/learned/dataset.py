@@ -1,9 +1,13 @@
 """V3 training dataset construction.
 
-Builds one training row per benchmark task, from the two experiment
-result files that actually exist in this repo: the V0 mock baseline
-(experiments/results/v0-mock-baseline.json) and the first real-provider
-experiment (experiments/results/gemini-3.6-flash-baseline.json).
+Builds one training row per benchmark task, from the experiment result
+files that actually exist in this repo: the V0 mock baseline
+(experiments/results/v0-mock-baseline.json), the first real-provider
+experiment (experiments/results/gemini-3.6-flash-baseline.json), and the
+Groq gpt-oss-20b/120b run against the expanded 104-task set
+(experiments/results/groq-gpt-oss-expansion.json, added 2026-09-23 —
+run from outside this sandbox, since this environment's network policy
+blocks groq.com; see FAILURES_AND_LESSONS.md).
 
 TRAINING TARGET, and why: for each task, the target is the *cheapest*
 candidate model that got the task CORRECT. This directly encodes
@@ -23,14 +27,18 @@ train/serve skew: the real router never sees ground truth at inference
 time, only the analyzer's guess. See docs/case-study/DECISIONS.md.
 
 KNOWN LIMITATION, stated here because it shapes every downstream result:
-this dataset is small (at most 44 tasks, most candidates from
-MockProvider) and mixes one real-provider model (gemini-3.6-flash, only
-present for the original 12 tasks) with three mock models present for
-all 44. Whatever a model trained on this data appears to learn is, for
-most of the data, still a function of MockProvider's own regex
-heuristics — the exact leakage risk raised in the 2026-09-19 V3
-data-readiness review. This dataset does not resolve that; it is the
-smallest real, non-fabricated dataset that exists today.
+rows only exist for tasks with a deterministic evaluator (see TRAINING
+TARGET above), and among those, a row's candidate set only ever includes
+whichever models actually have a recorded execution for that specific
+task — the three mock models (all 104 tasks), gemini-3.6-flash (only the
+original 12), and the two Groq models (only the 104 auto-gradeable-type
+tasks that exist as of the 2026-09-22 expansion, which happens to be all
+of them for math/classification/extraction/structured_output plus the 5
+exact_match reasoning tasks). This dataset does not resolve the
+MockProvider-heuristic leakage risk raised in the 2026-09-19 V3
+data-readiness review for tasks where mock candidates dominate the
+correct-and-cheap comparison; it is the smallest real, non-fabricated
+dataset that exists today.
 """
 
 import json
@@ -45,6 +53,7 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_RESULT_FILES = [
     REPO_ROOT / "experiments/results/v0-mock-baseline.json",
     REPO_ROOT / "experiments/results/gemini-3.6-flash-baseline.json",
+    REPO_ROOT / "experiments/results/groq-gpt-oss-expansion.json",
 ]
 
 

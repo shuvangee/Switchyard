@@ -147,13 +147,17 @@ def test_real_project_data_produces_the_expected_row_count():
     catches silent dataset drift (e.g. a new benchmark task file added
     without updating this expectation).
 
-    2026-09-22: benchmarks/tasks/ expanded from 44 to 104 tasks (60 new),
-    but no experiment has been run against the new tasks yet — row count
-    is unchanged (24) until that happens; the manual_eval_type count grew
-    from 20 to 47 because more manual-eval tasks now exist, independent
-    of whether any executions have been recorded for them.
+    2026-09-23: wired in experiments/results/groq-gpt-oss-expansion.json
+    (run from outside this sandbox, since groq.com is blocked here — see
+    FAILURES_AND_LESSONS.md) covering all 104 tasks against both Groq
+    models. Row count jumps from 24 to 55 (every auto-gradeable task now
+    has at least one real, non-mock candidate). no_executions drops to 0
+    since every task now has a Groq execution recorded; two auto-gradeable
+    tasks (classification-010, math-013) get no row because neither Groq
+    model answered them correctly, not because data is missing.
     """
     rows, excluded = build_training_rows()
-    assert len(rows) == 24
+    assert len(rows) == 55
     assert excluded["manual_eval_type"] == 47
-    assert excluded["no_executions"] == 33
+    assert excluded["no_executions"] == 0
+    assert excluded["no_correct_candidate"] == 2
