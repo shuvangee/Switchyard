@@ -150,14 +150,17 @@ def test_real_project_data_produces_the_expected_row_count():
     2026-09-23: wired in experiments/results/groq-gpt-oss-expansion.json
     (run from outside this sandbox, since groq.com is blocked here — see
     FAILURES_AND_LESSONS.md) covering all 104 tasks against both Groq
-    models. Row count jumps from 24 to 55 (every auto-gradeable task now
-    has at least one real, non-mock candidate). no_executions drops to 0
-    since every task now has a Groq execution recorded; two auto-gradeable
-    tasks (classification-010, math-013) get no row because neither Groq
-    model answered them correctly, not because data is missing.
+    models, then regenerated v0-mock-baseline.json (free, mock-only)
+    against all 104 tasks too, closing the coverage gap that made the
+    baseline comparison in train.py apples-to-oranges (see that file's
+    _cheapest_and_strongest_model_ids docstring). Row count: 24 -> 55
+    (Groq run) -> 56 (mock regeneration recovers one of the two tasks
+    neither Groq model got right — classification-010 or math-013, now
+    answered correctly by a mock candidate). no_executions is 0 since
+    every task now has at least one real or mock execution recorded.
     """
     rows, excluded = build_training_rows()
-    assert len(rows) == 55
+    assert len(rows) == 56
     assert excluded["manual_eval_type"] == 47
     assert excluded["no_executions"] == 0
-    assert excluded["no_correct_candidate"] == 2
+    assert excluded["no_correct_candidate"] == 1

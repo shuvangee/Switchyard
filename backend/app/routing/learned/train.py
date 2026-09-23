@@ -10,17 +10,18 @@ raw data (experiments/results/*.json)
   -> saved router artifact (learned/artifacts/learned-v1.joblib + .json
      manifest)
 
-WHY LEAVE-ONE-OUT, NOT A TRAIN/VAL/TEST SPLIT: with 24 total rows, a
-conventional 80/20 split leaves a ~5-row test set — a single such split's
-accuracy is dominated by noise (getting 1 extra row right or wrong is a
-20-point swing). Leave-one-out (train on 23, predict the 1 held out,
-repeat 24 times) uses every row as a held-out test exactly once, which is
-the standard, defensible choice for a dataset this small — not a
-workaround, the textbook-correct method here. It still prevents leakage
-the same way a split would: each held-out row's prediction never saw that
-row's own label during its training.
+WHY LEAVE-ONE-OUT, NOT A TRAIN/VAL/TEST SPLIT: with a small row count (see
+the manifest's n_training_rows for the current figure), a conventional
+80/20 split leaves a test set small enough that a single split's accuracy
+is dominated by noise (one extra row right or wrong is a large swing).
+Leave-one-out (train on all-but-one, predict the held-out row, repeat for
+every row) uses every row as a held-out test exactly once, which is the
+standard, defensible choice for a dataset this small — not a workaround,
+the textbook-correct method here. It still prevents leakage the same way
+a split would: each held-out row's prediction never saw that row's own
+label during its training.
 
-The final saved artifact is trained on ALL 24 rows (not held out) — LOOCV
+The final saved artifact is trained on ALL rows (not held out) — LOOCV
 estimates how a model trained on data-of-this-size generalizes; the
 deployed model should still use every real observation available.
 """
@@ -44,8 +45,34 @@ ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 ARTIFACT_PATH = ARTIFACT_DIR / "learned-v1.joblib"
 MANIFEST_PATH = ARTIFACT_DIR / "learned-v1.manifest.json"
 
-_ALWAYS_CHEAPEST_MODEL_ID = "mock-fast-v1"  # lowest input+output cost/1k in the registry
-_ALWAYS_STRONGEST_MODEL_ID = "mock-accurate-v1"  # the mock registry's designated "capable" tier
+
+def _cheapest_and_strongest_model_ids(rows: list[TrainingRow]) -> tuple[str, str]:
+    """Picks the always-cheapest/always-strongest baseline models dynamically
+    from whatever models actually have recorded candidates in this dataset,
+    ranked by combined input+output cost/1k from the live model registry.
+
+    These used to be hardcoded literals (mock-fast-v1/mock-accurate-v1) from
+    when mock was the only provider with data. That went silently stale the
+    moment real providers with their own pricing joined the candidate pool -
+    worse, it also broke comparability: a baseline hardcoded to a specific
+    model can only be evaluated on the subset of rows THAT model happens to
+    have data for, which is a different (and differently-sized) subset than
+    a baseline that adapts to whichever models are actually present. See
+    docs/case-study/FAILURES_AND_LESSONS.md (2026-09-23) for the concrete
+    comparison this produced.
+    """
+    model_lookup = {m.id: m for m in get_model_registry()}
+    candidate_ids = {c.model_config_id for row in rows for c in row.candidates}
+    priced = [
+        (model_lookup[mid], model_lookup[mid].input_cost_per_1k + model_lookup[mid].output_cost_per_1k)
+        for mid in candidate_ids
+        if mid in model_lookup
+    ]
+    if not priced:
+        raise RuntimeError("no candidate model in the training data matches a registered model config")
+    cheapest = min(priced, key=lambda pair: pair[1])[0]
+    strongest = max(priced, key=lambda pair: pair[1])[0]
+    return cheapest.id, strongest.id
 
 
 def _candidate_lookup(row: TrainingRow) -> dict[str, Candidate]:
@@ -61,8 +88,10 @@ def _outcome_for(row: TrainingRow, model_id: str) -> Candidate | None:
 
 
 def _new_tree() -> DecisionTreeClassifier:
-    # Shallow on purpose: N=24, 3 imbalanced classes (14/8/2). A deeper
-    # tree would fit noise, not signal, and stop being interpretable.
+    # Shallow on purpose: still a small, imbalanced dataset (see
+    # dataset.py's KNOWN LIMITATION note for the current row count and
+    # class shape). A deeper tree would fit noise, not signal, and stop
+    # being interpretable.
     return DecisionTreeClassifier(max_depth=2, min_samples_leaf=2, random_state=0)
 
 
@@ -95,6 +124,29 @@ def _v1_rule_based_predictions(rows: list[TrainingRow]) -> list[str | None]:
         except RoutingError:
             predictions.append(None)
     return predictions
+
+
+def _all_single_model_baselines(rows: list[TrainingRow]) -> list[dict]:
+    """A trivial "always send everything to model X" baseline for EVERY
+    model that actually appears as a candidate in the data - not just the
+    registry's cheapest/most-expensive by listed price.
+
+    Why this exists: always-cheapest/always-strongest are picked by
+    REGISTERED price, which is not the same question as "what is the
+    strongest constant (non-learning) policy achievable on this data?" A
+    model that is merely mid-priced can still be the empirically best
+    single choice (e.g. groq-gpt-oss-20b outscored the registry-cheapest
+    mock-fast-v1 by a wide margin once mock's regex heuristics started
+    failing on harder tasks). Without checking every candidate model this
+    way, a learned router's accuracy can look like a win against the two
+    named baselines while still losing to a trivial policy simply not
+    named "cheapest" or "strongest" - which is exactly what happened
+    during this fix (see FAILURES_AND_LESSONS.md, 2026-09-23).
+    """
+    candidate_ids = sorted({c.model_config_id for row in rows for c in row.candidates})
+    return [
+        _summarize(f"always-{model_id}", rows, [model_id] * len(rows)) for model_id in candidate_ids
+    ]
 
 
 def _random_expected_outcome(row: TrainingRow) -> tuple[float, float]:
@@ -168,18 +220,45 @@ def run(
             "refusing to train on a dataset this small without an explicit override."
         )
 
+    cheapest_model_id, strongest_model_id = _cheapest_and_strongest_model_ids(rows)
     loo_predictions = _leave_one_out_predictions(rows)
-    always_cheapest = [_ALWAYS_CHEAPEST_MODEL_ID] * len(rows)
-    always_strongest = [_ALWAYS_STRONGEST_MODEL_ID] * len(rows)
+    always_cheapest = [cheapest_model_id] * len(rows)
+    always_strongest = [strongest_model_id] * len(rows)
     v1_predictions = _v1_rule_based_predictions(rows)
+    learned_summary = _summarize(LEARNED_ROUTER_VERSION, rows, loo_predictions)
 
     comparison = [
-        _summarize(LEARNED_ROUTER_VERSION, rows, loo_predictions),
+        learned_summary,
         _summarize("always-cheapest", rows, always_cheapest),
         _summarize("always-strongest", rows, always_strongest),
         _summarize(V1_ROUTER_VERSION, rows, v1_predictions),
         _summarize_random(rows),
     ]
+
+    # always-cheapest/always-strongest are picked by REGISTERED price, which
+    # can silently miss the actual strongest do-nothing policy (see
+    # _all_single_model_baselines' docstring for the concrete case this
+    # caught). Every individual candidate model is checked as its own
+    # trivial baseline so a "win" against only the two named baselines can
+    # never be reported as a win against every naive alternative.
+    single_model_baselines = _all_single_model_baselines(rows)
+    # A baseline evaluated on far fewer rows than learned-v1 can post a
+    # deceptively high accuracy by small-sample luck (e.g. 100% on 8 rows
+    # vs. learned-v1's 75% on 56) - not a meaningful bar to clear. Only
+    # candidates with the SAME evaluable count as learned-v1 itself (i.e.
+    # a recorded outcome for every row) are eligible to be "the" baseline
+    # to beat; others stay visible in single_model_baselines for
+    # transparency but are excluded from this specific comparison.
+    fully_evaluable_baselines = [
+        b for b in single_model_baselines if b["n_evaluable"] == learned_summary["n_evaluable"]
+    ]
+    best_single_model_baseline = max(
+        fully_evaluable_baselines, key=lambda b: b["accuracy_on_evaluable"]
+    )
+    learned_v1_beats_every_single_model_baseline = (
+        learned_summary["accuracy_on_evaluable"] is not None
+        and learned_summary["accuracy_on_evaluable"] > best_single_model_baseline["accuracy_on_evaluable"]
+    )
 
     # Final deployed artifact: trained on ALL rows, not held out.
     encoded = encode([r.analysis for r in rows])
@@ -203,10 +282,15 @@ def run(
             "cheapest candidate model with a recorded CORRECT outcome for "
             "each task, among tasks with a deterministic evaluator"
         ),
+        "always_cheapest_model_id": cheapest_model_id,
+        "always_strongest_model_id": strongest_model_id,
         "evaluation_method": (
             f"leave-one-out cross-validation (n={len(rows)} too small for a held-out split)"
         ),
         "comparison": comparison,
+        "single_model_baselines": single_model_baselines,
+        "best_single_model_baseline": best_single_model_baseline["strategy"],
+        "learned_v1_beats_every_single_model_baseline": learned_v1_beats_every_single_model_baseline,
         "decision_tree_text": tree_text,
     }
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
