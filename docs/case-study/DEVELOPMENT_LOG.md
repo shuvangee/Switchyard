@@ -504,3 +504,44 @@ Phase 3 (recompute the analysis) and Phase 5 (V3 readiness with 3
 models) are both still blocked on running the above on the user's
 machine - nothing in this pass could reach Groq's API from this
 sandbox.
+
+## 2026-09-23 — V2.6 data-application phase: tooling fixes, coverage/analysis reporting, Qwen re-check
+
+Still no new API calls reachable from this sandbox - Phase A (export)
+and Phase B (revision-batch call) both remain the user's local machine
+to run. This pass fixed and extended the tooling those two phases feed
+into, ahead of handing back exact commands:
+
+- Fixed a real bug in `apply_revision_batch_results.py`: it only wrote
+  `evaluation_status`/`evaluation_detail` onto the existing debugging/
+  reasoning-005 records, leaving `latency_ms`, token counts, cost, and
+  `error_message` at their stale pre-revision-prompt values. Now every
+  field the new call actually measured is replaced, including on a
+  failed call, and debugging-007 (which stays ungraded) still gets its
+  new metrics recorded.
+- Added `scripts/evaluation_coverage_report.py` (Phase C): a per-task,
+  three-way split - automatically graded / manual-only / ungraded -
+  computed from `evaluation_status`, not the task's declared
+  `evaluation_type` (so it correctly counts sandbox- and
+  required-facts-graded tasks that keep `evaluation_type="manual"` by
+  design). Run against the CURRENT (pre-Phase-A/B) dataset: 75/104
+  automatically graded (72.1%), 25 manual-only, 4 ungraded - the 4 are
+  exactly reasoning-001/002/003/005, which is what Phase A/B exist to
+  fix. Full breakdown in `experiments/results/evaluation-coverage-
+  report.md`.
+- Added a Token usage section to `analyze_routing_opportunity.py`
+  (Phase D asked for it explicitly; it previously reported latency and
+  cost but not tokens).
+- Re-checked `groq-qwen3.8-27b`'s model id via web search rather than
+  trusting the earlier single-aggregator source: a Groq deprecation
+  notice (found via search; console.groq.com itself is still blocked
+  from this sandbox) confirms `qwen/qwen3.6-27b` was deprecated in
+  favor of `qwen/qwen3.8-27b`, and two independent third-party sources
+  now agree on the free-tier limits already recorded in the registry
+  (30 RPM / 1,000 RPD / 8K TPM / 200K TPD). Stronger corroboration than
+  before, but still not a live call - treated with the same caution as
+  every other unverified model id until one succeeds.
+
+No routing-opportunity numbers changed this pass - both reports above
+were regenerated against the same pre-Phase-A/B data as before, only
+the reporting code changed.
