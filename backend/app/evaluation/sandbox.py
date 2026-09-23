@@ -114,13 +114,21 @@ def extract_python_code(response_text: str, function_name: str) -> str | None:
     """Pulls the fenced code block that actually defines `function_name`
     out of a model response. Prefers a block containing the expected
     function's def over just taking the first fenced block, since a
-    response may include a second block for example usage or output.
+    response may include a separate block for example usage or output.
+
+    Takes the LAST such block, not the first: a debugging-style response
+    conventionally quotes the original (buggy) function before presenting
+    its fix, so both blocks define the same function name and "first
+    match" silently grades the unfixed code. Confirmed as a real bug
+    (not a hypothetical) against real Groq responses for debugging-009/
+    011/012 — see FAILURES_AND_LESSONS.md, 2026-09-23.
+
     Returns None if the response has no fenced code block at all.
     """
     blocks = _CODE_FENCE_RE.findall(response_text)
-    for block in blocks:
-        if f"def {function_name}(" in block:
-            return block
+    matching = [b for b in blocks if f"def {function_name}(" in b]
+    if matching:
+        return matching[-1]
     return blocks[0] if blocks else None
 
 

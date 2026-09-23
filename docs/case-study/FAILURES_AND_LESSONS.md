@@ -533,3 +533,41 @@ whether a learned router earns its complexity. Any future baseline
 comparison should default to checking every available candidate, not
 just the two with the most legible names, and should always report the
 evaluable-row count next to the accuracy number, never the number alone.
+
+## 2026-09-23 — The code-extraction grader graded the buggy original, not the fix
+
+**What was tried:** Grading the real Groq responses for the 5 revised
+debugging tasks (009-013) with the new sandboxed code-execution grader
+(`backend/app/evaluation/sandbox.py`). First run: 3 of 18 (task, model)
+pairs failed — `debugging-009/011/012` on `groq-gpt-oss-20b`.
+
+**Why it wasn't real:** Before reporting those as genuine model
+failures, read the actual response behind one of them
+(`debugging-009`). It contained three separate fenced Python blocks: the
+original buggy `is_anagram`, and two different corrected versions
+presented afterward — a completely normal way for a debugging-style
+response to explain a fix (show the bug, then the correction).
+`extract_python_code` took the FIRST block containing `def is_anagram(`,
+which was the unfixed original. Checked the other two failures the same
+way: both had the identical pattern (2-4 fenced blocks, several
+defining the same function). All three were the grader grading the
+wrong code, not the model failing to fix the bug.
+
+**What changed:** `extract_python_code` now takes the LAST block that
+defines the target function, not the first — matching how a debugging
+response conventionally orders "here's the bug" before "here's the fix."
+Added a regression test with the exact buggy-then-fixed pattern found in
+the real data. Re-ran the grader: 36/36 (task, model) pairs pass.
+
+**General lesson:** a 100% pass rate and a 3-failure rate are both
+results worth reading the underlying data behind before trusting -
+not just the failures. Here the failures were the tell (a systematic
+grader bug, not a systematic model weakness), but the fix should have
+been informed by looking at real responses in the first place, not by
+guessing at how debugging-style output is typically structured. Any
+extraction/parsing heuristic written against an assumed response shape
+needs to be checked against the actual data it will run on before its
+output is trusted, the same way an evaluator regression needs to be
+proven against the pre-fix code before it's trusted (see the 2026-09-23
+baseline-selection entry above for the same discipline applied to a
+different kind of bug).

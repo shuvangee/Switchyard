@@ -57,6 +57,21 @@ def test_no_fenced_code_block_is_reported_distinctly_from_a_failure():
     assert result.test_case_results == []
 
 
+def test_prefers_the_last_matching_block_over_a_buggy_original_shown_first():
+    """Regression test for a real bug found grading actual Groq responses:
+    a debugging-style response conventionally quotes the original buggy
+    function before its fix, so both blocks define the same function
+    name - taking the first match silently grades the unfixed code.
+    """
+    response = (
+        "The original buggy code:\n```python\ndef add(a, b):\n    return a - b\n```\n"
+        "The fix:\n```python\ndef add(a, b):\n    return a + b\n```"
+    )
+    result = grade_response(response, "add", [{"input": [2, 3], "expected": 5}])
+    assert result.code_extracted is True
+    assert result.all_passed is True
+
+
 def test_picks_the_block_that_defines_the_function_over_an_earlier_example_block():
     response = (
         "Example usage:\n```python\nprint(add(1, 2))\n```\n"
