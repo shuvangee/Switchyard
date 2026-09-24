@@ -1,0 +1,234 @@
+{
+  "note": "response_text export from local switchyard.db - no new API calls",
+  "task_count": 16,
+  "model_ids": [
+    "groq-gpt-oss-20b",
+    "groq-gpt-oss-120b"
+  ],
+  "executions": [
+    {
+      "task_id": "reasoning-001",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "**Answer:**\u202fCarol is the shortest.\n\n**Reasoning:**\n\n1. The statement \u201cAlice is taller than Bob\u201d tells us that, in terms of height, Alice ranks above Bob.\n2. The statement \u201cBob is taller than Carol\u201d tells us that Bob ranks above Carol.\n3. By chaining these two comparisons together we get a clear ordering from tallest to shortest:\n   - Alice (tallest) > Bob > Carol (shortest)\n\nSince Carol is lower than both Alice and Bob in this hierarchy, she must be the shortest of the three.",
+      "error_message": null
+    },
+    {
+      "task_id": "reasoning-001",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "From the statements we have two height comparisons:\n\n1. **Alice > Bob**  (Alice is taller than Bob)  \n2. **Bob > Carol** (Bob is taller than Carol)\n\nBecause height comparison is transitive, we can combine these two facts:\n\n- Since Alice is taller than Bob, and Bob is taller than Carol, it follows that **Alice is also taller than Carol**.\n\nNow we have a chain of heights:\n\n```\nAlice  >  Bob  >  Carol\n```\n\nIn any chain of strict inequalities, the last element is the smallest. Thus **Carol is the shortest** of the three.",
+      "error_message": null
+    },
+    {
+      "task_id": "reasoning-002",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "**Short answer:**  \nNo \u2013 based on the given premise we can conclude that it is *not* raining.\n\n---\n\n## Why the conclusion follows\n\n### 1. Translate the sentences into logical form  \n\n| English statement | Symbol |\n|-------------------|--------|\n| \u201cIt is raining.\u201d | **R** |\n| \u201cSam brings an umbrella.\u201d | **U** |\n| \u201cIf it is raining, Sam brings an umbrella.\u201d | **R \u2192 U** |\n| \u201cSam did **not** bring an umbrella today.\u201d | **\u00acU** |\n\nWe are given the two premises  \n\n1. \\(R \\rightarrow U\\)\u2003(If it rains, Sam brings an umbrella)  \n2. \\(\\neg U\\)\u2003(Sam did not bring an umbrella)\n\nWe want to know the truth value of **R** (is it raining?).\n\n---\n\n### 2. Use the **contrapositive**  \n\nA material implication \\(P \\rightarrow Q\\) is *logically equivalent* to its contrapositive \\(\\neg Q \\rightarrow \\neg P\\).\n\nSo from premise\u202f1 we can rewrite:\n\n\\[\nR \\rightarrow U \\;\\equiv\\; \\neg U \\rightarrow \\neg R\n\\]\n\nThat is: *If Sam does **not** bring an umbrella, then it is **not** raining.*\n\n---\n\n### 3. Apply modus ponens (or \u201caffirming the antecedent\u201d)  \n\nWe have the antecedent of the contrapositive:\n\n- Premise\u202f2 tells us \\(\\neg U\\) is true.\n\nGiven \\(\\neg U\\) and \\(\\neg U \\rightarrow \\neg R\\), we can infer \\(\\neg R\\) by modus ponens:\n\n\\[\n\\begin{aligned}\n\\neg U \\quad &\\text{(premise)}\\\\\n\\neg U \\rightarrow \\neg R \\quad &\\text{(contrapositive of premise\u202f1)}\\\\\n\\hline\n\\neg R \\quad &\\text{(modus ponens)}\n\\end{aligned}\n\\]\n\nThus \u201cit is **not** raining\u201d follows logically.\n\n---\n\n## 4. Truth\u2011table intuition  \n\n| R (rain) | U (umbrella) | R \u2192 U | \u00acU | \u00acU \u2192 \u00acR | Conclusion |\n|----------|--------------|-------|----|----------|------------|\n| T        | T            | T     | F  | \u2013        | (premise\u202f2 false) |\n| T        | F            | **F** | T  | **T**    | (premise\u202f1 would be false, so the original \u201cif\u201d statement would not hold) |\n| F        | T            | T     | F  | \u2013        | (\u00acU false) |\n| F        | F            | T     | T  | **T**    | (consistent with both premises) |\n\nThe only row that satisfies **both** premises (the conditional is true *and* Sam didn\u2019t bring an umbrella) is the last one, where **R** is false. Hence the situation described can only occur when it is not raining.\n\n---\n\n## 5. Possible real\u2011world caveats (optional)\n\nThe logical conclusion assumes the premise \u201cIf it is raining, Sam brings an umbrella\u201d is *always* true\u2014i.e., Sam never forgets or decides not to bring one when it rains.",
+      "error_message": null
+    },
+    {
+      "task_id": "reasoning-002",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "**Answer: No, it is not raining.**\n\n**Why?**\n\n1. **Premise**  \n   \u201cIf it is raining, Sam brings an umbrella.\u201d  \n   This is a conditional statement of the form  \n   \\[\n   R \\;\\rightarrow\\; U\n   \\]\n   where  \n   * \\(R\\) = \u201cIt is raining\u201d  \n   * \\(U\\) = \u201cSam brings an umbrella\u201d\n\n2. **Given fact**  \n   \u201cSam did not bring an umbrella today.\u201d  \n   This is the negation of \\(U\\):  \n   \\[\n   \\neg U\n   \\]\n\n3. **Logical equivalence**  \n   In propositional logic, every conditional statement has an equivalent *contrapositive*.  \n   \\[\n   R \\;\\rightarrow\\; U \\quad \\text{is logically equivalent to} \\quad \\neg U \\;\\rightarrow\\; \\neg R\n   \\]\n   So, from \\(\\neg U\\) we can infer \\(\\neg R\\).\n\n4. **Conclusion**  \n   Since Sam did not bring an umbrella today (\\(\\neg U\\)), the contrapositive tells us that it cannot be raining (\\(\\neg R\\)).  \n   Therefore, **it is not raining**.\n\n---\n\n### A note on common misconceptions\n\n- The rule *does not* say \u201cSam brings an umbrella if and only if it\u2019s raining.\u201d  \n  It only says that rain *forces* an umbrella; the absence of an umbrella **does** imply that rain did not occur.\n- If the premise had been \u201cSam brings an umbrella if and only if it is raining\u201d (an *if and only if* statement), we would also know that \u201cSam brings an umbrella\u201d would be equivalent to \u201cIt is raining.\u201d  \n  But in our case we only have the one\u2011way implication, so the contrapositive is all that follows.\n\nSo, based on the given information and standard rules of classical logic, we can conclude that it is not raining.",
+      "error_message": null
+    },
+    {
+      "task_id": "reasoning-003",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "**Step\u2011by\u2011step reasoning**\n\n1. **Identify the head\u2011start distance.**  \n   - The first train departs at **2:00\u202fpm** and travels at **60\u202fmph**.  \n   - By the time the second train starts (at **3:00\u202fpm**), the first train has been moving for 1 hour.  \n   - Distance covered in that hour:  \n     \\[\n     d_{\\text{head\u2011start}} = 60\\ \\text{mph} \\times 1\\ \\text{h} = 60\\ \\text{miles}.\n     \\]\n\n2. **Determine the relative speed after 3:00\u202fpm.**  \n   - Both trains are now moving in the same direction.  \n   - Speed of the second train: **90\u202fmph**.  \n   - Speed of the first train: **60\u202fmph**.  \n   - The *relative* speed at which the second train is closing the gap is:  \n     \\[\n     v_{\\text{rel}} = 90\\ \\text{mph} - 60\\ \\text{mph} = 30\\ \\text{mph}.\n     \\]\n\n3. **Calculate the time needed to eliminate the 60\u2011mile gap.**  \n   - Time = distance \u00f7 relative speed:  \n     \\[\n     t = \\frac{d_{\\text{head\u2011start}}}{v_{\\text{rel}}}\n       = \\frac{60\\ \\text{miles}}{30\\ \\text{mph}}\n       = 2\\ \\text{hours}.\n     \\]\n\n4. **Add this time to the moment the second train started.**  \n   - The second train began at **3:00\u202fpm**.  \n   - Adding 2\u202fhours gives:  \n     \\[\n     3:00\\ \\text{pm} + 2\\ \\text{h} = 5:00\\ \\text{pm}.\n     \\]\n\n---\n\n**Answer:** The second train catches up to the first at **5:00\u202fpm**.",
+      "error_message": null
+    },
+    {
+      "task_id": "reasoning-003",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "Let  \n\n* \\(t\\) = number of hours after **2:00\u202fpm** (so \\(t=0\\) at 2\u202fpm).  \n* Train\u202f1 (the first train) departs at \\(t=0\\) and travels at \\(60\\ \\text{mph}\\).  \n* Train\u202f2 (the second train) departs at \\(t=1\\) hour (3\u202fpm) and travels at \\(90\\ \\text{mph}\\).\n\n---\n\n### 1. Express the distances each train has traveled at time \\(t\\).\n\nFor Train\u202f1 (always moving):\n\n\\[\nd_1 = 60\\,t \\quad\\text{(miles)}\n\\]\n\nFor Train\u202f2, it only starts moving once \\(t \\ge 1\\). Its elapsed time since departure is \\(t-1\\):\n\n\\[\nd_2 = 90\\,(t-1) \\quad\\text{(miles)}\n\\]\n\n---\n\n### 2. Set the distances equal to find when they meet.\n\n\\[\n60\\,t = 90\\,(t-1)\n\\]\n\n---\n\n### 3. Solve for \\(t\\).\n\n\\[\n60t = 90t - 90 \\\\\n-30t = -90 \\\\\nt = \\frac{-90}{-30} = 3\n\\]\n\nSo \\(t = 3\\) hours after 2\u202fpm.\n\n---\n\n### 4. Convert back to clock time.\n\n\\[\n2\\: \\text{pm} + 3 \\text{ hours} = 5\\: \\text{pm}\n\\]\n\n---\n\n## Answer\n\nThe second train catches up to the first at **5:00\u202fpm**.\n\n**Why?**  \nAt 3\u202fpm the first train is already 60\u202fmiles ahead (it traveled one hour at 60\u202fmph). The second train travels 30\u202fmph faster (90\u202f\u2013\u202f60). To make up a 60\u2011mile gap at 30\u202fmph takes \\(60/30 = 2\\) hours, so it reaches the first train 2 hours after its own departure, i.e., at 5\u202fpm.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-001",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "This week the team released the new billing dashboard, resolved three persistent sync bugs, and started moving the notification service off the legacy queue, aiming for complete migration by next month\u2019s end.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-001",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "The team launched a new billing dashboard, fixed three long\u2011standing sync bugs, and started migrating the notification service off the legacy queue, expecting the migration to be completed by the end of next month.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-002",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "The support team cleared all pending tickets and finished the sprint a day ahead of schedule.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-002",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "The support team cleared all outstanding customer tickets and finished the sprint a day early.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-003",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "Q3 revenue rose 12% YoY thanks to robust subscription renewals, even as new customer acquisition lagged behind Q2 amid heightened competition.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-003",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "Q3 revenue rose 12% year\u2011over\u2011year driven by robust subscription renewals, but new customer acquisition lagged behind Q2 as competition intensified.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-004",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "The engineering team completed a weekend migration of the primary database to a new provider with zero downtime, but later found that a subset of analytics events were not recorded correctly for about four hours during the transition. A backfill job has been scheduled to reconstruct the missing events from raw logs, with completion targeted by the end of the week.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-004",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "The engineering team successfully migrated the primary database to a new provider over the weekend with zero downtime, but later discovered that a subset of analytics events was not recorded correctly for roughly four hours during the transition. A backfill job has been scheduled to reconstruct the missing events from raw logs by the end of the week.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-005",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "The mobile app now defaults to biometric authentication for login, cutting average login time from 8 seconds to 2 seconds in early tests.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-005",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "The mobile app now defaults to biometric login, cutting average login time from 8\u202fseconds to 2\u202fseconds in early testing.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-006",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "The marketing team's new referral program\u2014granting a $10 credit for each successful referral\u2014has already driven a 15% increase in sign\u2011ups compared to the previous month.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-006",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "The marketing team launched a referral program that rewards existing customers with a $10 credit per successful referral, and early results show a 15% bump in sign\u2011ups versus last month.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-007",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "The app crashed for about 20% of iOS users during yesterday\u2019s update due to a memory leak, and a hotfix has already been released.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-007",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "A memory\u2011leak caused the app to crash for about 20% of iOS users during yesterday\u2019s update rollout, but a hotfix has already been deployed.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-008",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "The design team finished a comprehensive audit of the onboarding flow, pinpointed six improvement areas, and prioritized the top three that will most boost user activation.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-008",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "The design team completed a full audit of the onboarding flow, identified six improvement areas, and prioritized the top three for maximum impact on user activation.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-009",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "The annual security audit revealed two medium\u2011severity vulnerabilities in the authentication service\u2014both of which have already been patched and released to production\u2014and one low\u2011severity issue in the logging pipeline, which will be addressed in the next sprint. A follow\u2011up penetration test is scheduled for next quarter to verify that the fixes are effective.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-009",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "The audit identified two medium\u2011severity vulnerabilities in the authentication service and one low\u2011severity issue in the logging pipeline. The authentication fixes have already been patched and deployed, the logging issue is slated for the next sprint due to its low risk, and a follow\u2011up penetration test will verify the corrections next quarter.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-010",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "Customer feedback this quarter was mixed: product quality satisfaction hit a record 88%, while shipping\u2011time satisfaction fell to a two\u2011year low of 61% after the carrier change in month two.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-010",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "Customer feedback this quarter was mixed, with product\u2011quality satisfaction soaring to an all\u2011time high of 88\u202f% while shipping\u2011time satisfaction fell to a two\u2011year low of 61\u202f%, largely due to a carrier change in month\u202ftwo.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-011",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "The support team migrated to a new ticketing system this week, aiming to cut average response times from six hours to two hours once fully adopted.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-011",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "The support team switched to a new ticketing system this week, aiming to cut average response times from six hours to two hours once fully adopted.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-012",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "Engineering had intended to release the new search feature by month\u2011end, but a three\u2011week delay in the updated indexing service\u2014caused by an unrelated infrastructure migration\u2014forced the launch to be moved to next month. Meanwhile, the team has started parallel work on a ranking improvement that is not impacted by the delay and stays on its original schedule.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-012",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "Engineering planned to ship the new search feature by month\u2011end, but a three\u2011week delay of the required indexing service pushed the launch to next month. Meanwhile, the team is working on a related ranking improvement that remains on schedule and is unaffected by the delay.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-013",
+      "model_config_id": "groq-gpt-oss-120b",
+      "status": "success",
+      "response_text": "The finance team achieved the quickest Q3 close ever, finishing two days ahead of schedule.",
+      "error_message": null
+    },
+    {
+      "task_id": "summarization-013",
+      "model_config_id": "groq-gpt-oss-20b",
+      "status": "success",
+      "response_text": "The finance team achieved the company\u2019s fastest-ever Q3 close, wrapping up the books two days ahead of schedule.",
+      "error_message": null
+    }
+  ]
+}
