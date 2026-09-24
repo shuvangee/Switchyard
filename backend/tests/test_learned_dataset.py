@@ -161,21 +161,34 @@ def test_real_project_data_produces_the_expected_row_count():
 
     2026-09-23 (V2.6 evaluation-coverage pass): reasoning-001/002/003
     converted from manual to exact_match, then reasoning-005 too (prompt
-    narrowed to ask for oranges only - see benchmarks/tasks/). All 4 are
-    a TRANSIENT state: their existing Groq executions were recorded
-    under the old evaluation_type/prompt, so real scores don't exist yet
-    (reasoning-001/002/003 need scripts/export_reasoning_responses.py +
-    apply_reasoning_grading_results.py; reasoning-005's prompt changed,
-    so it needs an actual new Groq call, not just a rescore). Until then
-    all 4 fall into no_correct_candidate (correct=False for both
-    models), NOT because anyone verified the models got them wrong, just
-    because real scoring hasn't happened yet. manual_eval_type: 47 -> 43
-    (-4); no_correct_candidate: 1 -> 5 (+4, exactly these 4 tasks); rows
-    stay at 56. Expect these numbers to change again once real data
-    exists for all 4.
+    narrowed to ask for oranges only - see benchmarks/tasks/). All 4 were
+    briefly a TRANSIENT state (real scores not applied yet), tracked as
+    manual_eval_type: 47 -> 43 (-4); no_correct_candidate: 1 -> 5 (+4).
+
+    2026-09-24 (V2.6 Phase A/B applied): real scores now exist for all 4 -
+    reasoning-001/002/003 rescored via export_original_run_extras.py +
+    apply_remaining_grading_results.py (no new call, prompts unchanged);
+    reasoning-005 via an actual new Groq call (run_groq_revision_batch.py
+    + apply_revision_batch_results.py, prompt was revised). 3 of the 4
+    now have a real correct candidate and produce a training row;
+    reasoning-003 does not (both Groq models score it incorrect, and its
+    mock/gemini executions predate its exact_match conversion so they're
+    still not_evaluated - a real, verified "no correct candidate", not a
+    gap). no_correct_candidate: 5 -> 2, leaving exactly math-013 (pre-
+    existing, unrelated to this pass) and reasoning-003. rows: 56 -> 59.
+
+    NOTE: debugging-001-008 and the 6 auto-gradeable summarization tasks
+    were ALSO scored this pass (real evaluation_status, feeding the
+    evaluation-coverage report and routing-opportunity analysis), but
+    their evaluation_type stays "manual" by design (sandbox/required-
+    facts grading is deliberately NOT wired into EvaluationType - see
+    backend/app/evaluation/sandbox.py) - so build_training_rows()
+    excludes them via manual_eval_type exactly as before. manual_eval_type
+    stays 43; scoring them did not and was not meant to change this
+    number.
     """
     rows, excluded = build_training_rows()
-    assert len(rows) == 56
+    assert len(rows) == 59
     assert excluded["manual_eval_type"] == 43
     assert excluded["no_executions"] == 0
-    assert excluded["no_correct_candidate"] == 5
+    assert excluded["no_correct_candidate"] == 2
