@@ -605,3 +605,42 @@ whose correct output is undefined. Verifying test cases against BOTH
 the buggy code and a correct fix (not just the fix) is what surfaced
 this - checking only the fix would have shown all-tests-pass and missed
 that the buggy code passes those same tests too.
+
+## 2026-09-24 — Sandbox grader is Linux-only; `unshare` doesn't exist on macOS
+
+**What happened:** the user ran `run_groq_revision_batch.py` successfully
+on their local Mac (all 18 Groq calls succeeded, `groq-revision-batch.json`
+written), then `apply_revision_batch_results.py` crashed immediately with
+`FileNotFoundError: [Errno 2] No such file or directory: 'unshare'`.
+
+**Root cause:** `backend/app/evaluation/sandbox.py`'s isolation model is
+built entirely on `unshare` (part of Linux's util-linux) for real
+network/mount namespace isolation - deliberately, so untrusted
+LLM-generated code can be `exec()`'d with kernel-enforced guarantees, not
+a Python-level policy. `unshare` has no equivalent on macOS or Windows.
+This was built and verified in the Claude Code cloud sandbox (Linux) and
+never tested against the actual local machine a case-study contributor
+would use to run it.
+
+**What was fixed (narrow):** `apply_revision_batch_results.py` was
+missing the `is_sandbox_available()` upfront check that its two sibling
+scripts (`apply_code_grading_results.py`, `grade_code_responses.py`)
+already had - it would have failed with the same unclear traceback even
+on a Linux machine lacking namespace permissions. Added the same check,
+with a message that explains the macOS/Windows gap specifically rather
+than a generic "sandbox unavailable."
+
+**What was NOT done:** no macOS-compatible fallback (e.g. `sandbox-exec`
+profiles) was built - that's a real feature addition, out of scope for a
+data-application pass that was explicitly told not to add new features.
+Instead, the actual grading step ran in the Claude Code cloud sandbox
+(confirmed Linux, confirmed working `unshare`) against the response data
+already collected on the user's Mac - no new API calls needed, since the
+expensive part (the live Groq calls) had already succeeded before the
+grading step failed.
+
+**Lesson:** "verified to work" needs to specify *where*. A sandbox model
+proven correct in one Linux container doesn't transfer to every
+contributor's machine by default - worth stating explicitly in
+`sandbox.py`'s docstring (Linux-only, `unshare` required) rather than
+discovering it via a contributor's crash.

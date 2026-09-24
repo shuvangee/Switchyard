@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
-from app.evaluation.sandbox import grade_response  # noqa: E402
+from app.evaluation.sandbox import grade_response, is_sandbox_available  # noqa: E402
 from app.evaluation.strategies import evaluate  # noqa: E402
 from app.experiments.loader import default_benchmarks_dir, load_benchmark_tasks  # noqa: E402
 from app.models.enums import EvaluationType  # noqa: E402
@@ -41,6 +41,14 @@ DEBUGGING_FUNCTION_NAMES = {
 def main() -> None:
     if not BATCH_PATH.exists():
         raise SystemExit(f"{BATCH_PATH} not found - run scripts/run_groq_revision_batch.py first.")
+    if not is_sandbox_available():
+        raise SystemExit(
+            "sandboxed code execution is unavailable in this environment (the `unshare` "
+            "binary, part of util-linux, is missing or namespace creation isn't permitted - "
+            "this is expected on macOS/Windows, which have no equivalent). The collected "
+            f"{BATCH_PATH.name} is unaffected - run this script on a Linux machine/container "
+            "that has `unshare` instead (see backend/app/evaluation/sandbox.py's docstring)."
+        )
 
     batch = {
         (r["task_id"], r["model_config_id"]): r
