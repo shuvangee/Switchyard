@@ -216,8 +216,9 @@ def main() -> None:
              f"unconditional default by {margin:.1%} on this task set.")
     emit(f"- a perfect oracle router (always picks whichever of the two is correct, when either "
          f"is) reaches {len(both_succeed)+len(only_a)+len(only_b)}/{len(graded_task_ids)} = "
-         f"{oracle_acc:.1%} - a ceiling only {oracle_acc-always_a_acc:.1%} above either model alone, "
-         f"defined by just {len(only_a)+len(only_b)} tasks total.")
+         f"{oracle_acc:.1%}, defined by just {len(only_a)+len(only_b)} disagreeing tasks total.")
+    emit(f"- oracle improvement over always-{MODEL_A}: +{oracle_acc-always_a_acc:.1%}")
+    emit(f"- oracle improvement over always-{MODEL_B}: +{oracle_acc-always_b_acc:.1%}")
     emit()
 
     # --- evaluation gaps ---

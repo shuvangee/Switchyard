@@ -273,7 +273,9 @@
 - always-20b accuracy on the graded set: 78+3 = 81/92 = 88.0%
 - always-120b accuracy on the graded set: 78+5 = 83/92 = 90.2%
 - **these are NOT equal** (3 vs 5) - groq-gpt-oss-120b is the better unconditional default by 2.2% on this task set.
-- a perfect oracle router (always picks whichever of the two is correct, when either is) reaches 86/92 = 93.5% - a ceiling only 5.4% above either model alone, defined by just 8 tasks total.
+- a perfect oracle router (always picks whichever of the two is correct, when either is) reaches 86/92 = 93.5%, defined by just 8 disagreeing tasks total.
+- oracle improvement over always-groq-gpt-oss-20b: +5.4%
+- oracle improvement over always-groq-gpt-oss-120b: +3.3%
 
 ## Evaluation gaps: tasks with no real ground truth yet
 
