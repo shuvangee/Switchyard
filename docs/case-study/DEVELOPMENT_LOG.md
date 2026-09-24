@@ -545,3 +545,67 @@ into, ahead of handing back exact commands:
 No routing-opportunity numbers changed this pass - both reports above
 were regenerated against the same pre-Phase-A/B data as before, only
 the reporting code changed.
+
+## 2026-09-24 — V2.6 Phase A/B applied for real; the 20b/120b tie broke
+
+The user ran Phase A and B locally, walked through step by step with
+checkpoints at every stage rather than run-and-hope. Two real problems
+surfaced and got fixed along the way, not glossed over:
+
+- **Phase A** (export + rescore reasoning-001/002/003 and 6
+  summarization tasks, no new API calls): ran clean on the first try.
+  Coverage moved 75/25/4 -> 84/19/1 (ungraded dropped to just
+  reasoning-005, exactly as expected once accounting for it needing a
+  new call, not a rescore).
+- **Phase B** (18 new Groq calls for debugging-001-008 + reasoning-005,
+  free tier, \$0 billed): all 18 calls succeeded on the user's Mac, but
+  the grading step crashed - `apply_revision_batch_results.py` needs
+  `unshare` (Linux/util-linux), which doesn't exist on macOS. Fixed
+  narrowly: added the missing `is_sandbox_available()` upfront check
+  (its sibling scripts already had it), documented the platform gap in
+  `FAILURES_AND_LESSONS.md`, and ran the actual grading in this cloud
+  sandbox (confirmed Linux, confirmed `unshare` works) against the
+  response data the user had already collected and pushed - no
+  macOS fallback built, no new API calls needed, no scope creep.
+- Coverage after Phase B: **92/12/0, 88.5% automated** (0 ungraded -
+  every automated-evaluation_type task now has real ground truth).
+
+**Recomputing the routing-opportunity analysis surfaced a second real
+bug**: `analyze_routing_opportunity.py` hardcoded "these are equal"
+when reporting always-20b vs always-120b accuracy - true by coincidence
+at 68/75 in the old partial-coverage dataset, but with the fuller
+92-task graded set, only_a=3 and only_b=5 are NOT equal. The script
+would have kept asserting a tie was true after it stopped being true.
+Fixed to check before asserting either way.
+
+**The real finding, once coverage went from 72% to 88.5%: the tie
+broke.** always-20b 81/92 (88.0%), always-120b 83/92 (90.2%) - 120b is
+now the better unconditional default by 2.2 points, not equal to 20b.
+Oracle ceiling: 86/92 (93.5%), 3.3 points above 120b alone (down from
+the old finding's "4.0 points above either" - the ceiling itself also
+moved once summarization entered the picture, where 120b's edge is
+largest: 83.3% vs 50.0% on the 6 auto-gradeable summarization tasks).
+120b still costs 1.86x nominal tokens and 1.45x latency for that gain.
+
+**Lesson**: the 2026-09-23 "tie" finding was real in the data available
+at the time, but was never a structural fact about the model pair - it
+was an artifact of only 72% evaluation coverage. Closing the coverage
+gap changed the finding itself, not just its confidence interval. A
+routing-opportunity conclusion drawn on a partial graded set should be
+labeled provisional, not just "current," until coverage is closer to
+complete.
+
+Also updated `backend/tests/test_learned_dataset.py`'s row-count
+regression test with real numbers now that reasoning-001/002/003/005
+have actual scores: rows 56 -> 59, `no_correct_candidate` 5 -> 2
+(math-013, pre-existing, and reasoning-003, which both Groq models
+genuinely get wrong). `manual_eval_type` stays 43 - debugging and
+summarization tasks keep `evaluation_type="manual"` by design even
+once graded (the sandbox/required-facts graders are deliberately not
+wired into `EvaluationType`), so Phase A/B enriches evaluation-coverage
+reporting without changing V3's training set size.
+
+Still not done: Phase 4 (third-model call, `groq-qwen3.8-27b`, still
+needs explicit approval) and Phase 5 (V3 readiness with 3 models,
+blocked on Phase 4). V3 itself remains paused - nothing in this pass
+retrained it.

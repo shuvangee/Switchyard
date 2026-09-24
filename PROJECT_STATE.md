@@ -15,18 +15,26 @@ times** — see `docs/case-study/EXPERIMENTS.md` for both entries and
 methodology bugs found and fixed while re-checking the second result.
 This remains an honest negative result, not a bug to quietly fix.
 
-**The reframing finding (2026-09-23):** a routing-opportunity analysis
-asked a prior question V3's own accuracy can't answer — does the
-`groq-gpt-oss-20b`/`120b` pair even have a real quality gap to route
-around? On the 75/104 tasks with real ground truth, **always-20b and
-always-120b tie exactly** (68/75, 90.7% each); a perfect oracle router
-tops out just 4.0 points above either, on only 6 disagreeing tasks,
-while 120b costs 1.87x the nominal tokens and 1.51x the latency for
-that. V2.6 exists to find out whether that ceiling is a property of
-*this model pair* or of the *routing problem generally* — explicitly
-not to manufacture a win for Switchyard. See
+**The reframing finding, updated 2026-09-24 with full evaluation
+coverage:** a routing-opportunity analysis asked a prior question V3's
+own accuracy can't answer — does the `groq-gpt-oss-20b`/`120b` pair
+even have a real quality gap to route around? The original 2026-09-23
+answer (75/104 graded, always-20b and always-120b tied exactly at
+68/75) turned out to be an artifact of the smaller graded set, not a
+structural fact — once Phase A/B applied real scores for
+debugging/reasoning-005 (92/104 now graded, 88.5%), **the tie broke**:
+always-20b 81/92 (88.0%), always-120b 83/92 (90.2%) — 120b is the
+better unconditional default by 2.2 points. A perfect oracle router
+reaches 86/92 (93.5%), a ceiling only 3.3 points above 120b alone, on
+8 disagreeing tasks total (3 favor 20b, 5 favor 120b — summarization
+is where 120b's edge shows up most, 83.3% vs 50.0% on the 6
+auto-gradeable summarization tasks). 120b still costs 1.86x the
+nominal tokens and 1.45x the latency for that gain. See
 `docs/case-study/EXPERIMENTS.md` and
-`experiments/results/routing-opportunity-analysis.md`.
+`experiments/results/routing-opportunity-analysis.md`. **Lesson worth
+keeping**: a routing-opportunity finding computed on a partial graded
+set (72% coverage) is provisional, not final — the fix here was
+closing the coverage gap, not re-analyzing the same data harder.
 
 **2026-09-23, revised: Switchyard is staying Groq-only.** `gemini-3.1-
 pro-preview` was registered as a candidate stronger model, then
@@ -38,29 +46,29 @@ planned against it. No Gemini/OpenAI/Anthropic call has ever been made
 this pass. All V2.6 work since is scoped to the two existing Groq
 models plus one proposed third Groq model (below).
 
-**V2.6 Phase 1 (evaluation coverage) — this pass's actual work:**
+**V2.6 Phase 1 (evaluation coverage) — done as of 2026-09-24:**
 - Coding (13) + debugging-009/010/011/012/013 (5): **done** —
   `backend/app/evaluation/sandbox.py`, real kernel-enforced isolation,
   36/36 correct on the real Groq responses, applied to
   `evaluation_status`.
-- Debugging-001 through 006, 008 (7 of 8): **revised prompts +
-  test_cases written**, each verified via the sandbox against BOTH the
-  original buggy code AND a correct fix before being committed (caught
-  and fixed one real bug in the test cases themselves this way).
-  debugging-002/005/008 close small spec gaps the same way is_anagram
-  was disambiguated. Needs a new (free-tier) Groq call before real
-  scores exist — `scripts/run_groq_revision_batch.py` is ready, not run.
+- Debugging-001 through 006, 008 (7 of 8): **done** — revised prompts +
+  test_cases, verified via the sandbox against BOTH the original buggy
+  code AND a correct fix before being committed (caught and fixed one
+  real bug in the test cases themselves this way). Real-scored via an
+  18-request revision batch (2026-09-24, free tier, \$0 billed): all 14
+  executions (7 tasks x 2 models) came back correct.
 - Debugging-007: **verified NOT convertible** without either resolving
   its already-flagged spec ambiguity (forbidden) or building an
   unbuilt "doesn't crash" test type — documented in its own metadata,
-  stays manual.
-- Reasoning-001/002/003: converted to `exact_match` (metadata-only, no
-  prompt change). Reasoning-005: prompt narrowed (same treatment as
-  reasoning-010), converted to `exact_match` — verified this doesn't
-  reduce the actual reasoning challenge. All 4 are transient pending
-  real response data (3 via a plain export, 1 via a new call — the
-  export script covers the first 3, `run_groq_revision_batch.py` the
-  4th alongside the debugging batch).
+  stays manual. New call's latency/tokens recorded regardless.
+- Reasoning-001/002/003/005: converted to `exact_match`, real-scored
+  (2026-09-24) — 001/002 correct on both models, 003 incorrect on
+  both, 005 correct on both. `manual_eval_type` in V3's dataset is
+  UNCHANGED by any of this (debugging/summarization keep
+  `evaluation_type="manual"` by design even once graded — see
+  `backend/app/routing/learned/dataset.py`) — only these 4 reasoning
+  tasks actually changed `evaluation_type`, so V3's row count moved
+  56 -> 59, not further.
 - Reasoning-004: **stays manual, documented** — 3-fact answer, same
   shape problem as reasoning-009; a structured-answer approach is
   possible in principle but needs new evaluation infrastructure
@@ -84,16 +92,20 @@ code, same `GROQ_API_KEY`) — model id UNVERIFIED against a live call.
 **No call made — waiting on approval**, per Phase 4's explicit stop
 condition.
 
-Phase 3 (recompute the two-model analysis with full evaluation
-coverage) and Phase 5 (V3 readiness with a third model) are both
-blocked on the above data collection and haven't started.
+**Phase 3 (recompute the two-model analysis with full evaluation
+coverage): done** — see the reframing finding above; the tie broke
+once coverage went from 72% to 88.5%.
+
+Phase 5 (V3 readiness with a third model) is still blocked on Phase 4
+(below).
 
 ## Current objective
 
-1. Get sign-off on the pending-approval items above (the 18-request
-   revision batch for debugging/reasoning-005, and the
-   `groq-qwen3.8-27b` third-model run), then run the exports/batches and
-   recompute Phase 3's analysis.
+1. Get sign-off on the pending-approval item above (the
+   `groq-qwen3.8-27b` third-model run — diagnostic subset recommended,
+   not all 104 tasks, since 12 tasks have no automated ground truth to
+   score a third model against either), then run it and recompute
+   Phase 3's analysis with 3 models.
 2. Nothing about V3's pipeline itself needs more work right now — it's
    built, tested, and wired into the router-selection mechanism
    (`router_version="learned-v1"` in `POST /route`). The evaluation
