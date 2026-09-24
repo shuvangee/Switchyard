@@ -206,8 +206,14 @@ def main() -> None:
          f"{len(both_succeed)+len(only_a)}/{len(graded_task_ids)} = {always_a_acc:.1%}")
     emit(f"- always-120b accuracy on the graded set: {len(both_succeed)}+{len(only_b)} = "
          f"{len(both_succeed)+len(only_b)}/{len(graded_task_ids)} = {always_b_acc:.1%}")
-    emit(f"- **these are equal** ({len(only_a)} vs {len(only_b)}) - neither model is a better "
-         f"unconditional default than the other on this task set.")
+    if len(only_a) == len(only_b):
+        emit(f"- **these are equal** ({len(only_a)} vs {len(only_b)}) - neither model is a better "
+             f"unconditional default than the other on this task set.")
+    else:
+        better = MODEL_B if len(only_b) > len(only_a) else MODEL_A
+        margin = abs(always_b_acc - always_a_acc)
+        emit(f"- **these are NOT equal** ({len(only_a)} vs {len(only_b)}) - {better} is the better "
+             f"unconditional default by {margin:.1%} on this task set.")
     emit(f"- a perfect oracle router (always picks whichever of the two is correct, when either "
          f"is) reaches {len(both_succeed)+len(only_a)+len(only_b)}/{len(graded_task_ids)} = "
          f"{oracle_acc:.1%} - a ceiling only {oracle_acc-always_a_acc:.1%} above either model alone, "

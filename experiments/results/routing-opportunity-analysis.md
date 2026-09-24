@@ -1,6 +1,6 @@
 # Routing opportunity analysis: groq-gpt-oss-20b vs groq-gpt-oss-120b
 
-104 total benchmark tasks. 75 have real ground truth for both models (exact_match/classification_label/valid_json, or the sandboxed code-execution grader). 29 remain ungraded (evaluation_type=manual, no grader exists yet).
+104 total benchmark tasks. 92 have real ground truth for both models (exact_match/classification_label/valid_json, or the sandboxed code-execution grader). 12 remain ungraded (evaluation_type=manual, no grader exists yet).
 
 ## Full per-task, per-model breakdown
 
@@ -58,22 +58,22 @@
 | coding-012 | coding | hard | groq-gpt-oss-120b | correct | 1870 | 0.000445 |
 | coding-013 | coding | easy | groq-gpt-oss-20b | correct | 709 | 0.000162 |
 | coding-013 | coding | easy | groq-gpt-oss-120b | correct | 1069 | 0.000235 |
-| debugging-001 | debugging | hard | groq-gpt-oss-20b | not_evaluated | 914 | 0.000152 |
-| debugging-001 | debugging | hard | groq-gpt-oss-120b | not_evaluated | 1296 | 0.000277 |
-| debugging-002 | debugging | medium | groq-gpt-oss-20b | not_evaluated | 1185 | 0.000261 |
-| debugging-002 | debugging | medium | groq-gpt-oss-120b | not_evaluated | 1703 | 0.000445 |
-| debugging-003 | debugging | easy | groq-gpt-oss-20b | not_evaluated | 1133 | 0.000237 |
-| debugging-003 | debugging | easy | groq-gpt-oss-120b | not_evaluated | 2518 | 0.000387 |
-| debugging-004 | debugging | hard | groq-gpt-oss-20b | not_evaluated | 1029 | 0.000183 |
-| debugging-004 | debugging | hard | groq-gpt-oss-120b | not_evaluated | 1958 | 0.000377 |
-| debugging-005 | debugging | medium | groq-gpt-oss-20b | not_evaluated | 940 | 0.000192 |
-| debugging-005 | debugging | medium | groq-gpt-oss-120b | not_evaluated | 1915 | 0.000511 |
-| debugging-006 | debugging | easy | groq-gpt-oss-20b | not_evaluated | 844 | 0.000176 |
-| debugging-006 | debugging | easy | groq-gpt-oss-120b | not_evaluated | 1479 | 0.000323 |
-| debugging-007 | debugging | medium | groq-gpt-oss-20b | not_evaluated | 1580 | 0.000314 |
-| debugging-007 | debugging | medium | groq-gpt-oss-120b | not_evaluated | 2292 | 0.000570 |
-| debugging-008 | debugging | medium | groq-gpt-oss-20b | not_evaluated | 977 | 0.000210 |
-| debugging-008 | debugging | medium | groq-gpt-oss-120b | not_evaluated | 2378 | 0.000606 |
+| debugging-001 | debugging | hard | groq-gpt-oss-20b | correct | 824 | 0.000109 |
+| debugging-001 | debugging | hard | groq-gpt-oss-120b | correct | 883 | 0.000191 |
+| debugging-002 | debugging | medium | groq-gpt-oss-20b | correct | 586 | 0.000084 |
+| debugging-002 | debugging | medium | groq-gpt-oss-120b | correct | 883 | 0.000150 |
+| debugging-003 | debugging | easy | groq-gpt-oss-20b | correct | 677 | 0.000133 |
+| debugging-003 | debugging | easy | groq-gpt-oss-120b | correct | 1227 | 0.000264 |
+| debugging-004 | debugging | hard | groq-gpt-oss-20b | correct | 577 | 0.000072 |
+| debugging-004 | debugging | hard | groq-gpt-oss-120b | correct | 660 | 0.000165 |
+| debugging-005 | debugging | medium | groq-gpt-oss-20b | correct | 638 | 0.000098 |
+| debugging-005 | debugging | medium | groq-gpt-oss-120b | correct | 1017 | 0.000203 |
+| debugging-006 | debugging | easy | groq-gpt-oss-20b | correct | 526 | 0.000094 |
+| debugging-006 | debugging | easy | groq-gpt-oss-120b | correct | 1186 | 0.000261 |
+| debugging-007 | debugging | medium | groq-gpt-oss-20b | not_evaluated | 1557 | 0.000316 |
+| debugging-007 | debugging | medium | groq-gpt-oss-120b | not_evaluated | 2444 | 0.000632 |
+| debugging-008 | debugging | medium | groq-gpt-oss-20b | correct | 869 | 0.000128 |
+| debugging-008 | debugging | medium | groq-gpt-oss-120b | correct | 960 | 0.000240 |
 | debugging-009 | debugging | hard | groq-gpt-oss-20b | correct | 1371 | 0.000283 |
 | debugging-009 | debugging | hard | groq-gpt-oss-120b | correct | 2178 | 0.000545 |
 | debugging-010 | debugging | hard | groq-gpt-oss-20b | correct | 710 | 0.000145 |
@@ -136,16 +136,16 @@
 | math-012 | math | hard | groq-gpt-oss-120b | correct | 937 | 0.000103 |
 | math-013 | math | hard | groq-gpt-oss-20b | incorrect | 411 | 0.000032 |
 | math-013 | math | hard | groq-gpt-oss-120b | incorrect | 1403 | 0.000043 |
-| reasoning-001 | reasoning | medium | groq-gpt-oss-20b | not_evaluated | 575 | 0.000074 |
-| reasoning-001 | reasoning | medium | groq-gpt-oss-120b | not_evaluated | 849 | 0.000110 |
-| reasoning-002 | reasoning | easy | groq-gpt-oss-20b | not_evaluated | 1182 | 0.000232 |
-| reasoning-002 | reasoning | easy | groq-gpt-oss-120b | not_evaluated | 2428 | 0.000629 |
-| reasoning-003 | reasoning | medium | groq-gpt-oss-20b | not_evaluated | 1022 | 0.000223 |
-| reasoning-003 | reasoning | medium | groq-gpt-oss-120b | not_evaluated | 1606 | 0.000353 |
+| reasoning-001 | reasoning | medium | groq-gpt-oss-20b | correct | 575 | 0.000074 |
+| reasoning-001 | reasoning | medium | groq-gpt-oss-120b | correct | 849 | 0.000110 |
+| reasoning-002 | reasoning | easy | groq-gpt-oss-20b | correct | 1182 | 0.000232 |
+| reasoning-002 | reasoning | easy | groq-gpt-oss-120b | correct | 2428 | 0.000629 |
+| reasoning-003 | reasoning | medium | groq-gpt-oss-20b | incorrect | 1022 | 0.000223 |
+| reasoning-003 | reasoning | medium | groq-gpt-oss-120b | incorrect | 1606 | 0.000353 |
 | reasoning-004 | reasoning | hard | groq-gpt-oss-20b | not_evaluated | 555 | 0.000100 |
 | reasoning-004 | reasoning | hard | groq-gpt-oss-120b | not_evaluated | 1111 | 0.000231 |
-| reasoning-005 | reasoning | medium | groq-gpt-oss-20b | not_evaluated | 829 | 0.000187 |
-| reasoning-005 | reasoning | medium | groq-gpt-oss-120b | not_evaluated | 1582 | 0.000313 |
+| reasoning-005 | reasoning | medium | groq-gpt-oss-20b | correct | 1186 | 0.000151 |
+| reasoning-005 | reasoning | medium | groq-gpt-oss-120b | correct | 1153 | 0.000302 |
 | reasoning-006 | reasoning | easy | groq-gpt-oss-20b | not_evaluated | 1311 | 0.000213 |
 | reasoning-006 | reasoning | easy | groq-gpt-oss-120b | not_evaluated | 1810 | 0.000424 |
 | reasoning-007 | reasoning | medium | groq-gpt-oss-20b | correct | 961 | 0.000155 |
@@ -196,24 +196,24 @@
 | summarization-003 | summarization | medium | groq-gpt-oss-120b | not_evaluated | 251 | 0.000047 |
 | summarization-004 | summarization | hard | groq-gpt-oss-20b | not_evaluated | 492 | 0.000086 |
 | summarization-004 | summarization | hard | groq-gpt-oss-120b | not_evaluated | 653 | 0.000093 |
-| summarization-005 | summarization | medium | groq-gpt-oss-20b | not_evaluated | 518 | 0.000056 |
-| summarization-005 | summarization | medium | groq-gpt-oss-120b | not_evaluated | 576 | 0.000049 |
-| summarization-006 | summarization | medium | groq-gpt-oss-20b | not_evaluated | 554 | 0.000042 |
-| summarization-006 | summarization | medium | groq-gpt-oss-120b | not_evaluated | 728 | 0.000088 |
-| summarization-007 | summarization | medium | groq-gpt-oss-20b | not_evaluated | 553 | 0.000057 |
-| summarization-007 | summarization | medium | groq-gpt-oss-120b | not_evaluated | 554 | 0.000049 |
-| summarization-008 | summarization | medium | groq-gpt-oss-20b | not_evaluated | 445 | 0.000033 |
-| summarization-008 | summarization | medium | groq-gpt-oss-120b | not_evaluated | 354 | 0.000048 |
+| summarization-005 | summarization | medium | groq-gpt-oss-20b | correct | 518 | 0.000056 |
+| summarization-005 | summarization | medium | groq-gpt-oss-120b | correct | 576 | 0.000049 |
+| summarization-006 | summarization | medium | groq-gpt-oss-20b | correct | 554 | 0.000042 |
+| summarization-006 | summarization | medium | groq-gpt-oss-120b | correct | 728 | 0.000088 |
+| summarization-007 | summarization | medium | groq-gpt-oss-20b | incorrect | 553 | 0.000057 |
+| summarization-007 | summarization | medium | groq-gpt-oss-120b | correct | 554 | 0.000049 |
+| summarization-008 | summarization | medium | groq-gpt-oss-20b | correct | 445 | 0.000033 |
+| summarization-008 | summarization | medium | groq-gpt-oss-120b | correct | 354 | 0.000048 |
 | summarization-009 | summarization | hard | groq-gpt-oss-20b | not_evaluated | 386 | 0.000051 |
 | summarization-009 | summarization | hard | groq-gpt-oss-120b | not_evaluated | 618 | 0.000081 |
-| summarization-010 | summarization | hard | groq-gpt-oss-20b | not_evaluated | 634 | 0.000061 |
-| summarization-010 | summarization | hard | groq-gpt-oss-120b | not_evaluated | 671 | 0.000056 |
+| summarization-010 | summarization | hard | groq-gpt-oss-20b | incorrect | 634 | 0.000061 |
+| summarization-010 | summarization | hard | groq-gpt-oss-120b | correct | 671 | 0.000056 |
 | summarization-011 | summarization | medium | groq-gpt-oss-20b | not_evaluated | 556 | 0.000042 |
 | summarization-011 | summarization | medium | groq-gpt-oss-120b | not_evaluated | 676 | 0.000099 |
 | summarization-012 | summarization | hard | groq-gpt-oss-20b | not_evaluated | 650 | 0.000097 |
 | summarization-012 | summarization | hard | groq-gpt-oss-120b | not_evaluated | 550 | 0.000084 |
-| summarization-013 | summarization | medium | groq-gpt-oss-20b | not_evaluated | 448 | 0.000037 |
-| summarization-013 | summarization | medium | groq-gpt-oss-120b | not_evaluated | 764 | 0.000081 |
+| summarization-013 | summarization | medium | groq-gpt-oss-20b | incorrect | 448 | 0.000037 |
+| summarization-013 | summarization | medium | groq-gpt-oss-120b | incorrect | 764 | 0.000081 |
 
 **Actual billed cost (all 208 executions, both models): $0.00** - Groq free tier, no payment method on the account. The nominal_cost_usd column above is notional (registry per-1k pricing x real token counts), not what was actually charged.
 
@@ -223,60 +223,61 @@
 |---|---|---|---|---|---|
 | classification | 13 | 11 | 84.6% | 12 | 92.3% |
 | coding | 13 | 13 | 100.0% | 13 | 100.0% |
-| debugging | 5 | 5 | 100.0% | 5 | 100.0% |
+| debugging | 12 | 12 | 100.0% | 12 | 100.0% |
 | extraction | 13 | 10 | 76.9% | 10 | 76.9% |
 | math | 13 | 11 | 84.6% | 10 | 76.9% |
-| reasoning | 5 | 5 | 100.0% | 5 | 100.0% |
+| reasoning | 9 | 8 | 88.9% | 8 | 88.9% |
 | structured_output | 13 | 13 | 100.0% | 13 | 100.0% |
+| summarization | 6 | 3 | 50.0% | 5 | 83.3% |
 
 ## Quality/success rate by difficulty (graded tasks only)
 
 | difficulty | n_graded | 20b correct | 20b rate | 120b correct | 120b rate |
 |---|---|---|---|---|---|
-| easy | 15 | 14 | 93.3% | 15 | 100.0% |
-| medium | 33 | 30 | 90.9% | 30 | 90.9% |
-| hard | 27 | 24 | 88.9% | 23 | 85.2% |
+| easy | 18 | 17 | 94.4% | 18 | 100.0% |
+| medium | 44 | 38 | 86.4% | 39 | 88.6% |
+| hard | 30 | 26 | 86.7% | 26 | 86.7% |
 
 ## Agreement breakdown (graded tasks only)
 
-- both succeed: 65/75 (86.7%)
-- only 20b succeeds: 3/75 (4.0%) - ['extraction-002', 'extraction-005', 'math-011']
-- only 120b succeeds: 3/75 (4.0%) - ['classification-012', 'extraction-008', 'extraction-012']
-- both fail: 4/75 (5.3%) - ['classification-010', 'extraction-004', 'math-005', 'math-013']
+- both succeed: 78/92 (84.8%)
+- only 20b succeeds: 3/92 (3.3%) - ['extraction-002', 'extraction-005', 'math-011']
+- only 120b succeeds: 5/92 (5.4%) - ['classification-012', 'extraction-008', 'extraction-012', 'summarization-007', 'summarization-010']
+- both fail: 6/92 (6.5%) - ['classification-010', 'extraction-004', 'math-005', 'math-013', 'reasoning-003', 'summarization-013']
 
 ## Latency
 
-- groq-gpt-oss-20b: avg 682ms across all 104 tasks
-- groq-gpt-oss-120b: avg 1029ms across all 104 tasks
-- 120b is 1.51x the latency of 20b on average
+- groq-gpt-oss-20b: avg 663ms across all 104 tasks
+- groq-gpt-oss-120b: avg 964ms across all 104 tasks
+- 120b is 1.45x the latency of 20b on average
 
 ## Token usage
 
-- groq-gpt-oss-20b: 11059 input + 31899 output = 42958 total tokens across all 104 tasks (avg 307 output tokens/task)
-- groq-gpt-oss-120b: 11059 input + 29565 output = 40624 total tokens across all 104 tasks (avg 284 output tokens/task)
-- 120b uses 0.93x the output tokens of 20b on average
+- groq-gpt-oss-20b: 11298 input + 29413 output = 40711 total tokens across all 104 tasks (avg 283 output tokens/task)
+- groq-gpt-oss-120b: 11298 input + 27171 output = 38469 total tokens across all 104 tasks (avg 261 output tokens/task)
+- 120b uses 0.92x the output tokens of 20b on average
 
 ## Cost
 
-- groq-gpt-oss-20b: nominal total $0.010399 across all 104 tasks
-- groq-gpt-oss-120b: nominal total $0.019398 across all 104 tasks
-- 120b is 1.87x the nominal cost of 20b
+- groq-gpt-oss-20b: nominal total $0.009671 across all 104 tasks
+- groq-gpt-oss-120b: nominal total $0.017997 across all 104 tasks
+- 120b is 1.86x the nominal cost of 20b
 - **actual billed cost for both: $0.00** (free tier, no payment method)
 
 ## How often does choosing 120b over 20b actually improve the result?
 
-120b corrects a 20b failure on 3/75 graded tasks (4.0%), at 1.51x the latency and 1.87x the nominal cost, for a task set with no real cost difference today (both models are on Groq's free tier).
+120b corrects a 20b failure on 5/92 graded tasks (5.4%), at 1.45x the latency and 1.86x the nominal cost, for a task set with no real cost difference today (both models are on Groq's free tier).
 
 ### The structural fact that decides this
 
-- always-20b accuracy on the graded set: 65+3 = 68/75 = 90.7%
-- always-120b accuracy on the graded set: 65+3 = 68/75 = 90.7%
-- **these are equal** (3 vs 3) - neither model is a better unconditional default than the other on this task set.
-- a perfect oracle router (always picks whichever of the two is correct, when either is) reaches 71/75 = 94.7% - a ceiling only 4.0% above either model alone, defined by just 6 tasks total.
+- always-20b accuracy on the graded set: 78+3 = 81/92 = 88.0%
+- always-120b accuracy on the graded set: 78+5 = 83/92 = 90.2%
+- **these are NOT equal** (3 vs 5) - groq-gpt-oss-120b is the better unconditional default by 2.2% on this task set.
+- a perfect oracle router (always picks whichever of the two is correct, when either is) reaches 86/92 = 93.5% - a ceiling only 5.4% above either model alone, defined by just 8 tasks total.
 
 ## Evaluation gaps: tasks with no real ground truth yet
 
-- **debugging**: 8 task(s) - ['debugging-001', 'debugging-002', 'debugging-003', 'debugging-004', 'debugging-005', 'debugging-006', 'debugging-007', 'debugging-008']
-- **reasoning**: 8 task(s) - ['reasoning-001', 'reasoning-002', 'reasoning-003', 'reasoning-004', 'reasoning-005', 'reasoning-006', 'reasoning-009', 'reasoning-012']
-- **summarization**: 13 task(s) - ['summarization-001', 'summarization-002', 'summarization-003', 'summarization-004', 'summarization-005', 'summarization-006', 'summarization-007', 'summarization-008', 'summarization-009', 'summarization-010', 'summarization-011', 'summarization-012', 'summarization-013']
+- **debugging**: 1 task(s) - ['debugging-007']
+- **reasoning**: 4 task(s) - ['reasoning-004', 'reasoning-006', 'reasoning-009', 'reasoning-012']
+- **summarization**: 7 task(s) - ['summarization-001', 'summarization-002', 'summarization-003', 'summarization-004', 'summarization-009', 'summarization-011', 'summarization-012']
 
