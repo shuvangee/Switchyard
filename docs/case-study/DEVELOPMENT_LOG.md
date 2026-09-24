@@ -609,3 +609,61 @@ Still not done: Phase 4 (third-model call, `groq-qwen3.8-27b`, still
 needs explicit approval) and Phase 5 (V3 readiness with 3 models,
 blocked on Phase 4). V3 itself remains paused - nothing in this pass
 retrained it.
+
+## 2026-09-24 (2) — Simple routing baselines before V3: a real, LOOCV-validated finding
+
+Explicit instruction: do NOT add Qwen, do NOT retrain V3 yet — first
+determine how much value simple, interpretable rules already extract
+from the existing 20b/120b pair, since the just-broken "tie" finding
+(88.0% vs 90.2%, no longer equal) makes that a live question rather
+than moot.
+
+Built `scripts/analyze_simple_routing_baselines.py` against the 92
+auto-graded tasks: always-20b/always-120b/oracle plus category-aware,
+difficulty-aware, and (added after the LOOCV result below made it the
+right thing to test) a narrower summarization-only override rule.
+Category-level rule was derived from the data (not assumed) — per
+category, whichever model has strictly higher accuracy wins, ties
+default to the cheaper model. Difficulty showed a much smaller,
+murkier spread (5.6% vs category's much larger split) and was
+correctly not treated as a strong signal. Category+difficulty (23
+cells across 92 tasks, most with under 3 tasks) was checked and
+explicitly not run as a strategy — not enough data per cell for the
+rule to mean anything.
+
+**The important catch:** the full category rule scored 91.3% in-sample
+(+3.3pts over always-20b) — looked like a clean win. Ran leave-one-out
+cross-validation on it anyway (same methodology `train.py` already uses
+for V3, per the 2026-09-22 decision) rather than trusting the in-sample
+number, and it collapsed to exactly 88.0% - identical to always-20b,
+meaning the rule's apparent edge doesn't survive when it can't see the
+task it's predicting. Traced why: its classification and extraction
+assignments were built on 1-2 task margins, fragile enough to flip
+under leave-one-out. A narrower rule (summarization → 120b, everything
+else → 20b — dropping those fragile ties entirely) scored 90.2%
+in-sample AND 90.2% under LOOCV, identical, because its non-
+summarization branch has zero free parameters to overfit with. This is
+now `docs/case-study/DECISIONS.md`'s 2026-09-24 entry.
+
+**Recommended baseline: the narrower rule**, not the higher-scoring
+one - 90.2% accuracy (matches always-120b exactly), sending only 6.5%
+of requests to 120b (vs 100%), at 0.55x always-120b's nominal cost and
+0.70x its latency. Disagreement analysis (8 tasks total) confirms why:
+2/8 are summarization (both favor 120b, a real systematic signal), the
+other 6 split close to evenly across extraction/math/classification —
+too small and mixed to call systematic, exactly matching what LOOCV
+independently found by testing rather than eyeballing.
+
+**V3 decision inputs, all computed from real numbers, none retrained:**
+routing already provides real, validated value with just two models;
+the rule-based router ties (not beats) always-120b on accuracy while
+cutting 120b usage 93.5%; the oracle ceiling (93.5%) is 3.3pts above
+the validated rule, defined by disagreement tasks too few and mixed to
+route on with confidence; a learned router's baseline is now the
+LOOCV-validated 90.2%/6.5%-120b-usage rule, not always-20b or
+always-120b. Qwen: still not run - recommended to target specifically
+the 6 tasks where both current models fail together, since that's
+where a third model could expand the oracle ceiling itself rather than
+just get closer to an already-known number.
+
+No V3 retrain, no Qwen call, no production router change this pass.

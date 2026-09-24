@@ -36,6 +36,28 @@ keeping**: a routing-opportunity finding computed on a partial graded
 set (72% coverage) is provisional, not final — the fix here was
 closing the coverage gap, not re-analyzing the same data harder.
 
+**2026-09-24: simple routing baselines checkpoint, before V3 or a
+third model.** With a real (not tied) quality gap now established, the
+next question was whether a rule simple enough to say in one sentence
+already captures most of it — see `scripts/analyze_simple_routing_
+baselines.py` and `experiments/results/simple-routing-baselines.md`.
+A category-aware rule (route each category to whichever model wins it,
+derived from data) scored 91.3% in-sample, but **leave-one-out
+cross-validation** (same method `train.py` already uses for V3, per
+`DECISIONS.md` 2026-09-22) collapsed that to 88.0% — identical to
+always-20b, i.e. no demonstrated generalization; its classification/
+extraction assignments were built on 1-2-task margins that flip under
+leave-one-out. A narrower rule — **"summarization → 120b, everything
+else → 20b"** — scored 90.2% in-sample AND 90.2% under LOOCV
+(identical, because its non-summarization branch has zero free
+parameters to overfit with). **This is the validated baseline**: ties
+always-120b's accuracy (90.2%) while sending only 6.5% of requests to
+120b, at 0.55x its nominal cost and 0.70x its latency. Difficulty and
+category+difficulty were checked and correctly not used (too weak a
+signal; too few tasks per cell, respectively). **This LOOCV-validated
+rule — not always-20b/120b — is now the bar V3 must clear.** No V3
+retrain, no Qwen call, no production router change this pass.
+
 **2026-09-23, revised: Switchyard is staying Groq-only.** `gemini-3.1-
 pro-preview` was registered as a candidate stronger model, then
 explicitly ruled out once Google's free tier turned out to be Flash/
@@ -101,19 +123,21 @@ Phase 5 (V3 readiness with a third model) is still blocked on Phase 4
 
 ## Current objective
 
-1. Get sign-off on the pending-approval item above (the
-   `groq-qwen3.8-27b` third-model run — diagnostic subset recommended,
-   not all 104 tasks, since 12 tasks have no automated ground truth to
-   score a third model against either), then run it and recompute
-   Phase 3's analysis with 3 models.
-2. Nothing about V3's pipeline itself needs more work right now — it's
-   built, tested, and wired into the router-selection mechanism
-   (`router_version="learned-v1"` in `POST /route`). The evaluation
-   methodology in `train.py` was hardened this pass (dynamic baseline
-   model selection, every candidate model checked as its own trivial
-   baseline, explicit `learned_v1_beats_every_single_model_baseline`
-   flag) specifically so a future retrain's result can't look like a win
-   without actually being one.
+1. Qwen (`groq-qwen3.8-27b`) is still pending, but the target changed:
+   the simple-routing checkpoint above shows the 20b/120b gap is mostly
+   one category (summarization), so the sharper question is whether
+   Qwen adds capability on the 6 tasks where BOTH current models
+   already fail (classification-010, extraction-004, math-005,
+   math-013, reasoning-003, summarization-013) — that's where a third
+   model could raise the oracle ceiling itself, not just approach it.
+   Run against those 6 plus the 92-task auto-gradeable set if approved,
+   not all 104.
+2. If/when V3 is retrained, its baseline to beat is no longer
+   always-20b/120b — it's the LOOCV-validated simple rule above (90.2%
+   accuracy, 6.5% 120b usage). `train.py`'s existing hardening (dynamic
+   baseline selection, every candidate checked as its own trivial
+   baseline) needs one more baseline added: the simple routing rule
+   itself, not just single-model baselines.
 3. This sandbox's network policy blocks `groq.com` outright, and cannot
    make paid calls without cost approval regardless of provider — any
    future real-provider run needs to happen from outside this

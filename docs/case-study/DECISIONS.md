@@ -590,3 +590,50 @@ its judge model/version, exact prompt, and reproducibility caveats
 documented up front, and explicitly never presented as ground truth.
 **Not implemented yet** - this is a recommendation pending approval, per
 the explicit instruction not to implement before comparing approaches.
+
+## 2026-09-24 — Simple routing baselines before V3, and LOOCV again to pick between them
+
+**Decision:** before any V3 retrain or third-model addition, built
+`scripts/analyze_simple_routing_baselines.py` to test whether simple,
+interpretable rules (always-X, category-aware, difficulty-aware) can
+already capture most of the value a learned router would chase — and,
+critically, evaluated those rules with the same leave-one-out
+cross-validation used for V3's own training (see the 2026-09-22 LOOCV
+decision above), not a fixed train/test split.
+
+**Alternatives considered for the split:** an 80/20 held-out test set;
+stratified k-fold; category-level validation. Same reasoning as
+2026-09-22 applies, sharper here: the entire routing opportunity is
+defined by 8 disagreement tasks out of 92 graded. An 80/20 split puts
+roughly 1-2 of those 8 in the test set — not enough to tell "the rule
+generalizes" from "the rule got lucky on the one task that mattered."
+
+**What LOOCV actually caught:** the full category-aware rule (route
+each category to whichever model wins it) scored 91.3% in-sample, a
+seemingly solid +3.3pt edge over always-20b (88.0%). LOOCV on that same
+rule collapsed to exactly 88.0% — identical to always-20b, meaning zero
+demonstrated generalization. Traced per-task: the rule's classification
+and extraction assignments were built on 1-2 task margins (11 vs 12 out
+of 13; a dead-even 76.9%/76.9% tie), fragile enough that excluding any
+one relevant task flips the category's assignment. A narrower rule
+("summarization → 120b, everything else → 20b") that drops those
+fragile ties scored 90.2% in-sample AND 90.2% under LOOCV — identical,
+because its non-summarization branch is a hardcoded constant with zero
+free parameters (cannot overfit by construction) and its one data-
+derived decision (does summarization favor 120b) held up in every
+leave-one-out fold.
+
+**Reasoning:** an in-sample number on 92 tasks with only 8
+disagreements is cheap to produce and easy to over-trust. Running LOOCV
+on every candidate rule, not just the final one, is what actually
+distinguished a rule with real signal (summarization) from one that
+looked better only because it was allowed to fit noise in categories
+with razor-thin margins (classification, extraction).
+
+**Trade-offs accepted:** the LOOCV-validated rule is narrower and
+"only" matches always-120b's accuracy (90.2%) rather than beating it —
+its value is entirely in usage/cost/latency (6.5% 120b usage vs 100%),
+not a quality edge. The fuller category rule's higher in-sample number
+is real data, not fabricated, but reporting it as "the best simple
+router" without the LOOCV check would have been the same mistake V3
+already had to learn to avoid on 2026-09-22, in a new place.
