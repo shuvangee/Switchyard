@@ -277,3 +277,44 @@ class RoutingAnalytics(BaseModel):
     validation_passed: int
     validation_failed: int
     validation_not_validated: int
+
+
+class RouterStrategyMetrics(BaseModel):
+    """One strategy's row in the router comparison view. Every number
+    here is real, measured data from the training manifest — never
+    computed on the fly from live traffic (there isn't enough of it yet
+    to mean anything), and never estimated.
+    """
+
+    strategy: str
+    accuracy: float
+    correct: int
+    n: int
+    pct_20b: float
+    pct_120b: float
+    nominal_cost_usd: float
+    avg_latency_ms: float
+    # True for every real strategy here (D2 and learned-v2's numbers are
+    # both leave-one-out cross-validated, always-20b/120b are just a
+    # tautological readout of the same real per-task data) - False only
+    # for the oracle, which requires already knowing the answer and is
+    # never an implementable strategy.
+    is_out_of_sample: bool
+    is_theoretical_upper_bound: bool
+
+
+class RouterComparisonOut(BaseModel):
+    """V3 vs D2 vs the single-model baselines vs the oracle ceiling —
+    sourced directly from backend/app/routing/learned/artifacts/
+    learned-v2.manifest.json (rewritten each time
+    scripts/train_router.py runs), not recomputed here.
+    """
+
+    evaluation_method: str
+    n_evaluated_tasks: int
+    trained_at: str
+    chosen_algorithm: str
+    chosen_algorithm_reason: str
+    learned_beats_d2: bool
+    learned_beats_always_120b: bool
+    strategies: list[RouterStrategyMetrics]
