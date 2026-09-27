@@ -1,13 +1,21 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.schemas import ModelConfigOut, ModelPerformanceSummary
+from app.api.schemas import BenchmarkPerformanceSummary, ModelConfigOut, ModelPerformanceSummary
 from app.db.session import get_db
+from app.experiments.results_reader import model_benchmark_performance
 from app.models.enums import EvaluationStatus
 from app.models.experiment import ModelExecutionORM
 from app.models.model_config import ModelConfigORM
 
 router = APIRouter(prefix="/models", tags=["models"])
+
+
+def _benchmark_performance(model_id: str) -> BenchmarkPerformanceSummary | None:
+    result = model_benchmark_performance(model_id)
+    if result is None:
+        return None
+    return BenchmarkPerformanceSummary(**result)
 
 
 def _performance_summary(db: Session, model_id: str) -> ModelPerformanceSummary | None:
@@ -35,6 +43,10 @@ def _performance_summary(db: Session, model_id: str) -> ModelPerformanceSummary 
 def list_models(db: Session = Depends(get_db)) -> list[ModelConfigOut]:
     models = db.query(ModelConfigORM).order_by(ModelConfigORM.id).all()
     return [
-        ModelConfigOut.from_orm_model(model, performance=_performance_summary(db, model.id))
+        ModelConfigOut.from_orm_model(
+            model,
+            performance=_performance_summary(db, model.id),
+            benchmark_performance=_benchmark_performance(model.id),
+        )
         for model in models
     ]

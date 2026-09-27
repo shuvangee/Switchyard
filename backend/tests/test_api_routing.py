@@ -122,3 +122,29 @@ def test_models_endpoint_reflects_live_experiment_performance(api_client):
 
     flaky_perf = models["mock-flaky-v1"]["performance"]
     assert flaky_perf is None  # never included in that experiment run
+
+
+def test_models_endpoint_includes_real_benchmark_performance_for_groq_models(api_client):
+    """benchmark_performance is sourced from the committed offline
+    results file, not this deployment's (empty, in these tests) DB -
+    real on a fresh install, unlike `performance` above."""
+    response = api_client.get("/models")
+    models = {m["id"]: m for m in response.json()}
+
+    bench = models["groq-gpt-oss-20b"]["benchmark_performance"]
+    assert bench is not None
+    assert bench["n_graded"] == 92
+    assert 0.0 <= bench["accuracy"] <= 1.0
+
+    assert models["mock-fast-v1"]["benchmark_performance"] is None
+
+
+def test_benchmarks_coverage_endpoint(api_client):
+    response = api_client.get("/benchmarks/coverage")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_tasks"] == 104
+    assert body["auto_graded"] == 92
+    assert body["manual_only"] == 12
+    assert body["ungraded"] == 0
+    assert len(body["by_category"]) == 8

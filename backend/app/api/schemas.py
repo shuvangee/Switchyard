@@ -40,10 +40,34 @@ class BenchmarkTaskOut(BaseModel):
         )
 
 
+class CategoryCoverage(BaseModel):
+    category: str
+    total: int
+    auto_graded: int
+    manual_only: int
+    ungraded: int
+
+
+class EvaluationCoverageOut(BaseModel):
+    """Real coverage of the 104-task benchmark, sourced from the same
+    committed results file as BenchmarkPerformanceSummary — never
+    recomputed from live traffic, since evaluation coverage is a
+    property of the offline research benchmark, not this deployment.
+    """
+
+    total_tasks: int
+    auto_graded: int
+    manual_only: int
+    ungraded: int
+    automated_pct: float | None
+    by_category: list[CategoryCoverage]
+
+
 class ModelPerformanceSummary(BaseModel):
-    """Live-computed from this database's model_executions — never a fixed
-    snapshot — so it's always an honest reflection of what has actually
-    run here, not a baked-in historical number.
+    """Live-computed from THIS DEPLOYMENT's own model_executions table —
+    never a fixed snapshot, and null on a fresh install with no traffic
+    yet. Distinct from BenchmarkPerformanceSummary below — this is what
+    has actually run on this instance, not the offline research result.
     """
 
     total_executions: int
@@ -51,6 +75,23 @@ class ModelPerformanceSummary(BaseModel):
     correct: int
     avg_latency_ms: float | None
     total_cost_usd: float | None
+
+
+class BenchmarkPerformanceSummary(BaseModel):
+    """Real, measured results from the committed 92-task offline Groq
+    benchmark (experiments/results/groq-gpt-oss-expansion.json) — the
+    same numbers documented throughout docs/case-study/. Present only
+    for models actually included in that benchmark (currently
+    groq-gpt-oss-20b/120b); null for every other model, never estimated
+    or backfilled.
+    """
+
+    n_executions: int
+    n_graded: int
+    n_correct: int
+    accuracy: float | None
+    avg_latency_ms: float | None
+    nominal_cost_usd: float | None
 
 
 class ModelConfigOut(BaseModel):
@@ -63,10 +104,14 @@ class ModelConfigOut(BaseModel):
     output_cost_per_1k: float
     capabilities: dict[str, Any]
     performance: ModelPerformanceSummary | None
+    benchmark_performance: BenchmarkPerformanceSummary | None
 
     @classmethod
     def from_orm_model(
-        cls, model: ModelConfigORM, performance: ModelPerformanceSummary | None = None
+        cls,
+        model: ModelConfigORM,
+        performance: ModelPerformanceSummary | None = None,
+        benchmark_performance: BenchmarkPerformanceSummary | None = None,
     ) -> "ModelConfigOut":
         return cls(
             id=model.id,
@@ -78,6 +123,7 @@ class ModelConfigOut(BaseModel):
             output_cost_per_1k=model.output_cost_per_1k,
             capabilities=model.capabilities,
             performance=performance,
+            benchmark_performance=benchmark_performance,
         )
 
 
@@ -151,12 +197,13 @@ class CreateExperimentRequest(BaseModel):
 class RouteRequest(BaseModel):
     prompt: str
     category_hint: TaskCategory | None = None
-    # "v2" (default, rule-based, mock-tier models), "d2-baseline" (Groq-
-    # only simple rule — currently the preferred real-model strategy),
-    # "learned-v2" (V3's trained escalation classifier — does not
-    # currently beat d2-baseline, see docs/case-study/DECISIONS.md
-    # 2026-09-27), or "learned-v1" (the earlier exploratory multiclass
-    # model — not recommended, see EXPERIMENTS.md 2026-09-22).
+    # "d2-baseline" (preferred production strategy — see
+    # docs/case-study/DECISIONS.md 2026-09-24/27), "learned-v2" (V3's
+    # trained escalation classifier — does not currently beat
+    # d2-baseline), "always-20b" / "always-120b" (fixed single-model
+    # baselines, for direct comparison), "v2" (default, rule-based,
+    # mock-tier models — pre-V3), or "learned-v1" (earlier exploratory
+    # multiclass model — not recommended, see EXPERIMENTS.md 2026-09-22).
     router_version: str | None = None
 
 

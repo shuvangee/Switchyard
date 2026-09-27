@@ -31,6 +31,11 @@ from app.providers.registry import ModelConfig, get_model_registry, get_provider
 from app.routing.analyzer import analyze_request
 from app.routing.d2_router import D2_ROUTER_VERSION, decide_route_d2
 from app.routing.escalation_router import ESCALATION_ROUTER_VERSION, decide_route_escalation
+from app.routing.fixed_model_router import (
+    ALWAYS_20B_ROUTER_VERSION,
+    ALWAYS_120B_ROUTER_VERSION,
+    decide_route_fixed,
+)
 from app.routing.learned.train import LEARNED_ROUTER_VERSION
 from app.routing.learned_router import decide_route_learned
 from app.routing.router import decide_route
@@ -44,7 +49,10 @@ ALLOWED_ROUTER_VERSIONS = (
     LEARNED_ROUTER_VERSION,
     D2_ROUTER_VERSION,
     ESCALATION_ROUTER_VERSION,
+    ALWAYS_20B_ROUTER_VERSION,
+    ALWAYS_120B_ROUTER_VERSION,
 )
+_FIXED_ROUTER_VERSIONS = (ALWAYS_20B_ROUTER_VERSION, ALWAYS_120B_ROUTER_VERSION)
 
 MAX_ATTEMPTS = 2
 
@@ -91,6 +99,8 @@ def handle_routed_request(
         decision = decide_route_d2(analysis, model_lookup)
     elif router_version == ESCALATION_ROUTER_VERSION:
         decision = decide_route_escalation(analysis, model_lookup)
+    elif router_version in _FIXED_ROUTER_VERSIONS:
+        decision = decide_route_fixed(router_version, analysis, model_lookup)
     else:
         decision = decide_route(analysis, model_lookup)
 

@@ -53,6 +53,22 @@ def test_learned_router_version_is_used_when_requested(db_session):
     assert log.selected_model_config_id != ""
 
 
+def test_always_20b_router_version_ignores_category(db_session):
+    _seed_models(db_session)
+    log = handle_routed_request(
+        db_session, prompt="Summarize this article for me.", router_version="always-20b"
+    )
+    assert log.router_version == "always-20b"
+    assert log.selected_model_config_id == "groq-gpt-oss-20b"
+
+
+def test_always_120b_router_version_ignores_category(db_session):
+    _seed_models(db_session)
+    log = handle_routed_request(db_session, prompt="What is 17 * 6?", router_version="always-120b")
+    assert log.router_version == "always-120b"
+    assert log.selected_model_config_id == "groq-gpt-oss-120b"
+
+
 def test_d2_baseline_router_version_routes_summarization_to_120b(db_session):
     _seed_models(db_session)
     log = handle_routed_request(
