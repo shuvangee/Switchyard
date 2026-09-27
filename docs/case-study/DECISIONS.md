@@ -747,3 +747,44 @@ model, and a UI has to show both clearly labeled rather than one
 "performance" number — accepted deliberately (see Models page), since
 conflating "what we measured in research" with "what this instance has
 seen" would be a worse failure than an extra field.
+
+## 2026-09-28 — V4 security/dependency review: patched what was practical, documented the rest
+
+**Decision:** ran a repository security/hygiene review as part of V4
+deployment readiness. Confirmed no secret has ever been committed (no
+`.env`, no API key pattern, no `*.db` file in git history or the
+working tree — `git log --all --diff-filter=A` and a pattern grep both
+came back empty), confirmed `.gitignore` correctly excludes `.env` and
+`*.db` while keeping `experiments/results/*.json` (the real, reproducible
+research artifacts) tracked — the two are deliberately not conflated,
+per this file's 2026-09-28 (results_reader) entry above. Ran `pip-audit`
+against the backend's locked dependencies and found 20 known
+vulnerabilities across 4 packages (fastapi's pinned `starlette==0.41.3`,
+`python-dotenv==1.0.1`, dev-only `pytest==8.3.4`, and transitive
+`setuptools==79.0.1`).
+
+**What was fixed:** bumped `fastapi` 0.115.6 -> 0.128.0 (pulling
+`starlette` 0.41.3 -> 0.50.0, now pinned explicitly), `python-dotenv`
+1.0.1 -> 1.2.2, and dev-only `pytest` 8.3.4 -> 9.0.3 — all verified with
+a full clean-venv `pip install -r requirements-dev.txt` + the complete
+250-test suite passing unchanged, plus a manual smoke test (`/health`,
+`/route`) against the upgraded stack. This closed 4 of the 6 distinct
+CVEs found (everything with a fix version at or below starlette 0.50.x).
+
+**What was left:** the remaining starlette advisories require starlette
+>=1.0.0, a major version jump outside fastapi 0.128's supported range
+(`starlette<0.51.0,>=0.40.0`) — taking it would mean bumping fastapi
+much further (0.141.x latest) and re-verifying the whole API surface,
+a scope disproportionate to this project's actual exposure: a
+single-developer, mostly-local research/portfolio deployment with no
+untrusted multipart uploads and no multi-tenant traffic, not a public
+service handling adversarial input at scale. `setuptools` is a build-time
+tool, not an import-time runtime dependency of the app (`Required-by:`
+is empty), so it carries no request-time attack surface here and was
+left alone.
+
+**Trade-off accepted:** the repository carries two known, low-practical-
+risk advisories (a newer starlette major, an unused build-time
+setuptools) rather than an unverified major-version bump attempted
+under time pressure at the end of a research-frozen version. Revisit if
+this is ever deployed to handle real untrusted traffic at scale.
