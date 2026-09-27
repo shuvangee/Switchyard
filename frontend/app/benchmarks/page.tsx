@@ -133,7 +133,7 @@ export default async function BenchmarksPage({
 
       <h2 className="section-label">Tasks</h2>
       <form className="filters" method="get">
-        <select name="category" defaultValue={params.category ?? ""}>
+        <select name="category" aria-label="Filter by category" defaultValue={params.category ?? ""}>
           <option value="">All categories</option>
           {CATEGORIES.map((category) => (
             <option key={category} value={category}>
@@ -141,7 +141,7 @@ export default async function BenchmarksPage({
             </option>
           ))}
         </select>
-        <select name="difficulty" defaultValue={params.difficulty ?? ""}>
+        <select name="difficulty" aria-label="Filter by difficulty" defaultValue={params.difficulty ?? ""}>
           <option value="">All difficulties</option>
           {DIFFICULTIES.map((difficulty) => (
             <option key={difficulty} value={difficulty}>

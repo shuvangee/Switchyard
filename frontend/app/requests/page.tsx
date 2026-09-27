@@ -58,47 +58,53 @@ export default async function RequestsPage({
 
       {allRequests.length > 0 && (
         <form className="filters" method="get" style={{ flexWrap: "wrap" }}>
-          <select name="router_version" defaultValue={filters.router_version ?? ""}>
+          <select name="router_version" aria-label="Filter by router version" defaultValue={filters.router_version ?? ""}>
             <option value="">All router versions</option>
             {routerVersions.map((v) => (
               <option key={v} value={v}>{v}</option>
             ))}
           </select>
-          <select name="model" defaultValue={filters.model ?? ""}>
+          <select name="model" aria-label="Filter by selected model" defaultValue={filters.model ?? ""}>
             <option value="">All models</option>
             {models.map((m) => (
               <option key={m} value={m}>{m}</option>
             ))}
           </select>
-          <select name="provider" defaultValue={filters.provider ?? ""}>
+          <select name="provider" aria-label="Filter by provider" defaultValue={filters.provider ?? ""}>
             <option value="">All providers</option>
             {providers.map((p) => (
               <option key={p} value={p}>{p}</option>
             ))}
           </select>
-          <select name="category" defaultValue={filters.category ?? ""}>
+          <select name="category" aria-label="Filter by category" defaultValue={filters.category ?? ""}>
             <option value="">All categories</option>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
-          <select name="difficulty" defaultValue={filters.difficulty ?? ""}>
+          <select name="difficulty" aria-label="Filter by difficulty" defaultValue={filters.difficulty ?? ""}>
             <option value="">All difficulties</option>
             {DIFFICULTIES.map((d) => (
               <option key={d} value={d}>{d}</option>
             ))}
           </select>
-          <select name="status" defaultValue={filters.status ?? ""}>
+          <select name="status" aria-label="Filter by status" defaultValue={filters.status ?? ""}>
             <option value="">Any status</option>
             <option value="success">success</option>
             <option value="error">error</option>
           </select>
-          <select name="escalated" defaultValue={filters.escalated ?? ""}>
+          <select name="escalated" aria-label="Filter by escalation" defaultValue={filters.escalated ?? ""}>
             <option value="">Escalated: any</option>
             <option value="yes">Escalated: yes</option>
             <option value="no">Escalated: no</option>
           </select>
-          <input type="date" name="since" defaultValue={filters.since ?? ""} title="Since date" />
+          <input
+            type="date"
+            name="since"
+            defaultValue={filters.since ?? ""}
+            title="Since date"
+            aria-label="Filter by date, requests on or after"
+          />
           <button type="submit" className="primary">
             Filter
           </button>
