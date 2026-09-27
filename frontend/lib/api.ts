@@ -1,6 +1,7 @@
 import type {
   BenchmarkTask,
   CreateExperimentRequest,
+  EvaluationCoverage,
   ExperimentRunDetail,
   ExperimentRunSummary,
   ModelConfig,
@@ -48,6 +49,10 @@ export function getBenchmarks(params?: {
 
 export function getBenchmark(id: string): Promise<BenchmarkTask> {
   return apiFetch<BenchmarkTask>(`/benchmarks/${encodeURIComponent(id)}`);
+}
+
+export function getEvaluationCoverage(): Promise<EvaluationCoverage> {
+  return apiFetch<EvaluationCoverage>("/benchmarks/coverage");
 }
 
 export function getModels(): Promise<ModelConfig[]> {

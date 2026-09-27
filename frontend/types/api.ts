@@ -31,6 +31,18 @@ export interface ModelPerformanceSummary {
   total_cost_usd: number | null;
 }
 
+// Real, measured results from the committed 92-task offline Groq
+// benchmark — distinct from ModelPerformanceSummary, which reflects
+// only this deployment's own live traffic (null on a fresh install).
+export interface BenchmarkPerformanceSummary {
+  n_executions: number;
+  n_graded: number;
+  n_correct: number;
+  accuracy: number | null;
+  avg_latency_ms: number | null;
+  nominal_cost_usd: number | null;
+}
+
 export interface ModelConfig {
   id: string;
   provider: string;
@@ -41,6 +53,24 @@ export interface ModelConfig {
   output_cost_per_1k: number;
   capabilities: Record<string, unknown>;
   performance: ModelPerformanceSummary | null;
+  benchmark_performance: BenchmarkPerformanceSummary | null;
+}
+
+export interface CategoryCoverage {
+  category: TaskCategory;
+  total: number;
+  auto_graded: number;
+  manual_only: number;
+  ungraded: number;
+}
+
+export interface EvaluationCoverage {
+  total_tasks: number;
+  auto_graded: number;
+  manual_only: number;
+  ungraded: number;
+  automated_pct: number | null;
+  by_category: CategoryCoverage[];
 }
 
 export type ExecutionStatus = "success" | "error";
@@ -98,11 +128,19 @@ export type CategorySource = "explicit" | "heuristic";
 export type ConfidenceLevel = "high" | "medium" | "low";
 export type ValidationStatus = "not_validated" | "passed" | "failed";
 
-// "v2" (rule-based, mock-tier), "d2-baseline" (Groq-only simple rule -
-// currently the preferred real-model strategy), "learned-v2" (V3's
-// trained escalation classifier), or "learned-v1" (earlier exploratory
-// model, not recommended). See docs/case-study/DECISIONS.md 2026-09-27.
-export type RouterVersion = "v2" | "d2-baseline" | "learned-v2" | "learned-v1";
+// "d2-baseline" (preferred production strategy), "learned-v2" (V3's
+// trained escalation classifier - does not currently beat d2-baseline),
+// "always-20b" / "always-120b" (fixed single-model baselines, for
+// direct comparison), "v2" (rule-based, mock-tier, pre-V3), or
+// "learned-v1" (earlier exploratory model, not recommended).
+// See docs/case-study/DECISIONS.md (2026-09-24/27).
+export type RouterVersion =
+  | "d2-baseline"
+  | "learned-v2"
+  | "always-20b"
+  | "always-120b"
+  | "v2"
+  | "learned-v1";
 
 export interface RouteRequest {
   prompt: string;
