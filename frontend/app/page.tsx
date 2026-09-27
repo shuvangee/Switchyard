@@ -112,7 +112,7 @@ export default async function Home() {
         </div>
       </div>
 
-      <div className="stat-row" style={{ marginTop: "-1.5rem" }}>
+      <div className="quick-links">
         <Link href="/playground" className="mono" style={{ fontSize: "0.85rem" }}>
           Playground — route a live request →
         </Link>

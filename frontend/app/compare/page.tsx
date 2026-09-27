@@ -1,4 +1,5 @@
 import { Pill } from "@/components/Pill";
+import { StrategyBarChart } from "@/components/StrategyBarChart";
 import { getRouterComparison } from "@/lib/api";
 import type { RouterStrategyMetrics } from "@/types/api";
 
@@ -89,6 +90,42 @@ export default async function ComparePage() {
           {comparison.chosen_algorithm_reason}
         </div>
       </div>
+
+      <h2 className="section-label" style={{ marginTop: "1.75rem" }}>
+        Visual comparison
+      </h2>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 2.5rem", maxWidth: 880 }}>
+        <StrategyBarChart
+          title="Accuracy"
+          rows={comparison.strategies}
+          value={(row) => row.accuracy}
+          format={(row) => `${(row.accuracy * 100).toFixed(1)}%`}
+          max={1}
+        />
+        <StrategyBarChart
+          title="Nominal cost"
+          rows={comparison.strategies}
+          value={(row) => row.nominal_cost_usd}
+          format={(row) => `$${row.nominal_cost_usd.toFixed(6)}`}
+        />
+        <StrategyBarChart
+          title="Average latency"
+          rows={comparison.strategies}
+          value={(row) => row.avg_latency_ms}
+          format={(row) => `${row.avg_latency_ms.toFixed(0)}ms`}
+        />
+        <StrategyBarChart
+          title="120b usage"
+          rows={comparison.strategies}
+          value={(row) => row.pct_120b}
+          format={(row) => `${(row.pct_120b * 100).toFixed(1)}%`}
+          max={1}
+        />
+      </div>
+      <p style={{ color: "var(--text-muted)", fontSize: "0.78rem", maxWidth: 760, marginTop: "-1rem" }}>
+        D2 highlighted in the accent color; the oracle&apos;s bar is hatched to mark it as a
+        theoretical ceiling, not a real option.
+      </p>
 
       <table style={{ marginTop: "1.25rem" }}>
         <thead>
