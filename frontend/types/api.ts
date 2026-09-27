@@ -43,6 +43,13 @@ export interface BenchmarkPerformanceSummary {
   nominal_cost_usd: number | null;
 }
 
+export interface CategoryAccuracy {
+  category: string;
+  n_graded: number;
+  n_correct: number;
+  accuracy: number;
+}
+
 export interface ModelConfig {
   id: string;
   provider: string;
@@ -54,6 +61,7 @@ export interface ModelConfig {
   capabilities: Record<string, unknown>;
   performance: ModelPerformanceSummary | null;
   benchmark_performance: BenchmarkPerformanceSummary | null;
+  benchmark_performance_by_category: CategoryAccuracy[] | null;
 }
 
 export interface CategoryCoverage {
