@@ -7,6 +7,7 @@ import type {
   RequestLog,
   RequestLogSummary,
   RouteRequest,
+  RouterComparison,
   RoutingAnalytics,
 } from "@/types/api";
 
@@ -85,4 +86,8 @@ export function getRequest(id: string): Promise<RequestLog> {
 
 export function getAnalytics(): Promise<RoutingAnalytics> {
   return apiFetch<RoutingAnalytics>("/analytics");
+}
+
+export function getRouterComparison(): Promise<RouterComparison> {
+  return apiFetch<RouterComparison>("/analytics/router-comparison");
 }

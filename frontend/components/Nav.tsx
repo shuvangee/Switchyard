@@ -13,6 +13,7 @@ export function Nav() {
         <Link href="/models">Models</Link>
         <Link href="/requests">Requests</Link>
         <Link href="/analytics">Analytics</Link>
+        <Link href="/compare">Compare</Link>
       </div>
     </nav>
   );

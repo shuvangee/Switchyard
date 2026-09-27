@@ -98,9 +98,16 @@ export type CategorySource = "explicit" | "heuristic";
 export type ConfidenceLevel = "high" | "medium" | "low";
 export type ValidationStatus = "not_validated" | "passed" | "failed";
 
+// "v2" (rule-based, mock-tier), "d2-baseline" (Groq-only simple rule -
+// currently the preferred real-model strategy), "learned-v2" (V3's
+// trained escalation classifier), or "learned-v1" (earlier exploratory
+// model, not recommended). See docs/case-study/DECISIONS.md 2026-09-27.
+export type RouterVersion = "v2" | "d2-baseline" | "learned-v2" | "learned-v1";
+
 export interface RouteRequest {
   prompt: string;
   category_hint?: TaskCategory;
+  router_version?: RouterVersion;
 }
 
 export interface TraceEvent {
@@ -124,6 +131,10 @@ export interface RequestLog {
   router_version: string;
   rationale: string;
   matched_rule: string | null;
+  // A real predict_proba-derived number, only for strategies that have
+  // one (learned-v1, learned-v2) - null for deterministic rules (v2,
+  // D2), never a fabricated confidence percentage.
+  router_score: number | null;
   escalated: boolean;
   attempt_count: number;
   validation_status: ValidationStatus;
@@ -166,4 +177,28 @@ export interface RoutingAnalytics {
   validation_passed: number;
   validation_failed: number;
   validation_not_validated: number;
+}
+
+export interface RouterStrategyMetrics {
+  strategy: string;
+  accuracy: number;
+  correct: number;
+  n: number;
+  pct_20b: number;
+  pct_120b: number;
+  nominal_cost_usd: number;
+  avg_latency_ms: number;
+  is_out_of_sample: boolean;
+  is_theoretical_upper_bound: boolean;
+}
+
+export interface RouterComparison {
+  evaluation_method: string;
+  n_evaluated_tasks: number;
+  trained_at: string;
+  chosen_algorithm: string;
+  chosen_algorithm_reason: string;
+  learned_beats_d2: boolean;
+  learned_beats_always_120b: boolean;
+  strategies: RouterStrategyMetrics[];
 }

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ConfidencePill, ExecutionStatusPill, ValidationStatusPill } from "@/components/Pill";
 import { RequestTrace } from "@/components/RequestTrace";
 import { ApiError, routeRequest } from "@/lib/api";
-import type { RequestLog, TaskCategory } from "@/types/api";
+import type { RequestLog, RouterVersion, TaskCategory } from "@/types/api";
 
 const CATEGORIES: TaskCategory[] = [
   "extraction",
@@ -17,9 +17,17 @@ const CATEGORIES: TaskCategory[] = [
   "structured_output",
 ];
 
+const ROUTER_STRATEGIES: { value: RouterVersion; label: string }[] = [
+  { value: "v2", label: "v2 — rule-based (default, mock-tier models)" },
+  { value: "d2-baseline", label: "D2 baseline — Groq simple rule (preferred, real models)" },
+  { value: "learned-v2", label: "Learned V3 (learned-v2) — trained escalation classifier" },
+  { value: "learned-v1", label: "learned-v1 — earlier exploratory model (not recommended)" },
+];
+
 export function PlaygroundForm() {
   const [prompt, setPrompt] = useState("");
   const [categoryHint, setCategoryHint] = useState<string>("");
+  const [routerVersion, setRouterVersion] = useState<RouterVersion>("v2");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<RequestLog | null>(null);
@@ -38,6 +46,7 @@ export function PlaygroundForm() {
       const log = await routeRequest({
         prompt,
         category_hint: categoryHint ? (categoryHint as TaskCategory) : undefined,
+        router_version: routerVersion,
       });
       setResult(log);
     } catch (err) {
@@ -90,6 +99,30 @@ export function PlaygroundForm() {
             {CATEGORIES.map((category) => (
               <option key={category} value={category}>
                 {category}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
+          <label htmlFor="router-strategy">Routing strategy</label>
+          <select
+            id="router-strategy"
+            value={routerVersion}
+            onChange={(event) => setRouterVersion(event.target.value as RouterVersion)}
+            style={{
+              fontFamily: "var(--sans)",
+              fontSize: "0.85rem",
+              padding: "0.35rem 0.4rem",
+              border: "1px solid var(--border)",
+              background: "var(--surface)",
+              color: "var(--text)",
+              maxWidth: 420,
+            }}
+          >
+            {ROUTER_STRATEGIES.map((strategy) => (
+              <option key={strategy.value} value={strategy.value}>
+                {strategy.label}
               </option>
             ))}
           </select>
@@ -149,6 +182,12 @@ export function PlaygroundForm() {
               <div className="section-label">Router version</div>
               <div className="mono">{result.router_version}</div>
             </div>
+            {result.router_score !== null && (
+              <div>
+                <div className="section-label">Model score</div>
+                <div className="mono">{result.router_score.toFixed(2)}</div>
+              </div>
+            )}
           </div>
           <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", maxWidth: 700 }}>
             {result.rationale}
