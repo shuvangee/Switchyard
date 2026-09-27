@@ -1,0 +1,10 @@
+%% Switchyard — learned-router (learned-v2) offline training flow
+%% Source of truth: docs/architecture/overview.md (kept in sync manually)
+
+flowchart LR
+    RESULTS[Stored benchmark results<br/>experiments/results/*.json] --> DATASET[Dataset builder<br/>learned/escalation_dataset.py]
+    DATASET --> FEATURES[Feature extraction<br/>learned/features.py]
+    FEATURES --> CV[Cross-validation<br/>LOOCV, learned/train.py]
+    CV --> TREE[Decision tree]
+    TREE --> ARTIFACT[Versioned artifact<br/>learned-v2.joblib +<br/>learned-v2.manifest.json]
+    ARTIFACT --> RUNTIME[Runtime router<br/>routing/learned_router.py]

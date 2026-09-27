@@ -1,0 +1,80 @@
+{
+  "_comment": "Real, measured results — source: backend/app/routing/learned/artifacts/learned-v2.manifest.json, reproducible via `python scripts/train_router.py`. See docs/case-study/METRICS.md. Never edit by hand; regenerate from the manifest if the router is retrained.",
+  "evaluation_method": "leave-one-out cross-validation, system-level outcome",
+  "n_evaluated_tasks": 92,
+  "trained_at": "2026-09-27T18:12:23",
+  "preferred_strategy": "d2-baseline",
+  "experimental_strategy": "learned-v2",
+  "learned_beats_d2": false,
+  "learned_beats_always_120b": false,
+  "actual_billed_cost_usd": 0.0,
+  "strategies": [
+    {
+      "strategy": "always-20b",
+      "accuracy": 0.880,
+      "correct": 81,
+      "n": 92,
+      "pct_20b": 1.000,
+      "pct_120b": 0.000,
+      "nominal_cost_usd": 0.008108,
+      "avg_latency_ms": 646,
+      "is_out_of_sample": true,
+      "is_theoretical_upper_bound": false
+    },
+    {
+      "strategy": "always-120b",
+      "accuracy": 0.902,
+      "correct": 83,
+      "n": 92,
+      "pct_20b": 0.000,
+      "pct_120b": 1.000,
+      "nominal_cost_usd": 0.015020,
+      "avg_latency_ms": 927,
+      "is_out_of_sample": true,
+      "is_theoretical_upper_bound": false
+    },
+    {
+      "strategy": "d2-baseline",
+      "accuracy": 0.902,
+      "correct": 83,
+      "n": 92,
+      "pct_20b": 0.935,
+      "pct_120b": 0.065,
+      "nominal_cost_usd": 0.008193,
+      "avg_latency_ms": 651,
+      "is_out_of_sample": true,
+      "is_theoretical_upper_bound": false
+    },
+    {
+      "strategy": "learned-v2",
+      "accuracy": 0.880,
+      "correct": 81,
+      "n": 92,
+      "pct_20b": 0.761,
+      "pct_120b": 0.239,
+      "nominal_cost_usd": 0.009477,
+      "avg_latency_ms": 687,
+      "is_out_of_sample": true,
+      "is_theoretical_upper_bound": false
+    },
+    {
+      "strategy": "oracle",
+      "accuracy": 0.935,
+      "correct": 86,
+      "n": 92,
+      "pct_20b": 0.946,
+      "pct_120b": 0.054,
+      "nominal_cost_usd": 0.008187,
+      "avg_latency_ms": 655,
+      "is_out_of_sample": false,
+      "is_theoretical_upper_bound": true
+    }
+  ],
+  "headline_result": "D2 matched always-120b's 90.2% benchmark accuracy while routing only 6.5% of requests to 120B, reducing nominal cost by 45.5% and average latency by 29.8%, on the 92 automatically graded benchmark tasks.",
+  "evaluation_coverage": {
+    "total_tasks": 104,
+    "auto_graded": 92,
+    "manual_only": 12,
+    "ungraded": 0
+  }
+}

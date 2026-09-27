@@ -1,0 +1,33 @@
+%% Switchyard architecture — request flow and learned-router training flow
+%% Source of truth: docs/architecture/overview.md (kept in sync manually)
+
+flowchart TD
+    FE[Frontend<br/>Next.js / React] -->|HTTP| API[FastAPI]
+    API --> ANALYZER[Request Analyzer]
+    ANALYZER --> STRATEGY{Routing Strategy}
+    STRATEGY -->|preferred| D2[D2 baseline]
+    STRATEGY -->|comparison| LEARNED[learned-v2]
+    STRATEGY -.->|legacy, kept for comparison| OTHER[v2 rules / learned-v1 /<br/>always-20b / always-120b]
+    D2 --> PROVIDERS[Provider Layer]
+    LEARNED --> PROVIDERS
+    OTHER --> PROVIDERS
+    PROVIDERS --> GROQ[Groq]
+    GROQ --> RESPONSE[Response +<br/>trace + persisted RequestLog]
+    RESPONSE --> FE
+
+    subgraph Supporting systems
+        BENCH[Benchmark system]
+        RUNNER[Experiment runner]
+        EVAL[Evaluation]
+        DB[(SQLite)]
+        ANALYTICS[Analytics]
+        TRAIN[Training pipeline]
+    end
+
+    RUNNER --> BENCH
+    RUNNER --> EVAL
+    RUNNER --> DB
+    API --> DB
+    API --> ANALYTICS
+    ANALYTICS --> DB
+    TRAIN -.trains.-> LEARNED
