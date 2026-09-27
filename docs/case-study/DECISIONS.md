@@ -703,3 +703,47 @@ or the tree "wins." This is stated, not hidden: see `RoutingDecision
 .router_score`'s docstring and the Playground rationale text, which
 both say `learned-v2`'s accuracy plainly rather than implying more
 confidence than 5 examples support.
+
+## 2026-09-28 — V4: read the committed results JSON directly, not a DB importer
+
+**Decision:** `GET /models` and `GET /benchmarks/coverage` source real
+92-task benchmark numbers from `backend/app/experiments/results_
+reader.py`, which reads `experiments/results/groq-gpt-oss-expansion.json`
+directly off disk — the same pattern already used for `GET /analytics/
+router-comparison`'s training manifest — rather than importing that
+JSON into `model_executions` at startup.
+
+**The gap this fixes:** traced exactly why a fresh deployment's `GET
+/models` would show `performance: null` for the Groq models despite
+92 real graded tasks existing in the git history. `scripts/run_groq_
+expansion.py` and its siblings never called the HTTP API — they
+imported the backend package directly and wrote `ModelExecutionORM`
+rows into whichever developer's local `backend/switchyard.db` happened
+to run them (gitignored, never committed), then serialized the same
+executions to the committed JSON as they went. The JSON is the only
+durable, git-tracked copy; the DB rows only ever existed on one
+machine, transiently.
+
+**Alternatives considered:** write a startup/one-off importer that
+upserts the JSON's executions into `ModelExecutionORM`, so `GET
+/models`'s existing DB-backed `performance` field would show the real
+numbers directly.
+
+**Reasoning:** an importer has to resolve real complications a direct
+read doesn't — response_text lives in a separate file (`groq-code-
+responses.json`) for some tasks, `run_id`/`ExperimentRunORM` bookkeeping
+would need inventing for data that was never really one experiment run,
+and every future case-study number would then depend on the importer
+having actually been re-run after each data update, one more place for
+drift between "what the docs say" and "what the API serves." Reading
+the same JSON file directly has none of that: it's the file every
+markdown doc in `docs/case-study/` already cites, so the API and the
+prose can never disagree.
+
+**Trade-offs accepted:** `benchmark_performance` (real, offline,
+92-task) and `performance` (this deployment's own live traffic, likely
+null on a fresh install) are now two different fields on the same
+model, and a UI has to show both clearly labeled rather than one
+"performance" number — accepted deliberately (see Models page), since
+conflating "what we measured in research" with "what this instance has
+seen" would be a worse failure than an extra field.
