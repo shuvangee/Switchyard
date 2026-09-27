@@ -1,9 +1,17 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.schemas import BenchmarkPerformanceSummary, ModelConfigOut, ModelPerformanceSummary
+from app.api.schemas import (
+    BenchmarkPerformanceSummary,
+    CategoryAccuracy,
+    ModelConfigOut,
+    ModelPerformanceSummary,
+)
 from app.db.session import get_db
-from app.experiments.results_reader import model_benchmark_performance
+from app.experiments.results_reader import (
+    model_benchmark_performance,
+    model_benchmark_performance_by_category,
+)
 from app.models.enums import EvaluationStatus
 from app.models.experiment import ModelExecutionORM
 from app.models.model_config import ModelConfigORM
@@ -16,6 +24,13 @@ def _benchmark_performance(model_id: str) -> BenchmarkPerformanceSummary | None:
     if result is None:
         return None
     return BenchmarkPerformanceSummary(**result)
+
+
+def _benchmark_performance_by_category(model_id: str) -> list[CategoryAccuracy] | None:
+    result = model_benchmark_performance_by_category(model_id)
+    if result is None:
+        return None
+    return [CategoryAccuracy(category=category, **counts) for category, counts in result.items()]
 
 
 def _performance_summary(db: Session, model_id: str) -> ModelPerformanceSummary | None:
@@ -47,6 +62,7 @@ def list_models(db: Session = Depends(get_db)) -> list[ModelConfigOut]:
             model,
             performance=_performance_summary(db, model.id),
             benchmark_performance=_benchmark_performance(model.id),
+            benchmark_performance_by_category=_benchmark_performance_by_category(model.id),
         )
         for model in models
     ]

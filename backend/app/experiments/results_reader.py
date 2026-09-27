@@ -72,6 +72,39 @@ def model_benchmark_performance(model_config_id: str) -> dict[str, Any] | None:
     }
 
 
+def model_benchmark_performance_by_category(
+    model_config_id: str, benchmarks_dir: Path | None = None
+) -> dict[str, dict[str, Any]] | None:
+    """Real per-category accuracy for one model on the committed
+    benchmark - graded tasks only (see evaluation_coverage for the
+    manual-only/ungraded split). None if the model has no executions at
+    all; a category with zero graded tasks is simply absent from the
+    returned dict, never shown with a fabricated 0/0 accuracy.
+    """
+    executions = [e for e in _load_executions() if e["model_config_id"] == model_config_id]
+    if not executions:
+        return None
+
+    tasks = {t.id: t for t in load_benchmark_tasks(benchmarks_dir or default_benchmarks_dir())}
+    by_category: dict[str, list[dict]] = {}
+    for execution in executions:
+        if not _is_graded(execution):
+            continue
+        task = tasks.get(execution["task_id"])
+        if task is None:
+            continue
+        by_category.setdefault(task.category.value, []).append(execution)
+
+    return {
+        category: {
+            "n_graded": len(execs),
+            "n_correct": sum(1 for e in execs if e["evaluation_status"] == "correct"),
+            "accuracy": sum(1 for e in execs if e["evaluation_status"] == "correct") / len(execs),
+        }
+        for category, execs in sorted(by_category.items())
+    }
+
+
 def evaluation_coverage(benchmarks_dir: Path | None = None) -> dict[str, Any]:
     """Real evaluation-coverage breakdown, mirroring
     scripts/evaluation_coverage_report.py's logic exactly: a task counts

@@ -1,4 +1,8 @@
-from app.experiments.results_reader import evaluation_coverage, model_benchmark_performance
+from app.experiments.results_reader import (
+    evaluation_coverage,
+    model_benchmark_performance,
+    model_benchmark_performance_by_category,
+)
 
 
 def test_groq_20b_matches_the_published_headline_numbers():
@@ -26,6 +30,30 @@ def test_groq_120b_matches_the_published_headline_numbers():
 def test_model_with_no_executions_returns_none():
     assert model_benchmark_performance("mock-fast-v1") is None
     assert model_benchmark_performance("not-a-real-model") is None
+
+
+def test_by_category_matches_published_summarization_breakdown():
+    """summarization is the one category with the largest 20b/120b gap
+    in the published case study (50.0% vs 83.3%, only 6 of 13 tasks
+    auto-gradeable) - real regression check against that."""
+    by_cat_20b = model_benchmark_performance_by_category("groq-gpt-oss-20b")
+    assert by_cat_20b["summarization"]["n_graded"] == 6
+    assert by_cat_20b["summarization"]["accuracy"] == 3 / 6
+
+    by_cat_120b = model_benchmark_performance_by_category("groq-gpt-oss-120b")
+    assert by_cat_120b["summarization"]["accuracy"] == 5 / 6
+
+
+def test_by_category_omits_categories_with_no_graded_tasks_for_a_manual_only_slice():
+    result = model_benchmark_performance_by_category("groq-gpt-oss-20b")
+    assert set(result.keys()) == {
+        "classification", "coding", "debugging", "extraction",
+        "math", "reasoning", "structured_output", "summarization",
+    }
+
+
+def test_by_category_returns_none_for_a_model_with_no_executions():
+    assert model_benchmark_performance_by_category("mock-fast-v1") is None
 
 
 def test_evaluation_coverage_matches_the_published_breakdown():

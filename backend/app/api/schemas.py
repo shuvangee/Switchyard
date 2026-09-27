@@ -94,6 +94,13 @@ class BenchmarkPerformanceSummary(BaseModel):
     nominal_cost_usd: float | None
 
 
+class CategoryAccuracy(BaseModel):
+    category: str
+    n_graded: int
+    n_correct: int
+    accuracy: float
+
+
 class ModelConfigOut(BaseModel):
     id: str
     provider: str
@@ -105,6 +112,7 @@ class ModelConfigOut(BaseModel):
     capabilities: dict[str, Any]
     performance: ModelPerformanceSummary | None
     benchmark_performance: BenchmarkPerformanceSummary | None
+    benchmark_performance_by_category: list[CategoryAccuracy] | None
 
     @classmethod
     def from_orm_model(
@@ -112,6 +120,7 @@ class ModelConfigOut(BaseModel):
         model: ModelConfigORM,
         performance: ModelPerformanceSummary | None = None,
         benchmark_performance: BenchmarkPerformanceSummary | None = None,
+        benchmark_performance_by_category: list[CategoryAccuracy] | None = None,
     ) -> "ModelConfigOut":
         return cls(
             id=model.id,
@@ -124,6 +133,7 @@ class ModelConfigOut(BaseModel):
             capabilities=model.capabilities,
             performance=performance,
             benchmark_performance=benchmark_performance,
+            benchmark_performance_by_category=benchmark_performance_by_category,
         )
 
 
