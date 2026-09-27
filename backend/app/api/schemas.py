@@ -294,6 +294,8 @@ class RequestLogSummary(BaseModel):
     difficulty: str
     initial_model_config_id: str
     selected_model_config_id: str
+    selected_provider: str
+    router_version: str
     escalated: bool
     status: str
     validation_status: str
@@ -311,6 +313,8 @@ class RequestLogSummary(BaseModel):
             difficulty=log.difficulty,
             initial_model_config_id=log.initial_model_config_id,
             selected_model_config_id=log.selected_model_config_id,
+            selected_provider=log.selected_provider,
+            router_version=log.router_version,
             escalated=log.escalated,
             status=log.status,
             validation_status=log.validation_status,

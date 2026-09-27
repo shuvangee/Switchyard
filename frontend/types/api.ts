@@ -203,6 +203,8 @@ export interface RequestLogSummary {
   difficulty: TaskDifficulty;
   initial_model_config_id: string;
   selected_model_config_id: string;
+  selected_provider: string;
+  router_version: string;
   escalated: boolean;
   status: ExecutionStatus;
   validation_status: ValidationStatus;
