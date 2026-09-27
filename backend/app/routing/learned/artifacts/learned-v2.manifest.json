@@ -1,0 +1,92 @@
+{
+  "router_version": "learned-v2",
+  "trained_at": "2026-09-27T18:12:23.764647+00:00",
+  "random_seed": 0,
+  "n_training_rows": 92,
+  "excluded_task_counts": {
+    "no_ground_truth_for_both_models": 12
+  },
+  "feature_names": [
+    "category=extraction",
+    "category=classification",
+    "category=summarization",
+    "category=math",
+    "category=reasoning",
+    "category=coding",
+    "category=debugging",
+    "category=structured_output",
+    "difficulty_ordinal",
+    "structured_output_required",
+    "estimated_input_tokens"
+  ],
+  "training_target_definition": "escalate=True iff groq-gpt-oss-120b is correct AND groq-gpt-oss-20b is incorrect on the real recorded evaluation (the only case where paying for 120b changes the outcome); escalate=False for both-correct (20b already sufficient), only-20b-correct (120b would be wrong), and both-incorrect (escalating buys nothing) \u2014 see this module's docstring and docs/case-study/DECISIONS.md (2026-09-27).",
+  "candidate_algorithms": {
+    "logistic_regression": {
+      "accuracy": 0.8913043478260869,
+      "correct": 82,
+      "n": 92,
+      "pct_120b": 0.41304347826086957,
+      "nominal_cost_usd": 0.009875174999999995,
+      "avg_latency_ms": 719.6219736930368,
+      "escalate_predictions": 38
+    },
+    "decision_tree": {
+      "accuracy": 0.8804347826086957,
+      "correct": 81,
+      "n": 92,
+      "pct_120b": 0.2391304347826087,
+      "nominal_cost_usd": 0.009477375,
+      "avg_latency_ms": 687.2116231382319,
+      "escalate_predictions": 22
+    }
+  },
+  "chosen_algorithm": "decision_tree",
+  "chosen_algorithm_reason": "['logistic_regression', 'decision_tree'] were within 0.011 accuracy (one task's worth on 92 rows) \u2014 not distinguishable from noise at this sample size. Broken by lower LOOCV nominal cost (the project's actual objective), then by interpretability.",
+  "evaluation_method": "leave-one-out cross-validation, SYSTEM-level (accuracy/cost/latency use the real recorded outcome of whichever model each held-out prediction selected, not classifier accuracy on the label alone)",
+  "learned_router_system_metrics_loocv": {
+    "accuracy": 0.8804347826086957,
+    "correct": 81,
+    "n": 92,
+    "pct_120b": 0.2391304347826087,
+    "nominal_cost_usd": 0.009477375,
+    "avg_latency_ms": 687.2116231382319,
+    "escalate_predictions": 22
+  },
+  "baselines_same_92_rows": {
+    "always-20b": {
+      "accuracy": 0.8804347826086957,
+      "correct": 81,
+      "n": 92,
+      "pct_120b": 0.0,
+      "nominal_cost_usd": 0.008108324999999996,
+      "avg_latency_ms": 645.6216253794518
+    },
+    "always-120b": {
+      "accuracy": 0.9021739130434783,
+      "correct": 83,
+      "n": 92,
+      "pct_120b": 1.0,
+      "nominal_cost_usd": 0.015019649999999997,
+      "avg_latency_ms": 926.8519728584974
+    },
+    "d2-baseline": {
+      "accuracy": 0.9021739130434783,
+      "correct": 83,
+      "n": 92,
+      "pct_120b": 0.06521739130434782,
+      "nominal_cost_usd": 0.008192999999999992,
+      "avg_latency_ms": 650.995475488067
+    },
+    "oracle": {
+      "accuracy": 0.9347826086956522,
+      "correct": 86,
+      "n": 92,
+      "pct_120b": 0.05434782608695652,
+      "nominal_cost_usd": 0.008187074999999997,
+      "avg_latency_ms": 654.598456901073
+    }
+  },
+  "learned_beats_d2": false,
+  "learned_beats_always_120b": false,
+  "decision_tree_text": "|--- category=summarization <= 0.50\n|   |--- category=reasoning <= 0.50\n|   |   |--- class: 0\n|   |--- category=reasoning >  0.50\n|   |   |--- class: 1\n|--- category=summarization >  0.50\n|   |--- estimated_input_tokens <= 47.50\n|   |   |--- class: 0\n|   |--- estimated_input_tokens >  47.50\n|   |   |--- class: 1\n"
+}

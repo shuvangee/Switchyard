@@ -151,10 +151,12 @@ class CreateExperimentRequest(BaseModel):
 class RouteRequest(BaseModel):
     prompt: str
     category_hint: TaskCategory | None = None
-    # "v2" (default, rule-based) or "learned-v1". See
-    # docs/case-study/EXPERIMENTS.md (2026-09-22) before using learned-v1 for
-    # anything real — it is evaluated and NOT recommended, wired up for
-    # comparison purposes, not because it currently outperforms the rules.
+    # "v2" (default, rule-based, mock-tier models), "d2-baseline" (Groq-
+    # only simple rule — currently the preferred real-model strategy),
+    # "learned-v2" (V3's trained escalation classifier — does not
+    # currently beat d2-baseline, see docs/case-study/DECISIONS.md
+    # 2026-09-27), or "learned-v1" (the earlier exploratory multiclass
+    # model — not recommended, see EXPERIMENTS.md 2026-09-22).
     router_version: str | None = None
 
 
@@ -179,6 +181,7 @@ class RequestLogOut(BaseModel):
     router_version: str
     rationale: str
     matched_rule: str | None
+    router_score: float | None
     escalated: bool
     attempt_count: int
     validation_status: str
@@ -210,6 +213,7 @@ class RequestLogOut(BaseModel):
             router_version=log.router_version,
             rationale=log.rationale,
             matched_rule=log.matched_rule,
+            router_score=log.router_score,
             escalated=log.escalated,
             attempt_count=log.attempt_count,
             validation_status=log.validation_status,

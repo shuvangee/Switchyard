@@ -53,6 +53,32 @@ def test_learned_router_version_is_used_when_requested(db_session):
     assert log.selected_model_config_id != ""
 
 
+def test_d2_baseline_router_version_routes_summarization_to_120b(db_session):
+    _seed_models(db_session)
+    log = handle_routed_request(
+        db_session, prompt="Summarize this article for me.", router_version="d2-baseline"
+    )
+    assert log.router_version == "d2-baseline"
+    assert log.selected_model_config_id == "groq-gpt-oss-120b"
+    assert log.router_score is None  # deterministic rule
+
+
+def test_d2_baseline_router_version_routes_everything_else_to_20b(db_session):
+    _seed_models(db_session)
+    log = handle_routed_request(db_session, prompt="What is 17 * 6?", router_version="d2-baseline")
+    assert log.router_version == "d2-baseline"
+    assert log.selected_model_config_id == "groq-gpt-oss-20b"
+
+
+def test_learned_v2_router_version_is_used_when_requested(db_session):
+    _seed_models(db_session)
+    log = handle_routed_request(db_session, prompt="What is 17 * 6?", router_version="learned-v2")
+    assert log.router_version == "learned-v2"
+    assert log.selected_model_config_id in ("groq-gpt-oss-20b", "groq-gpt-oss-120b")
+    assert log.router_score is not None  # a trained classifier - always has a real proba
+    assert 0.0 <= log.router_score <= 1.0
+
+
 def test_unknown_router_version_raises(db_session):
     _seed_models(db_session)
     with pytest.raises(ValueError, match="unknown router_version"):

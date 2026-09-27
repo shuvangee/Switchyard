@@ -41,6 +41,11 @@ class RoutingDecision:
     router_version: str
     rationale: str
     matched_rule: str | None
+    # A real predicted-probability/model-confidence number, ONLY when the
+    # strategy that produced this decision genuinely has one (a trained
+    # classifier's predict_proba) — never a fabricated number for a
+    # deterministic rule (v2, D2), which report None here on purpose.
+    router_score: float | None = None
 
 
 def estimate_confidence(analysis: RequestAnalysis) -> ConfidenceLevel:

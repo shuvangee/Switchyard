@@ -39,6 +39,10 @@ class RequestLogORM(Base):
     router_version: Mapped[str] = mapped_column(String, nullable=False)
     rationale: Mapped[str] = mapped_column(String, nullable=False)
     matched_rule: Mapped[str | None] = mapped_column(String, nullable=True)
+    # A real predict_proba-derived number for strategies that have one
+    # (learned-v1, learned-v2) — None for deterministic rules (v2, D2).
+    # Never a fabricated confidence percentage.
+    router_score: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # --- escalation ---
     escalated: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

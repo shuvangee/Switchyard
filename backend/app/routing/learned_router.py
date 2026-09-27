@@ -103,4 +103,5 @@ def decide_route_learned(
         router_version=LEARNED_ROUTER_VERSION,
         rationale=rationale,
         matched_rule=matched_rule,
+        router_score=max_proba,
     )

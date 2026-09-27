@@ -37,6 +37,28 @@ def test_route_with_learned_router_version(api_client):
     assert body["selected_model_config_id"] != ""
 
 
+def test_route_with_d2_baseline_router_version(api_client):
+    response = api_client.post(
+        "/route", json={"prompt": "Summarize this article.", "router_version": "d2-baseline"}
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["router_version"] == "d2-baseline"
+    assert body["selected_model_config_id"] == "groq-gpt-oss-120b"
+    assert body["router_score"] is None
+
+
+def test_route_with_learned_v2_router_version(api_client):
+    response = api_client.post(
+        "/route", json={"prompt": "What is 17 * 6?", "router_version": "learned-v2"}
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["router_version"] == "learned-v2"
+    assert body["selected_model_config_id"] in ("groq-gpt-oss-20b", "groq-gpt-oss-120b")
+    assert body["router_score"] is not None
+
+
 def test_route_rejects_unknown_router_version(api_client):
     response = api_client.post(
         "/route", json={"prompt": "What is 17 * 6?", "router_version": "not-a-real-version"}
