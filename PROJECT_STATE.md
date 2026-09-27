@@ -6,143 +6,75 @@ changes. Full detail belongs in `docs/case-study/`, not here.
 
 ## Current stage
 
-**V2.6 — Evaluation Coverage & Routing Opportunity Expansion**, started
-2026-09-23. Not another V3 training round: V3 (learned routing) was
-retrained twice already (24 rows on 2026-09-22, 56 rows on 2026-09-23
-after the Groq run) and **lost to a trivial single-model baseline both
-times** — see `docs/case-study/EXPERIMENTS.md` for both entries and
-`FAILURES_AND_LESSONS.md` (2026-09-23) for two real evaluation-
-methodology bugs found and fixed while re-checking the second result.
-This remains an honest negative result, not a bug to quietly fix.
+**V3 — COMPLETE** (2026-09-27). A genuine learned routing system was
+built, evaluated out-of-sample, integrated into the real backend, and
+exposed in the UI — full story in `docs/case-study/EXPERIMENTS.md` and
+`DECISIONS.md` (both 2026-09-27), `docs/case-study/DEVELOPMENT_LOG.md`
+for the build narrative, and the pre-V3 groundwork (V2.6's evaluation-
+coverage expansion and the D2 simple-baseline checkpoint) in the same
+files under 2026-09-23/24.
 
-**The reframing finding, updated 2026-09-24 with full evaluation
-coverage:** a routing-opportunity analysis asked a prior question V3's
-own accuracy can't answer — does the `groq-gpt-oss-20b`/`120b` pair
-even have a real quality gap to route around? The original 2026-09-23
-answer (75/104 graded, always-20b and always-120b tied exactly at
-68/75) turned out to be an artifact of the smaller graded set, not a
-structural fact — once Phase A/B applied real scores for
-debugging/reasoning-005 (92/104 now graded, 88.5%), **the tie broke**:
-always-20b 81/92 (88.0%), always-120b 83/92 (90.2%) — 120b is the
-better unconditional default by 2.2 points. A perfect oracle router
-reaches 86/92 (93.5%), a ceiling only 3.3 points above 120b alone, on
-8 disagreeing tasks total (3 favor 20b, 5 favor 120b — summarization
-is where 120b's edge shows up most, 83.3% vs 50.0% on the 6
-auto-gradeable summarization tasks). 120b still costs 1.86x the
-nominal tokens and 1.45x the latency for that gain. See
-`docs/case-study/EXPERIMENTS.md` and
-`experiments/results/routing-opportunity-analysis.md`. **Lesson worth
-keeping**: a routing-opportunity finding computed on a partial graded
-set (72% coverage) is provisional, not final — the fix here was
-closing the coverage gap, not re-analyzing the same data harder.
-
-**2026-09-24: simple routing baselines checkpoint, before V3 or a
-third model.** With a real (not tied) quality gap now established, the
-next question was whether a rule simple enough to say in one sentence
-already captures most of it — see `scripts/analyze_simple_routing_
-baselines.py` and `experiments/results/simple-routing-baselines.md`.
-A category-aware rule (route each category to whichever model wins it,
-derived from data) scored 91.3% in-sample, but **leave-one-out
-cross-validation** (same method `train.py` already uses for V3, per
-`DECISIONS.md` 2026-09-22) collapsed that to 88.0% — identical to
-always-20b, i.e. no demonstrated generalization; its classification/
-extraction assignments were built on 1-2-task margins that flip under
-leave-one-out. A narrower rule — **"summarization → 120b, everything
-else → 20b"** — scored 90.2% in-sample AND 90.2% under LOOCV
-(identical, because its non-summarization branch has zero free
-parameters to overfit with). **This is the validated baseline**: ties
-always-120b's accuracy (90.2%) while sending only 6.5% of requests to
-120b, at 0.55x its nominal cost and 0.70x its latency. Difficulty and
-category+difficulty were checked and correctly not used (too weak a
-signal; too few tasks per cell, respectively). **This LOOCV-validated
-rule — not always-20b/120b — is now the bar V3 must clear.** No V3
-retrain, no Qwen call, no production router change this pass.
-
-**2026-09-23, revised: Switchyard is staying Groq-only.** `gemini-3.1-
-pro-preview` was registered as a candidate stronger model, then
-explicitly ruled out once Google's free tier turned out to be Flash/
-Flash-Lite only (confirmed via search) — running it would cost real
-money, which the project isn't doing right now. It stays registered
-(code-only, unused) for possible future work, but nothing further is
-planned against it. No Gemini/OpenAI/Anthropic call has ever been made
-this pass. All V2.6 work since is scoped to the two existing Groq
-models plus one proposed third Groq model (below).
-
-**V2.6 Phase 1 (evaluation coverage) — done as of 2026-09-24:**
-- Coding (13) + debugging-009/010/011/012/013 (5): **done** —
-  `backend/app/evaluation/sandbox.py`, real kernel-enforced isolation,
-  36/36 correct on the real Groq responses, applied to
-  `evaluation_status`.
-- Debugging-001 through 006, 008 (7 of 8): **done** — revised prompts +
-  test_cases, verified via the sandbox against BOTH the original buggy
-  code AND a correct fix before being committed (caught and fixed one
-  real bug in the test cases themselves this way). Real-scored via an
-  18-request revision batch (2026-09-24, free tier, \$0 billed): all 14
-  executions (7 tasks x 2 models) came back correct.
-- Debugging-007: **verified NOT convertible** without either resolving
-  its already-flagged spec ambiguity (forbidden) or building an
-  unbuilt "doesn't crash" test type — documented in its own metadata,
-  stays manual. New call's latency/tokens recorded regardless.
-- Reasoning-001/002/003/005: converted to `exact_match`, real-scored
-  (2026-09-24) — 001/002 correct on both models, 003 incorrect on
-  both, 005 correct on both. `manual_eval_type` in V3's dataset is
-  UNCHANGED by any of this (debugging/summarization keep
-  `evaluation_type="manual"` by design even once graded — see
-  `backend/app/routing/learned/dataset.py`) — only these 4 reasoning
-  tasks actually changed `evaluation_type`, so V3's row count moved
-  56 -> 59, not further.
-- Reasoning-004: **stays manual, documented** — 3-fact answer, same
-  shape problem as reasoning-009; a structured-answer approach is
-  possible in principle but needs new evaluation infrastructure
-  (per-key value checking) that doesn't exist yet.
-- Summarization: built `backend/app/evaluation/required_facts.py` (zero-
-  cost deterministic presence check, not an LLM judge) and classified
-  all 13 explicitly — 6 auto-gradeable (005/006/007/008/010/013), 7 stay
-  manual with a documented reason each (no crisp rubric, a required fact
-  too paraphrase-prone to check reliably, or — for the 2 hard-flagged
-  attribution tasks, 009/012 — presence-checking would defeat the actual
-  point of the test). Full comparison of 4 approaches considered:
-  `docs/case-study/DECISIONS.md` (2026-09-23).
-- `scripts/export_original_run_extras.py` (reasoning-001/002/003 +
-  all 13 summarization tasks, no new call) and
-  `scripts/apply_remaining_grading_results.py` (rescores them) are
-  ready; need to run against the user's local db.
-
-**V2.6 Phase 4 (third Groq model):** `groq-qwen3.8-27b` registered
-(different vendor/lineage from gpt-oss, reuses `GroqProvider`, zero new
-code, same `GROQ_API_KEY`) — model id UNVERIFIED against a live call.
-**No call made — waiting on approval**, per Phase 4's explicit stop
-condition.
-
-**Phase 3 (recompute the two-model analysis with full evaluation
-coverage): done** — see the reframing finding above; the tie broke
-once coverage went from 72% to 88.5%.
-
-Phase 5 (V3 readiness with a third model) is still blocked on Phase 4
-(below).
+- **Final V3 router:** `learned-v2` (`backend/app/routing/learned/
+  train_escalation.py` + `escalation_router.py`) — a shallow decision
+  tree predicting whether a request should escalate from
+  `groq-gpt-oss-20b` to `groq-gpt-oss-120b`, trained on pre-execution
+  features only (category, difficulty, structured-output flag,
+  estimated tokens — the same `analyze_request()` output every router
+  uses).
+- **Training dataset:** 92 of 104 benchmark tasks — real Groq
+  gpt-oss-20b/120b evaluation results only, never mock/gemini data. 5
+  positive (escalate) examples, 87 negative.
+- **Evaluation method:** leave-one-out cross-validation, SYSTEM-level —
+  each held-out prediction scored against the real recorded cost/
+  latency/correctness of whichever model it selected, not classifier
+  accuracy on the label alone. Logistic regression edged out on raw
+  accuracy by exactly 1 task (89.1% vs 88.0%) while escalating to 120b
+  nearly twice as often; treated as noise at this sample size and chose
+  the decision tree on cost + interpretability instead (reasoning
+  computed into the manifest, not asserted after the fact — see
+  `DECISIONS.md`).
+- **learned-v2 metrics (LOOCV, 92 tasks):** 88.0% accuracy (81/92),
+  23.9% requests to 120b, $0.009477 nominal cost, 687ms avg latency.
+- **D2 baseline metrics (same 92 tasks, LOOCV-validated):** 90.2%
+  accuracy (83/92), 6.5% requests to 120b, $0.008193 nominal cost,
+  651ms avg latency.
+- **Conclusion:** `learned-v2` does **not** beat D2 or always-120b
+  (`learned_beats_d2: false`, `learned_beats_always_120b: false` in the
+  training manifest). With only 8 total model-disagreement tasks (5
+  positive-labeled), there is too little signal in this dataset for
+  learned selection to outperform the single-category rule D2 already
+  found. This is a valid, fully-reported outcome, not spun — V3 was
+  explicitly not required to win.
+- **Current production/preferred router:** `d2-baseline` — matches
+  always-120b's accuracy at 6.5% of its 120b usage, 0.55x its nominal
+  cost, 0.70x its latency, and (unlike the fuller category rule tried
+  on 2026-09-24) its accuracy is genuinely LOOCV-validated, not just
+  in-sample. `learned-v2` stays fully integrated and selectable
+  (`router_version="learned-v2"`, visible in the Playground and
+  `/compare`) for comparison, not removed.
+- **Major limitations:** only 5 positive training examples total, so no
+  algorithm choice here is on strong statistical footing — a different
+  92-task sample could plausibly flip the result. 12 benchmark tasks
+  (debugging-007, 4 reasoning, 7 summarization) still have no automated
+  ground truth and contribute to neither D2's nor learned-v2's
+  evaluation. Qwen (`groq-qwen3.8-27b`) remains registered but not
+  called — the sharper question for a future third model is whether it
+  helps the 6 tasks where both current models fail together
+  (classification-010, extraction-004, math-005, math-013,
+  reasoning-003, summarization-013), not general capability.
 
 ## Current objective
 
-1. Qwen (`groq-qwen3.8-27b`) is still pending, but the target changed:
-   the simple-routing checkpoint above shows the 20b/120b gap is mostly
-   one category (summarization), so the sharper question is whether
-   Qwen adds capability on the 6 tasks where BOTH current models
-   already fail (classification-010, extraction-004, math-005,
-   math-013, reasoning-003, summarization-013) — that's where a third
-   model could raise the oracle ceiling itself, not just approach it.
-   Run against those 6 plus the 92-task auto-gradeable set if approved,
-   not all 104.
-2. If/when V3 is retrained, its baseline to beat is no longer
-   always-20b/120b — it's the LOOCV-validated simple rule above (90.2%
-   accuracy, 6.5% 120b usage). `train.py`'s existing hardening (dynamic
-   baseline selection, every candidate checked as its own trivial
-   baseline) needs one more baseline added: the simple routing rule
-   itself, not just single-model baselines.
-3. This sandbox's network policy blocks `groq.com` outright, and cannot
-   make paid calls without cost approval regardless of provider — any
-   future real-provider run needs to happen from outside this
-   environment or wait on explicit approval (see
-   `FAILURES_AND_LESSONS.md`, 2026-09-23).
+**V4 — product polish, observability, deployment, and the final
+portfolio case study.** Not started this pass (explicit instruction:
+finish V3 completely, do not begin V4 in the same task). First V4
+questions to pick up: what "production polish" concretely means here
+(error handling/rate limiting on real provider calls, structured
+logging, a deploy target), whether router-comparison should move from
+reading a static manifest to a live/scheduled recompute as more
+evaluation coverage or real traffic accumulates, and assembling the
+final case-study narrative (`PROJECT_STORY.md`/`WEBSITE_CASE_STUDY.md`)
+from the real, now-complete V0→V3 story.
 
 ## Completed
 
@@ -337,3 +269,19 @@ and decided against it — see "Not implemented" above.
 **Phase 3 — re-run real-provider experiments on the expanded set:**
 Not started. Needs a cost estimate and approval before any call, same as
 the first Gemini run.
+
+**V2.6 (2026-09-23/24) + V3 complete (2026-09-27):** condensed here;
+full detail in `docs/case-study/DEVELOPMENT_LOG.md`/`EXPERIMENTS.md`/
+`DECISIONS.md` under those dates. Expanded real-Groq evaluation coverage
+from 72.1% to 88.5% (92/104 tasks), which broke an earlier apparent tie
+between `groq-gpt-oss-20b` and `120b` (88.0% vs 90.2%). Found and
+LOOCV-validated a simple baseline, D2 ("summarization → 120b, else →
+20b"): 90.2% accuracy at 6.5% 120b usage. Built V3 as a real, complete
+learned-routing system (dataset → training → out-of-sample evaluation →
+backend integration → Playground/`/compare` UI → 36 new tests) — see
+"Current stage" at the top of this file for final numbers. `learned-v2`
+does not beat D2; D2 is the preferred production router. Two earlier V3
+attempts (24 rows on 2026-09-22, 56 rows on 2026-09-23, both losing to
+a trivial baseline) are the ones referenced by "V3 was retrained twice
+already" in older case-study entries — this is the third, complete
+attempt, on a materially different dataset and target.

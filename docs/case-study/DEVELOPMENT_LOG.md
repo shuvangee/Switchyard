@@ -667,3 +667,76 @@ where a third model could expand the oracle ceiling itself rather than
 just get closer to an already-known number.
 
 No V3 retrain, no Qwen call, no production router change this pass.
+
+## 2026-09-27 — V3 finished end-to-end: dataset, training, integration, UI, tests, docs
+
+Explicit instruction: stop reviewing readiness and finish V3 completely
+in one pass - build, evaluate out-of-sample, integrate into the real
+backend, expose in the UI, test, and document honestly, whether or not
+the learned router wins. It didn't win. Built anyway, fully.
+
+**Dataset + training** (`backend/app/routing/learned/escalation_
+dataset.py`, `train_escalation.py`): a binary escalation target -
+escalate=True iff 120b correct AND 20b incorrect - built ONLY from the
+92 real Groq-graded tasks, all 4 outcome cases labeled (not just the
+gradeable-and-correct ones the original learned-v1 dataset kept).
+Compared logistic regression vs a shallow decision tree via SYSTEM-
+level leave-one-out cross-validation (each held-out prediction scored
+against the real recorded cost/latency/correctness of whichever model
+it picked, never classifier accuracy alone). Logistic regression edged
+out on raw accuracy by exactly 1 task (89.1% vs 88.0%) while escalating
+to 120b nearly twice as often - treated that as noise, not signal, and
+chose the decision tree on cost + interpretability instead, with the
+reasoning computed into the manifest rather than asserted. Full
+reasoning: `DECISIONS.md` (2026-09-27).
+
+**Integration**: two new router_version strategies alongside the
+existing v2/learned-v1 - `d2-baseline` (`app/routing/d2_router.py`, the
+fixed LOOCV-validated rule) and `learned-v2` (`app/routing/escalation_
+router.py`, the trained classifier). Both follow the router_version
+dispatch pattern already documented as the right move for a third
+strategy (`DECISIONS.md`, 2026-09-22), with matching 3-tier fallback
+(predicted model -> other Groq model -> global default). New
+`RoutingDecision.router_score` field (real predict_proba number where
+one exists, `None` for deterministic rules - backfilled onto learned-v1
+too for consistency) threaded through `RequestLogORM`/`RequestLogOut`,
+including a small `init_db.py` migration helper since this project has
+no Alembic yet and `create_all` doesn't add columns to a table that
+already exists on disk.
+
+**API + UI**: new `GET /analytics/router-comparison` endpoint reading
+the real training manifest. Playground gained a routing-strategy
+selector and shows the model score when one exists. New `/compare`
+page shows all 5 strategies with the oracle explicitly labeled
+"THEORETICAL UPPER BOUND" and never presented as implementable.
+Verified end-to-end in a real browser (Playwright against the
+pre-installed Chromium, both dev servers actually running) - not just
+typecheck/build: submitted real Playground requests under D2 and
+learned-v2, confirmed correct model selection, correct presence/absence
+of the model score, correct rationale and trace, then loaded /compare
+and confirmed the real numbers rendered correctly with the oracle
+correctly flagged. The only failures seen were the Groq API calls
+themselves (no network path to Groq from this sandbox, the same
+constraint as every real-provider call this whole project) - routing
+and UI logic confirmed correct independent of that.
+
+**Tests**: 36 new (dataset label logic for all 4 outcome cases,
+training pipeline including a too-small-dataset guard and a synthetic-
+pattern sanity check that isolates "pipeline bug" from "the real data
+lacks signal", both routers' fallback chains and confidence mapping,
+deterministic predictions from a fixed artifact, corrupt/missing
+artifact handling, service- and API-level dispatch, the comparison
+endpoint). 235 backend tests total, all passing. Frontend typecheck,
+lint, and production build all clean.
+
+**Final, honest result** (full numbers: `EXPERIMENTS.md`, `METRICS.md`,
+both 2026-09-27): learned-v2 does not beat D2 (88.0% vs 90.2% accuracy,
+more 120b usage, higher cost) or always-120b. D2 remains the preferred
+production strategy. This was reported plainly - `learned_beats_d2` and
+`learned_beats_always_120b` are both `false` in the manifest, surfaced
+directly in the Playground's rationale text and the /compare page, not
+buried or spun.
+
+PROJECT_STATE.md now marks V3 COMPLETE. Next stage is V4 (product
+polish, observability, deployment, final case study) - not started
+this pass, per instruction.

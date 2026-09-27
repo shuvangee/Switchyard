@@ -548,3 +548,56 @@ model pair with a starker capability gap (e.g. a much smaller/cheaper
 model against a frontier one) would be a more informative test of
 whether routing itself has value, independent of whether V3's learning
 approach works.
+
+## 2026-09-27 — V3: a real learned escalation router, trained and evaluated
+
+Full pipeline: `backend/app/routing/learned/escalation_dataset.py` +
+`train_escalation.py` (retrain with `python scripts/train_router.py`),
+integrated as router_version `"learned-v2"`. Data and reasoning behind
+every number below: `docs/case-study/DECISIONS.md` (2026-09-27),
+`backend/app/routing/learned/artifacts/learned-v2.manifest.json`.
+
+**Dataset:** 92 of 104 benchmark tasks (the same set the 2026-09-24
+simple-routing-baselines checkpoint used) — real Groq gpt-oss-20b/120b
+evaluation results only, no mock/gemini data mixed in. 12 excluded
+(no ground truth for both models). Binary escalation target: 5 positive
+(escalate) examples, 87 negative — see DECISIONS.md for the exact label
+definition and why each of the 4 outcome cases (both-correct,
+only-20b, only-120b, both-incorrect) is handled, not dropped.
+
+**Algorithm comparison (LOOCV, system-level — see DECISIONS.md for why
+this beat raw classifier accuracy as the selection criterion):**
+
+| candidate | LOOCV accuracy | 120b usage | nominal cost | avg latency |
+|---|---|---|---|---|
+| logistic regression | 89.1% (82/92) | 41.3% | $0.009875 | 720ms |
+| decision tree (chosen) | 88.0% (81/92) | 23.9% | $0.009477 | 687ms |
+
+**Full comparison, same 92 tasks, all real per-task data (no averages
+substituted):**
+
+| strategy | accuracy | 20b usage | 120b usage | nominal cost | avg latency | basis |
+|---|---|---|---|---|---|---|
+| always-20b | 88.0% (81/92) | 100.0% | 0.0% | $0.008108 | 646ms | out-of-sample |
+| always-120b | 90.2% (83/92) | 0.0% | 100.0% | $0.015020 | 927ms | out-of-sample |
+| **D2 baseline** | **90.2% (83/92)** | 93.5% | 6.5% | $0.008193 | 651ms | out-of-sample (LOOCV) |
+| **learned-v2 (decision tree)** | **88.0% (81/92)** | 76.1% | 23.9% | $0.009477 | 687ms | out-of-sample (LOOCV) |
+| oracle | 93.5% (86/92) | 94.6% | 5.4% | $0.008187 | 655ms | theoretical upper bound — not implementable |
+
+**Result: learned-v2 does NOT beat D2 or always-120b.** `learned_beats_
+d2: false`, `learned_beats_always_120b: false` (recorded directly in
+the manifest, not a post-hoc read of the table). This is a valid,
+fully-permitted outcome under this pass's explicit instructions — V3
+was not required to win. With only 8 total model-disagreement tasks
+(and only 5 of those positive-labeled), there is too little
+predictive routing signal in this dataset for learned selection to
+reliably outperform the LOOCV-validated single-category rule D2 already
+found. **D2 remains the preferred production strategy.** `learned-v2`
+stays fully integrated and selectable (`router_version="learned-v2"`,
+visible in the Playground and `/compare`) rather than removed — a
+genuine working learned-routing system, end to end (dataset -> training
+-> LOOCV evaluation -> backend integration -> UI), was V3's actual
+deliverable, independent of whether it currently wins.
+
+**What a future learned router would need to beat:** not always-20b or
+always-120b — D2's 90.2% accuracy at 6.5% 120b usage is now the bar.

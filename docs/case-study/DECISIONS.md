@@ -637,3 +637,69 @@ not a quality edge. The fuller category rule's higher in-sample number
 is real data, not fabricated, but reporting it as "the best simple
 router" without the LOOCV check would have been the same mistake V3
 already had to learn to avoid on 2026-09-22, in a new place.
+
+## 2026-09-27 — V3's real training target, dataset, and algorithm selection
+
+**Decision:** V3's actual deliverable (`backend/app/routing/learned/
+escalation_dataset.py` + `train_escalation.py`) uses a binary
+escalation target, NOT the earlier multiclass "cheapest correct
+candidate" target from the 2026-09-22 decision above, and is trained
+ONLY on the 92 real Groq-graded tasks — never the mock/gemini-mixed
+data the original `learned-v1` dataset used. escalate=True iff
+`groq-gpt-oss-120b` is correct AND `groq-gpt-oss-20b` is incorrect (the
+only case where paying for 120b changes the outcome); escalate=False
+for both-correct, only-20b-correct, and both-incorrect. Every one of
+those 4 outcome cases gets a label — none is silently dropped, unlike
+the original target, which drops "no correct candidate" rows entirely.
+
+**Alternatives considered:** keep the multiclass "predict the cheapest
+correct model" target, just retrained on the new 92-row Groq-only data;
+a regression target on some continuous quality-benefit score.
+
+**Reasoning:** the multiclass target answers "which model is cheapest
+and correct" in the abstract; it doesn't encode Switchyard's actual
+operating question, which is conditional: *given the 20b/120b pair
+specifically, should this ONE request escalate*. With only two
+candidate models, "predict the cheapest correct model" and "predict
+whether to escalate" are almost the same decision, but binary framing
+makes the label's real-world meaning (and its 4-way outcome handling)
+explicit and auditable in a way multiclass-over-N-models doesn't. A
+regression target would need a continuous quality-benefit number that
+doesn't exist in this project's data (V0 never produced partial-credit
+scores) — CLAUDE.md forbids inventing one.
+
+**Algorithm selection — a second real decision, not just a training
+run:** compared logistic regression and a shallow decision tree via
+LOOCV. Logistic regression won on raw accuracy (89.1% vs 88.0%) but
+that is exactly a 1-task difference on 92 rows (5 positive examples) —
+not distinguishable from noise — while escalating to 120b nearly twice
+as often (41.3% vs 23.9%) for that marginal gain, directly working
+against the project's cost-minimization objective. Chose the decision
+tree instead: a `noise_margin = 1/n_rows` threshold treats any gap
+within one task's worth as a practical tie, broken by lower LOOCV
+nominal cost first (the actual objective), then by interpretability (a
+printed decision path over regression coefficients needing feature-
+scale context to read). This reasoning is computed and recorded in the
+training manifest (`chosen_algorithm_reason`), not just asserted after
+the fact.
+
+**Final, honest result:** `learned-v2` does NOT beat the D2 baseline
+(88.0% vs D2's 90.2%, more 120b usage, higher cost) or always-120b. Per
+the explicit instruction for this pass, V3 was not required to win —
+and it didn't, and that's reported plainly (`learned_beats_d2: false`,
+`learned_beats_always_120b: false` in the manifest, surfaced in the
+Playground's own rationale text and the `/compare` page) rather than
+spun. D2 is the preferred production strategy; `learned-v2` stays fully
+integrated and selectable (not deleted or hidden) both because a
+working learned-routing system was the actual deliverable regardless of
+outcome, and so the comparison can be re-run cheaply once more
+disagreement data exists.
+
+**Trade-offs accepted:** with only 5 positive examples in the entire
+dataset, no algorithm choice here is on strong statistical footing —
+the LOOCV numbers are real and honestly computed, but a different
+random 92-task sample could plausibly flip which of logistic regression
+or the tree "wins." This is stated, not hidden: see `RoutingDecision
+.router_score`'s docstring and the Playground rationale text, which
+both say `learned-v2`'s accuracy plainly rather than implying more
+confidence than 5 examples support.
