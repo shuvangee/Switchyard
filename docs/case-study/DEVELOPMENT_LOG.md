@@ -740,3 +740,103 @@ buried or spun.
 PROJECT_STATE.md now marks V3 COMPLETE. Next stage is V4 (product
 polish, observability, deployment, final case study) - not started
 this pass, per instruction.
+
+## 2026-09-28 — V4: product polish, deployment readiness, and the final case study
+
+Research frozen per the explicit V4 kickoff instructions: no retraining,
+no new models, no benchmark expansion, no evaluation-methodology
+changes. Preferred router stayed `d2-baseline`; `learned-v2` stayed the
+non-preferred, fully-selectable comparison strategy throughout.
+
+**The central architectural gap closed first:** a fresh deployment's own
+`model_executions` table starts empty — every real benchmark number the
+product needed to show lives only in the committed
+`experiments/results/groq-gpt-oss-expansion.json`, produced by
+standalone scripts that never went through the HTTP API. Added
+`backend/app/experiments/results_reader.py` to read that file directly
+(the same pattern already used for `/analytics/router-comparison`'s
+training manifest) rather than build a DB-rehydration importer — see
+`DECISIONS.md` (2026-09-28). Wired the result into `GET /models`
+(`benchmark_performance`/`benchmark_performance_by_category`, clearly
+distinct from the live-traffic `performance` field) and a new
+`GET /benchmarks/coverage`. Added `always-20b`/`always-120b` fixed
+single-model routers for direct comparison. 250 backend tests pass (up
+from 235 at V3 completion).
+
+**All 8 frontend pages rebuilt to be data-driven**, not hardcoded:
+Overview (leads with the real D2-vs-always-120b headline result,
+explicitly scoped language, quick links), Compare (all 5 strategies,
+restrained monochrome bar charts, oracle visually and textually marked
+`THEORETICAL UPPER BOUND`), Models (configured-model metadata vs.
+measured benchmark results vs. this deployment's own live traffic, kept
+as three clearly separate sections), Benchmarks (104/92/12/0 coverage,
+per-category breakdown, why 12 tasks stay manual-only, the 6 evaluation
+methods), Playground (D2/learned-v2/legacy strategies in grouped
+`<optgroup>`s, full pipeline trace, a labeled demo-mode fallback with a
+static example trace when no Groq key is configured — verified against
+a real key-unset backend restart, not assumed), Experiments (a "project
+history" table of the real V0->V3 milestones alongside live experiment
+runs), Requests (router/model/provider/category/difficulty/status/
+escalation/date filters), Analytics (unchanged, still live-computed).
+
+**Architecture and documentation rewritten for the current system:**
+`docs/architecture/overview.md` (was stale at "Status: V2") now has two
+Mermaid diagrams (request flow, learned-router training flow) and
+documents every V4-era module. `README.md` rewritten end to end per the
+exact structure requested — Problem, Research Question, Result (leading
+with the exact measured sentence), Architecture, How Routing Works,
+Benchmark, Results table, **What Didn't Work** (the learned-router
+negative result, explained rather than hidden), Running Locally, Demo
+Mode, Training the Router, Tests, Limitations, Future Work.
+`docs/case-study/WEBSITE_CASE_STUDY.md` written in full (was a stub) —
+a 15-section narrative from problem through next steps, grounded in the
+real dated `DEVELOPMENT_LOG.md`/`DECISIONS.md`/`EXPERIMENTS.md` entries,
+not reconstructed from memory. `PROJECT_STORY.md` updated (was also
+still a stub claiming nothing had been built past bootstrap).
+`docs/DEPLOYMENT.md` added: verified frontend production build,
+verified backend production-mode startup + learned-router artifact
+loading against a fresh empty database, verified graceful behavior with
+no Groq key, documented the environment variable contract and a
+suggested free-tier deployment shape — no account, payment, or
+credential was actually created.
+
+**Portfolio assets** added under `docs/assets/`: the two Mermaid
+diagrams as standalone `.mmd` source, `results-comparison.json` (checked
+field-for-field against the real training manifest), a project
+description, three resume bullets, a short interview explanation, and
+three real screenshots captured against the actual running application
+(Overview, Compare, and a Playground routing trace captured in this
+deployment's own demo-mode fallback — not staged).
+
+**Security/repository hygiene review:** confirmed no `.env`, API key
+pattern, or `*.db` file has ever been committed (checked git history,
+not just the working tree). Ran `pip-audit`: found 20 known
+vulnerabilities across 4 packages; patched what was practical
+(`fastapi` 0.115.6 -> 0.128.0, `starlette` 0.41.3 -> 0.50.0 pinned
+explicitly, `python-dotenv` 1.0.1 -> 1.2.2, dev-only `pytest` 8.3.4 ->
+9.0.3 — closing every CVE with a fix at or below starlette 0.50.x,
+verified with a clean-venv install and the full test suite unchanged);
+documented the two remaining low-practical-risk advisories (a starlette
+major bump outside fastapi 0.128's range, and build-time-only
+`setuptools`) as an accepted trade-off rather than an unverified
+major-version jump under time pressure — see `DECISIONS.md`.
+
+**Design/accessibility pass:** all 8 pages screenshotted against the
+real running app at desktop and mobile viewports — no gradient/
+glassmorphism/generic-SaaS pattern found (the existing amber-accent,
+thin-border, dense-table design system already avoided all of them by
+construction). Added a root `error.tsx` after finding an unreachable
+backend fell through to Next.js's generic dev error overlay instead of
+a Switchyard-styled state — verified against a real backend-down
+restart. Confirmed no `outline: none` anywhere in `globals.css` (focus
+rings intact), no unlabeled images, aria-labels already present on
+every filter control.
+
+**Final quality gate:** 250/250 backend tests pass; frontend typecheck,
+lint, and production build all clean; all 8 pages verified returning
+200 with real data against a fresh Playwright run; demo-mode, backend-
+down, and provider-error states all verified against the real running
+application, not assumed.
+
+PROJECT_STATE.md now marks **V4 COMPLETE**. Per the V4 kickoff's
+explicit instruction, no V5 has been started.

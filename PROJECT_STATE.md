@@ -6,13 +6,73 @@ changes. Full detail belongs in `docs/case-study/`, not here.
 
 ## Current stage
 
-**V3 — COMPLETE** (2026-09-27). A genuine learned routing system was
-built, evaluated out-of-sample, integrated into the real backend, and
-exposed in the UI — full story in `docs/case-study/EXPERIMENTS.md` and
-`DECISIONS.md` (both 2026-09-27), `docs/case-study/DEVELOPMENT_LOG.md`
+**V4 — COMPLETE** (2026-09-28). Switchyard is a finished, deployable,
+recruiter-ready portfolio project. Research is frozen as of V3 — V4 was
+product polish, observability, deployment readiness, and final
+documentation only, per the explicit V4 kickoff instructions. No model
+was retrained, no benchmark was expanded, and the preferred router did
+not change during this stage.
+
+- **Preferred production router:** `d2-baseline` — one rule
+  (`summarization -> groq-gpt-oss-120b`, else -> `groq-gpt-oss-20b`),
+  LOOCV-validated.
+- **Experimental/comparison router:** `learned-v2` — a trained decision
+  tree, kept fully integrated and selectable in the Playground and
+  Compare page, **not** the preferred strategy.
+- **Final benchmark:** 104 total tasks / 92 automatically graded / 12
+  manual-only / 0 ungraded.
+- **Final key result** (measured on the 92 automatically graded
+  benchmark tasks, leave-one-out cross-validated): D2 matched
+  always-120b's 90.2% benchmark accuracy while routing only 6.5% of
+  requests to 120B, reducing nominal cost by 45.5% and average latency
+  by 29.8%. This is a measured result on Switchyard's own evaluation
+  set, not a general claim that these percentages hold on arbitrary
+  production traffic — see `docs/case-study/WEBSITE_CASE_STUDY.md` and
+  the README's Limitations section.
+- **learned-v2 did not outperform D2:** 88.0% LOOCV accuracy (81/92)
+  against D2's 90.2% (83/92), using the larger model 23.9% of the time
+  against D2's 6.5% — a real, intentionally reported negative result,
+  not hidden or retrained away. Likely cause: only 8 of 92 graded tasks
+  showed real model disagreement (5 positive/escalate examples), too
+  little signal for learned selection to beat the single-category rule.
+
+**V4 work completed this stage:**
+- Backend: `results_reader.py` (reads the committed 92-task benchmark
+  JSON directly — the only durable source of the real numbers, since a
+  fresh deployment's own DB starts empty), `GET /benchmarks/coverage`,
+  `benchmark_performance`/`benchmark_performance_by_category` on
+  `GET /models`, `always-20b`/`always-120b` fixed-baseline routers.
+  250 backend tests pass (up from 231 at V3 completion).
+- Frontend: all 8 pages (Overview, Playground, Requests, Models,
+  Benchmarks, Experiments, Compare, Analytics) rewritten to be
+  data-driven from real backend endpoints, restrained bar-chart
+  visualizations on Compare, a labeled demo-mode fallback + static
+  example trace on the Playground when no Groq key is configured, a
+  calm on-brand `error.tsx` for backend-unavailable/API failures.
+  Typecheck, lint, and production build all pass cleanly.
+- Docs: `docs/architecture/overview.md` rewritten with two Mermaid
+  diagrams (request flow, learned-router training flow), `README.md`
+  rewritten as the final project README, `docs/case-study/
+  WEBSITE_CASE_STUDY.md` written (15-section narrative) and
+  `PROJECT_STORY.md` updated, `docs/DEPLOYMENT.md` added, portfolio
+  assets added under `docs/assets/` (diagram source, results JSON, real
+  screenshots, resume bullets, interview explanation).
+- Security/deployment: `pip-audit` review — patched fastapi/starlette/
+  python-dotenv/pytest to close every CVE with a fix version at or
+  below starlette 0.50.x (verified: clean-venv install + full test
+  suite unchanged); confirmed no secret has ever been committed;
+  verified production-mode backend startup and frontend production
+  build both work with a fresh, empty database and no API key.
+
+Full V4 narrative: `docs/case-study/DEVELOPMENT_LOG.md` and
+`DECISIONS.md` (2026-09-28 entries). Full V3 story (unchanged since V3
+completion, preserved below for reference): `docs/case-study/
+EXPERIMENTS.md` and `DECISIONS.md` (2026-09-27), `DEVELOPMENT_LOG.md`
 for the build narrative, and the pre-V3 groundwork (V2.6's evaluation-
-coverage expansion and the D2 simple-baseline checkpoint) in the same
-files under 2026-09-23/24.
+coverage expansion and the D2 simple-baseline checkpoint) under
+2026-09-23/24.
+
+### V3 summary (complete, unchanged in V4)
 
 - **Final V3 router:** `learned-v2` (`backend/app/routing/learned/
   train_escalation.py` + `escalation_router.py`) — a shallow decision
@@ -65,16 +125,18 @@ files under 2026-09-23/24.
 
 ## Current objective
 
-**V4 — product polish, observability, deployment, and the final
-portfolio case study.** Not started this pass (explicit instruction:
-finish V3 completely, do not begin V4 in the same task). First V4
-questions to pick up: what "production polish" concretely means here
-(error handling/rate limiting on real provider calls, structured
-logging, a deploy target), whether router-comparison should move from
-reading a static manifest to a live/scheduled recompute as more
-evaluation coverage or real traffic accumulates, and assembling the
-final case-study narrative (`PROJECT_STORY.md`/`WEBSITE_CASE_STUDY.md`)
-from the real, now-complete V0→V3 story.
+None — V4 is complete and no V5 has been started. Per the explicit V4
+kickoff instructions, the research portion of this project is frozen;
+any future work is a deliberate new decision, not an automatic next
+step. Realistic candidates, if resumed later (see the README's Future
+Work and `docs/case-study/WEBSITE_CASE_STUDY.md` section 15 — not
+started, not promised): expanding benchmark category coverage where
+model disagreement is currently sparse before revisiting learned
+routing, grading the remaining 12 manual-only tasks, evaluating a third
+model's marginal value on the specific tasks where both current models
+fail together, and moving router-comparison analytics from a static
+manifest to a live recomputation once a real deployment accumulates
+meaningful traffic.
 
 ## Completed
 
