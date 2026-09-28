@@ -232,7 +232,7 @@ def test_provider_error_on_escalation_preserves_earlier_completed_response(db_se
 
     call_count = {"n": 0}
 
-    def fake_attempt(model, prompt):
+    def fake_attempt(model, prompt, groq_api_key=None):
         call_count["n"] += 1
         if call_count["n"] == 1:
             return (
@@ -279,7 +279,7 @@ def test_cost_and_latency_accumulate_across_a_validation_escalation(db_session, 
 
     monkeypatch.setattr("app.routing.service.validate_response", fake_validate)
 
-    def fake_attempt(model, prompt):
+    def fake_attempt(model, prompt, groq_api_key=None):
         if model.id == "mock-fast-v1":
             return ProviderResult(text="wrong", input_tokens=100, output_tokens=50, latency_ms=200.0), None
         return ProviderResult(text="right", input_tokens=80, output_tokens=40, latency_ms=300.0), None
@@ -309,3 +309,71 @@ def test_cost_and_latency_accumulate_across_a_validation_escalation(db_session, 
         output_tokens=40,
     )
     assert log.estimated_cost_usd == pytest.approx(expected_cost)
+
+
+def test_groq_api_key_override_is_threaded_to_the_registry_lookup(db_session, monkeypatch):
+    """"Bring your own key": handle_routed_request must pass its
+    groq_api_key straight through to get_model_registry's override —
+    this is what lets a keyless server still route live for a caller
+    who supplies their own key (the enabling behavior itself is proven
+    at the registry-unit level in test_provider_registry.py).
+    """
+    _seed_models(db_session)
+    captured: dict[str, str | None] = {}
+
+    def fake_get_model_registry(groq_api_key_override=None):
+        captured["override"] = groq_api_key_override
+        from app.providers.registry import get_model_registry as real_get_model_registry
+
+        return real_get_model_registry(groq_api_key_override=groq_api_key_override)
+
+    monkeypatch.setattr("app.routing.service.get_model_registry", fake_get_model_registry)
+
+    handle_routed_request(
+        db_session,
+        prompt="Summarize this article for me.",
+        router_version="d2-baseline",
+        groq_api_key="user-supplied-key",
+    )
+
+    assert captured["override"] == "user-supplied-key"
+
+
+def test_groq_api_key_override_is_never_persisted_on_the_request_log(db_session):
+    _seed_models(db_session)
+    log = handle_routed_request(
+        db_session,
+        prompt="Summarize this article for me.",
+        router_version="d2-baseline",
+        groq_api_key="a-very-secret-key",
+    )
+    assert not hasattr(log, "groq_api_key")
+    assert "a-very-secret-key" not in (log.rationale or "")
+    assert "a-very-secret-key" not in (log.error_message or "")
+    assert all("a-very-secret-key" not in event["detail"] for event in log.trace_events)
+
+
+def test_attempt_only_applies_groq_api_key_override_to_groq_models(monkeypatch):
+    from app.providers.registry import ModelConfig
+    from app.routing.service import _attempt
+
+    captured: dict[str, str | None] = {}
+
+    def fake_get_provider(name, settings=None, api_key=None):
+        captured[name] = api_key
+        return MockProvider()
+
+    monkeypatch.setattr("app.routing.service.get_provider", fake_get_provider)
+
+    mock_model = ModelConfig(
+        id="mock-accurate-v1",
+        provider="mock",
+        model_id="mock-accurate-v1",
+        display_name="Mock Accurate",
+        enabled=True,
+        input_cost_per_1k=0.003,
+        output_cost_per_1k=0.006,
+    )
+    _attempt(mock_model, "hello", groq_api_key="a-groq-key-that-must-not-leak-to-mock")
+
+    assert captured["mock"] is None

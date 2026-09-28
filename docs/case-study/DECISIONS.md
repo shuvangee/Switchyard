@@ -788,3 +788,51 @@ risk advisories (a newer starlette major, an unused build-time
 setuptools) rather than an unverified major-version bump attempted
 under time pressure at the end of a research-frozen version. Revisit if
 this is ever deployed to handle real untrusted traffic at scale.
+
+## 2026-09-28 (2) — Bring your own key: request-scoped Groq API key, not a shared server key
+
+**Decision:** V4 shipped Switchyard as single-tenant — every live-routed
+request used the one `GROQ_API_KEY` in the backend's `.env`, so whoever
+deployed it paid for every visitor's usage. Added an optional
+`groq_api_key` field to `POST /route` (`RouteRequest.groq_api_key`):
+when a caller supplies one, that single request's provider is
+constructed with the caller's key instead of the server's
+(`get_provider(..., api_key=...)` in `providers/registry.py`), and the
+Groq models are treated as available for that request even when the
+server itself has no key configured (`get_model_registry(...,
+groq_api_key_override=...)`). The Playground gained a matching optional
+"Your Groq API key" field.
+
+**Scope:** deliberately limited to Groq. It's the only provider any
+routing strategy (D2, learned-v2, always-20b/120b) actually selects —
+OpenAI/Gemini/Grok are registered in the model registry but never
+routed to by anything (see PROJECT_STATE.md), so a generic multi-
+provider "bring your own key" would be abstraction with no caller. If a
+future router ever selects one of those providers, the same pattern
+(`get_provider`'s `api_key` parameter already works for all of them)
+extends without a rewrite — but that's a decision to make when it's
+actually needed, not now.
+
+**Security handling:** the key is held only in memory for the duration
+of the single request. It is never written to `RequestLogORM` (no
+column exists for it), never appended to a `TraceEvent`, never included
+in a `ProviderError` message (`GroqProvider`'s error strings come from
+`httpx`'s own exception text, which never includes request headers),
+and never present in any API response — verified with a dedicated test
+(`test_route_accepts_groq_api_key_and_never_echoes_it_back`) that greps
+the raw response body for the literal key value. Client-side, the
+Playground field is `type="password"`, not persisted to localStorage,
+and only ever held in React component state.
+
+**Alternative considered:** a per-user account/API-key-management
+system (stored keys, multiple named credentials). Rejected as
+premature — this is a single-page tool with one live-routing form, not
+a multi-tenant SaaS product; a stored-credentials system is real
+security surface (encryption at rest, key rotation, deletion) with no
+current user story to justify it. Request-scoped, never-stored is the
+simplest design that actually solves "anyone can bring their own key,"
+and it can be revisited if a real multi-session use case appears.
+
+**Trade-off accepted:** a visitor has to paste their key on every visit
+(no persistence) — a minor UX cost, accepted deliberately in exchange
+for the key never touching any storage layer, server or client.

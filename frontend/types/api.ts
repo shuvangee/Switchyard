@@ -154,6 +154,10 @@ export interface RouteRequest {
   prompt: string;
   category_hint?: TaskCategory;
   router_version?: RouterVersion;
+  // Optional "bring your own key" Groq API key, scoped to this one
+  // request. Never stored client-side beyond the form's own state
+  // (no localStorage), never persisted server-side, never echoed back.
+  groq_api_key?: string;
 }
 
 export interface TraceEvent {

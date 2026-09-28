@@ -184,6 +184,22 @@ crashes or exposes backend configuration details; it also offers a
 labeled, static example routing trace so the full pipeline (analysis ->
 routing decision -> execution -> trace) is understandable without a key.
 
+### Bring your own key
+
+A deployment doesn't have to hold a shared `GROQ_API_KEY` to offer live
+routing to everyone who visits it. The Playground has an optional "Your
+Groq API key" field — when a visitor pastes their own key, that single
+request routes and calls Groq for real, using their key, even if the
+server has none configured. The key is sent once for that request only:
+it's never stored (not server-side, not in browser storage), never
+logged, and never echoed back in any response (see `RouteRequest.
+groq_api_key` in `backend/app/api/schemas.py` and
+`docs/case-study/DECISIONS.md`, 2026-09-28). This is scoped to Groq
+specifically, the only provider any routing strategy actually selects —
+the other registered providers (OpenAI/Gemini/Grok) are configured but
+not part of any router's decision logic, so a "bring your own key" for
+them would be unused abstraction.
+
 ### Running an experiment
 
 ```bash
@@ -225,10 +241,12 @@ retrained as part of V4 — the command above is documentation of how
 cd backend && source .venv/bin/activate && pytest
 ```
 
-250 backend tests currently pass, covering routing decisions (all
+259 backend tests currently pass, covering routing decisions (all
 strategies), evaluation/validation logic, provider adapters, the
-experiment runner, and the new V4 API surface
-(`benchmark_performance`, `/benchmarks/coverage`, fixed-model routers).
+experiment runner, the V4 API surface (`benchmark_performance`,
+`/benchmarks/coverage`, fixed-model routers), and the bring-your-own-key
+path (including that the key is never persisted, logged, or echoed
+back).
 
 Frontend:
 

@@ -76,6 +76,42 @@ def test_get_provider_rejects_unknown_name():
         get_provider("not-a-provider")
 
 
+def test_groq_api_key_override_enables_groq_models_without_server_key():
+    """"Bring your own key": a request-supplied Groq key must enable the
+    Groq models even when the server has no GROQ_API_KEY configured —
+    this is the entire point of the feature (a keyless deployment can
+    still offer live routing to a visitor who supplies their own key).
+    """
+    registry = get_model_registry(Settings(groq_api_key=None), groq_api_key_override="user-key")
+    groq_models = [m for m in registry if m.provider == "groq"]
+    assert len(groq_models) == 3
+    assert all(m.enabled is True for m in groq_models)
+
+
+def test_groq_api_key_override_does_not_affect_other_providers():
+    registry = get_model_registry(
+        Settings(openai_api_key=None, groq_api_key=None), groq_api_key_override="user-key"
+    )
+    openai_model = next(m for m in registry if m.provider == "openai")
+    assert openai_model.enabled is False
+
+
+def test_no_override_preserves_existing_server_only_behavior():
+    registry = get_model_registry(Settings(groq_api_key=None))
+    groq_models = [m for m in registry if m.provider == "groq"]
+    assert all(m.enabled is False for m in groq_models)
+
+
+def test_get_provider_api_key_override_takes_precedence_over_settings():
+    provider = get_provider("groq", Settings(groq_api_key="server-key"), api_key="request-key")
+    assert provider._api_key == "request-key"
+
+
+def test_get_provider_falls_back_to_settings_without_override():
+    provider = get_provider("groq", Settings(groq_api_key="server-key"))
+    assert provider._api_key == "server-key"
+
+
 def test_sync_model_configs_upserts_registry(db_session):
     sync_model_configs(db_session, Settings(openai_api_key=None))
     rows = db_session.query(ModelConfigORM).all()

@@ -32,14 +32,24 @@ class ModelConfig:
     capabilities: dict[str, Any] = field(default_factory=dict)
 
 
-def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
+def get_model_registry(
+    settings: Settings | None = None, groq_api_key_override: str | None = None
+) -> list[ModelConfig]:
     """Build the list of configured models.
 
     A function rather than a module-level constant so enabling/disabling
     real providers reflects current settings (useful in tests, which
     construct their own Settings rather than relying on process env vars).
+
+    `groq_api_key_override` is a caller-supplied ("bring your own key")
+    Groq key for a single request — see `routing/service.py`. It only
+    affects whether the Groq models below report `enabled`; it never
+    changes server configuration or any other provider's models, and a
+    caller that omits it (every call site except a live-routed request
+    that included one) sees exactly the same registry as before.
     """
     settings = settings or get_settings()
+    groq_enabled = bool(settings.groq_api_key) or bool(groq_api_key_override)
     return [
         ModelConfig(
             id="mock-fast-v1",
@@ -170,7 +180,7 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
             provider="groq",
             model_id="openai/gpt-oss-20b",
             display_name="Groq GPT-OSS 20B",
-            enabled=bool(settings.groq_api_key),
+            enabled=groq_enabled,
             input_cost_per_1k=0.000075,
             output_cost_per_1k=0.0003,
             capabilities={
@@ -191,7 +201,7 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
             provider="groq",
             model_id="qwen/qwen3.8-27b",
             display_name="Groq Qwen3.8 27B",
-            enabled=bool(settings.groq_api_key),
+            enabled=groq_enabled,
             input_cost_per_1k=0.0008,
             output_cost_per_1k=0.004,
             capabilities={
@@ -218,7 +228,7 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
             provider="groq",
             model_id="openai/gpt-oss-120b",
             display_name="Groq GPT-OSS 120B",
-            enabled=bool(settings.groq_api_key),
+            enabled=groq_enabled,
             input_cost_per_1k=0.00015,
             output_cost_per_1k=0.0006,
             capabilities={
@@ -237,18 +247,23 @@ def get_model_registry(settings: Settings | None = None) -> list[ModelConfig]:
     ]
 
 
-def get_provider(name: str, settings: Settings | None = None) -> Provider:
+def get_provider(name: str, settings: Settings | None = None, api_key: str | None = None) -> Provider:
+    """`api_key`, when given, is used instead of the matching Settings field
+    — the "bring your own key" path for a single request (see
+    `routing/service.py`). It is never logged, persisted, or echoed back;
+    callers that omit it get exactly the server-configured provider.
+    """
     settings = settings or get_settings()
     if name == "mock":
         return MockProvider()
     if name == "openai":
-        return OpenAIProvider(settings.openai_api_key)
+        return OpenAIProvider(api_key or settings.openai_api_key)
     if name == "gemini":
-        return GeminiProvider(settings.google_api_key)
+        return GeminiProvider(api_key or settings.google_api_key)
     if name == "grok":
-        return GrokProvider(settings.xai_api_key)
+        return GrokProvider(api_key or settings.xai_api_key)
     if name == "groq":
-        return GroqProvider(settings.groq_api_key)
+        return GroqProvider(api_key or settings.groq_api_key)
     raise ValueError(f"unknown provider: {name!r}")
 
 

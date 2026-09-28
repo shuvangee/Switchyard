@@ -20,6 +20,7 @@ def route_request(payload: RouteRequest, db: Session = Depends(get_db)) -> Reque
             prompt=payload.prompt,
             category_hint=payload.category_hint,
             router_version=payload.router_version,
+            groq_api_key=payload.groq_api_key,
         )
     except RoutingError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc

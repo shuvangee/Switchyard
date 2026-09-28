@@ -57,9 +57,19 @@ _FIXED_ROUTER_VERSIONS = (ALWAYS_20B_ROUTER_VERSION, ALWAYS_120B_ROUTER_VERSION)
 MAX_ATTEMPTS = 2
 
 
-def _attempt(model: ModelConfig, prompt: str) -> tuple[ProviderResult | None, str | None]:
-    """Returns (result, error_message) — exactly one is None."""
-    provider = get_provider(model.provider)
+def _attempt(
+    model: ModelConfig, prompt: str, groq_api_key: str | None = None
+) -> tuple[ProviderResult | None, str | None]:
+    """Returns (result, error_message) — exactly one is None.
+
+    `groq_api_key` is only ever applied when this attempt's model is
+    actually a Groq model — a caller-supplied key for a different
+    provider's model (which no router in this project currently
+    produces, but would be a real bug if one did) must never be sent to
+    the wrong provider.
+    """
+    override = groq_api_key if model.provider == "groq" else None
+    provider = get_provider(model.provider, api_key=override)
     try:
         return provider.generate(model.model_id, prompt), None
     except ProviderError as exc:
@@ -86,13 +96,26 @@ def handle_routed_request(
     prompt: str,
     category_hint: TaskCategory | None = None,
     router_version: str | None = None,
+    groq_api_key: str | None = None,
 ) -> RequestLogORM:
+    """`groq_api_key`, when given, is a caller-supplied ("bring your own
+    key") Groq key scoped to this single request — it is never persisted
+    to `RequestLogORM`, never written to a trace event, and never logged.
+    It also makes the Groq models available for THIS request's routing
+    decision even when the server itself has no GROQ_API_KEY configured
+    (see `get_model_registry`'s `groq_api_key_override`), which is the
+    whole point: a deployment with no server-side key can still offer
+    live routing to a visitor who provides their own.
+    """
     if router_version not in ALLOWED_ROUTER_VERSIONS:
         allowed = ", ".join(repr(v) for v in ALLOWED_ROUTER_VERSIONS if v is not None)
         raise ValueError(f"unknown router_version {router_version!r} — expected one of {allowed}, or None")
 
     analysis = analyze_request(prompt, category_hint=category_hint)
-    model_lookup = {model.id: model for model in get_model_registry()}
+    model_lookup = {
+        model.id: model
+        for model in get_model_registry(groq_api_key_override=groq_api_key)
+    }
     if router_version == LEARNED_ROUTER_VERSION:
         decision = decide_route_learned(analysis, model_lookup)
     elif router_version == D2_ROUTER_VERSION:
@@ -151,7 +174,7 @@ def handle_routed_request(
     while attempt_count < MAX_ATTEMPTS:
         attempt_count += 1
         model = model_lookup[current_model_id]
-        result, error_message = _attempt(model, prompt)
+        result, error_message = _attempt(model, prompt, groq_api_key=groq_api_key)
 
         if result is None:
             trace.append(TraceEvent.now("provider_error", f"{current_model_id}: {error_message}"))

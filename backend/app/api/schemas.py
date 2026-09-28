@@ -215,6 +215,13 @@ class RouteRequest(BaseModel):
     # mock-tier models — pre-V3), or "learned-v1" (earlier exploratory
     # multiclass model — not recommended, see EXPERIMENTS.md 2026-09-22).
     router_version: str | None = None
+    # Optional "bring your own key" Groq API key, scoped to this one
+    # request only. Lets a deployment with no server-side GROQ_API_KEY
+    # still offer real live routing to a caller who supplies their own —
+    # never persisted to RequestLogOut/RequestLogSummary, never written
+    # to a trace event, never logged. See docs/case-study/DECISIONS.md
+    # (2026-09-28, "bring your own key").
+    groq_api_key: str | None = None
 
 
 class TraceEventOut(BaseModel):

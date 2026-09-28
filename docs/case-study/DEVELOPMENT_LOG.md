@@ -840,3 +840,39 @@ application, not assumed.
 
 PROJECT_STATE.md now marks **V4 COMPLETE**. Per the V4 kickoff's
 explicit instruction, no V5 has been started.
+
+## 2026-09-28 (2) — Bring your own key + a Build/Deploy section in the README
+
+Post-V4 feature work, requested directly: Switchyard was single-tenant
+(one shared server `GROQ_API_KEY` paid for every visitor's live routing).
+Added a "bring your own key" path — `POST /route` accepts an optional
+`groq_api_key`, scoped to that single request, never persisted/logged/
+echoed back (`backend/app/providers/registry.py`'s `get_provider`
+`api_key` param and `get_model_registry`'s `groq_api_key_override`,
+threaded through `routing/service.py`'s `handle_routed_request` and
+`_attempt`). The Playground gained a matching optional password-type
+field with an explicit "never stored" note. Deliberately scoped to Groq
+only — the one provider any routing strategy actually selects; see
+`DECISIONS.md` (2026-09-28, "Bring your own key").
+
+Verified end-to-end against the real running app, not just tests: with
+the server's own `GROQ_API_KEY` temporarily removed, a request with no
+override correctly fell back to `mock-accurate-v1` (success); the same
+request with a supplied (fake) key correctly selected `groq-gpt-oss-120b`
+and made a real attempt against Groq's API (failed with a 403 — this
+sandbox's network policy blocks groq.com entirely, a pre-existing,
+unrelated constraint, not a bug); the response JSON never contained the
+key or a `groq_api_key` field in either case. Repeated through the
+actual browser (Playwright) with the key field visible and filled in,
+same result. 9 new backend tests added (259 total, up from 250):
+registry-level enable/override behavior, that `_attempt` never sends a
+Groq key to a non-Groq provider, that `handle_routed_request` threads
+the override correctly, and that neither the ORM row nor the API
+response ever carries the key.
+
+Also added the README section this was missing: "Building for
+production (so other people can see it)" — the actual `npm run build`/
+`npm run start` and production-mode `uvicorn` commands (distinct from
+the dev-only `npm run dev`/`--reload` commands already documented),
+linking to `docs/DEPLOYMENT.md` for the full verified detail rather than
+duplicating it.

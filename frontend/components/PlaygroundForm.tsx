@@ -186,6 +186,7 @@ export function PlaygroundForm({ groqConfigured }: { groqConfigured: boolean }) 
   const [prompt, setPrompt] = useState("");
   const [categoryHint, setCategoryHint] = useState<string>("");
   const [routerVersion, setRouterVersion] = useState<RouterVersion>("d2-baseline");
+  const [groqApiKey, setGroqApiKey] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<RequestLog | null>(null);
@@ -207,6 +208,7 @@ export function PlaygroundForm({ groqConfigured }: { groqConfigured: boolean }) 
         prompt,
         category_hint: categoryHint ? (categoryHint as TaskCategory) : undefined,
         router_version: routerVersion,
+        groq_api_key: groqApiKey.trim() ? groqApiKey.trim() : undefined,
       });
       setResult(log);
     } catch (err) {
@@ -232,7 +234,7 @@ export function PlaygroundForm({ groqConfigured }: { groqConfigured: boolean }) 
           <strong>Live routing requires a Groq API key.</strong> This deployment doesn&apos;t have
           one configured, so D2/learned-v2/always-20b/always-120b will route correctly but fall
           back to a mock model instead of calling Groq — the routing decision itself is real, the
-          model response won&apos;t be.{" "}
+          model response won&apos;t be. Paste your own key below for real live routing, or{" "}
           <button
             type="button"
             onClick={() => setShowExample((v) => !v)}
@@ -328,6 +330,38 @@ export function PlaygroundForm({ groqConfigured }: { groqConfigured: boolean }) 
               ))}
             </optgroup>
           </select>
+        </div>
+
+        <div className="field">
+          <label htmlFor="groq-api-key">
+            Your Groq API key (optional — bring your own for live routing)
+          </label>
+          <input
+            id="groq-api-key"
+            type="password"
+            autoComplete="off"
+            value={groqApiKey}
+            onChange={(event) => setGroqApiKey(event.target.value)}
+            placeholder="gsk_..."
+            style={{
+              fontFamily: "var(--mono)",
+              fontSize: "0.85rem",
+              padding: "0.4rem 0.5rem",
+              border: "1px solid var(--border)",
+              background: "var(--surface)",
+              color: "var(--text)",
+              width: "100%",
+              maxWidth: 360,
+            }}
+          />
+          <p style={{ color: "var(--text-muted)", fontSize: "0.78rem", marginTop: "0.35rem", maxWidth: 500 }}>
+            Sent directly to this backend for this one request only — never stored (not even in
+            your browser), never logged, never included in any response. Get a free key at{" "}
+            <a href="https://console.groq.com/keys" target="_blank" rel="noreferrer">
+              console.groq.com/keys
+            </a>
+            .
+          </p>
         </div>
 
         {error && <p className="error-text">{error}</p>}

@@ -148,3 +148,17 @@ def test_benchmarks_coverage_endpoint(api_client):
     assert body["manual_only"] == 12
     assert body["ungraded"] == 0
     assert len(body["by_category"]) == 8
+
+
+def test_route_accepts_groq_api_key_and_never_echoes_it_back(api_client):
+    response = api_client.post(
+        "/route",
+        json={
+            "prompt": "Summarize this article.",
+            "router_version": "d2-baseline",
+            "groq_api_key": "a-very-secret-key-that-must-not-leak",
+        },
+    )
+    assert response.status_code == 201
+    assert "a-very-secret-key-that-must-not-leak" not in response.text
+    assert "groq_api_key" not in response.json()

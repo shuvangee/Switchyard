@@ -76,7 +76,10 @@ and because the choice affects nothing else in the repo:
   persistence choice, not a deployment detail to paper over.
 - **Groq API key**: optional. Without one, the deployment runs fully in
   demo mode (see above) — a legitimate, intended way to host this
-  publicly without paying for inference.
+  publicly without paying for inference. Visitors can also paste their
+  own Groq key into the Playground for live routing on their own key,
+  request-scoped and never stored server-side — see the README's "Bring
+  your own key" section and `docs/case-study/DECISIONS.md` (2026-09-28).
 
 Actually provisioning any of the above requires an account and is left
 to whoever deploys this; nothing paid or account-gated was created here.
