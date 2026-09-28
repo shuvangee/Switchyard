@@ -219,6 +219,48 @@ curl -X POST http://localhost:8000/route \
 `router_version` accepts `d2-baseline` (preferred), `learned-v2`,
 `always-20b`, `always-120b`, or the legacy `v2`/`learned-v1`.
 
+## Building for production (so other people can see it)
+
+`npm run dev`/`uvicorn --reload` above are for local development only.
+To build and run the real production artifacts:
+
+**Frontend:**
+
+```bash
+cd frontend
+npm install
+npm run build   # production build — verified clean, no errors/warnings
+npm run start   # serves the build, defaults to port 3000
+```
+
+**Backend:**
+
+```bash
+cd backend
+source .venv/bin/activate
+ENVIRONMENT=production DEBUG=false uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+No separate build step — table creation and the benchmark/model sync
+still run automatically on startup, against whatever `DATABASE_URL`
+points at (use a persistent path/volume in production, not an ephemeral
+filesystem, or the SQLite database won't survive a restart).
+
+That's the whole deployment surface: two processes, one SQLite file, no
+database server, no build pipeline beyond the two commands above. A
+`GROQ_API_KEY` is optional even in production — without one the
+deployment runs fully in demo mode, and a visitor can still get live
+routing by pasting their own key (see [Bring your own key](#bring-your-own-key)
+above).
+
+For a concrete free-tier hosting suggestion (e.g. Vercel for the
+frontend, any host with a persistent volume for the backend), the exact
+environment variables production needs, and everything already verified
+against a real production-mode run (build output, a fresh empty
+database, no API key, CORS), see **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)**.
+No deployment was actually created as part of this project — that page
+documents what's ready, not a live URL.
+
 ## Training the router
 
 `learned-v2` is trained offline from the committed benchmark results, not
